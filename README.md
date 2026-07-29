@@ -56,11 +56,23 @@ Each plugin is stored in its own folder. For normal WordPress installation, use 
 
 The suite grew from practical work on the UA FREE foundation website rather than from a theoretical plugin checklist. The public versions keep that experience but remove foundation-specific assumptions wherever possible so the plugins can be used independently on other WordPress sites.
 
-## Support development
+## Support the developer
 
-The plugins are free and open source. Donations help cover development, testing, documentation and maintenance:
+These wallet addresses belong to the plugin developer. They are not donation details of the UA FREE charitable foundation.
 
-https://uafree.org/plugins/support-development/
+### BTC · Bitcoin
+
+`bc1q4dn8e7sz2866g7qp1qtshh98j54tvuau5ghuuk`
+
+### ETH + USDC · Ethereum ERC-20
+
+`0x3aE3b23A7BD94b8a65A7E8Ca205A4e29BEF7c229`
+
+### USDT · TRON TRC-20
+
+`TYsGyK7K3XB4NPHprf5w8ZodFafxFfDdbP`
+
+Use only the network shown next to each address.
 
 ## License
 
