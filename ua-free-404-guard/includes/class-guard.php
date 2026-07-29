@@ -176,8 +176,9 @@ final class Guard {
 	}
 
 	public static function request_uri(): string {
-		$uri = self::scalar_string( $_SERVER['REQUEST_URI'] ?? '/' );
-		$uri = wp_unslash( $uri );
+		$uri = isset( $_SERVER['REQUEST_URI'] )
+			? sanitize_text_field( wp_unslash( self::scalar_string( $_SERVER['REQUEST_URI'] ) ) )
+			: '/';
 		$uri = preg_replace( '/[\x00-\x1F\x7F].*$/s', '', $uri ) ?? '/';
 		return self::truncate( '' !== $uri ? $uri : '/', self::MAX_REQUEST_BYTES );
 	}
@@ -193,8 +194,9 @@ final class Guard {
 	}
 
 	public static function user_agent(): string {
-		$ua = self::scalar_string( $_SERVER['HTTP_USER_AGENT'] ?? '' );
-		$ua = sanitize_text_field( wp_unslash( $ua ) );
+		$ua = isset( $_SERVER['HTTP_USER_AGENT'] )
+			? sanitize_text_field( wp_unslash( self::scalar_string( $_SERVER['HTTP_USER_AGENT'] ) ) )
+			: '';
 		return self::truncate( $ua, 400 );
 	}
 
@@ -574,7 +576,10 @@ final class Guard {
 		$key              = md5( $status . '|' . $kind . '|' . $source . '|' . $path_fingerprint . '|' . implode( ',', $query_key_fingerprints ) );
 		$log              = self::log_map();
 		$now              = current_time( 'mysql' );
-		$referrer         = self::referrer_summary( self::scalar_string( $_SERVER['HTTP_REFERER'] ?? '' ) );
+		$referrer_raw = isset( $_SERVER['HTTP_REFERER'] )
+			? esc_url_raw( wp_unslash( self::scalar_string( $_SERVER['HTTP_REFERER'] ) ) )
+			: '';
+		$referrer = self::referrer_summary( $referrer_raw );
 
 		if ( ! isset( $log[ $key ] ) ) {
 			$log[ $key ] = array(
@@ -651,18 +656,22 @@ final class Guard {
 		}
 
 		global $wpdb;
-		if ( ! is_object( $wpdb ) || empty( $wpdb->options ) || ! method_exists( $wpdb, 'prepare' ) || ! method_exists( $wpdb, 'query' ) || ! function_exists( 'maybe_serialize' ) ) {
+		if ( ! is_object( $wpdb ) || empty( $wpdb->options ) || ! method_exists( $wpdb, 'update' ) || ! function_exists( 'maybe_serialize' ) ) {
 			return false;
 		}
 		$old_serialized = maybe_serialize( $current );
 		$new_serialized = maybe_serialize( $bucket );
-		$sql = $wpdb->prepare(
-			"UPDATE {$wpdb->options} SET option_value = %s WHERE option_name = %s AND option_value = %s",
-			$new_serialized,
-			self::CAPTURE_LOCK_OPTION,
-			$old_serialized
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Atomic compare-and-swap prevents concurrent capture writes.
+		$updated = (int) $wpdb->update(
+			$wpdb->options,
+			array( 'option_value' => $new_serialized ),
+			array(
+				'option_name'  => self::CAPTURE_LOCK_OPTION,
+				'option_value' => $old_serialized,
+			),
+			array( '%s' ),
+			array( '%s', '%s' )
 		);
-		$updated = (int) $wpdb->query( $sql );
 		if ( 1 === $updated && function_exists( 'wp_cache_delete' ) ) {
 			wp_cache_delete( self::CAPTURE_LOCK_OPTION, 'options' );
 		}
@@ -685,11 +694,11 @@ final class Guard {
 		header( 'Referrer-Policy: no-referrer', true );
 		header( "Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'", true );
 		header( 'Content-Type: text/html; charset=' . get_bloginfo( 'charset' ), true );
-		$home = esc_url( home_url( '/' ) );
+		$home = home_url( '/' );
 		echo '<!doctype html><html lang="' . esc_attr( substr( determine_locale(), 0, 2 ) ) . '"><head><meta charset="utf-8">';
 		echo '<meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow,noarchive">';
 		echo '<title>' . esc_html( $title ) . '</title><style>body{font-family:system-ui,sans-serif;background:#f6f7f7;color:#1d2327;margin:0}main{max-width:700px;margin:12vh auto;padding:32px;background:#fff;border-radius:12px;text-align:center}h1{font-size:56px;margin:0 0 12px}a{display:inline-block;padding:12px 20px;background:#2271b1;color:#fff;text-decoration:none;border-radius:8px}</style></head>';
-		echo '<body><main><h1>' . esc_html( (string) $status ) . '</h1><p>' . esc_html( $message ) . '</p><a href="' . $home . '">' . esc_html__( 'Return to the homepage', 'ua-free-404-guard' ) . '</a></main></body></html>';
+		echo '<body><main><h1>' . esc_html( (string) $status ) . '</h1><p>' . esc_html( $message ) . '</p><a href="' . esc_url( $home ) . '">' . esc_html__( 'Return to the homepage', 'ua-free-404-guard' ) . '</a></main></body></html>';
 		exit;
 	}
 

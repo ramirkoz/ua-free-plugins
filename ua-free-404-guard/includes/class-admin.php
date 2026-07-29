@@ -60,7 +60,11 @@ final class Admin {
 		$redirects  = Guard::redirects();
 		$gone_rules = Guard::gone_rules();
 		$scan       = Environment_Scanner::scan();
-		$deep       = isset( $_GET['uafree_404_deep'] ) && '1' === Guard::scalar_string( wp_unslash( $_GET['uafree_404_deep'] ) );
+		$deep_value = '';
+		if ( isset( $_GET['uafree_404_deep'] ) ) {
+			$deep_value = sanitize_key( wp_unslash( Guard::scalar_string( $_GET['uafree_404_deep'] ) ) );
+		}
+		$deep = '1' === $deep_value;
 		if ( $deep ) {
 			check_admin_referer( 'uafree_404_deep_scan' );
 		}
@@ -69,7 +73,7 @@ final class Admin {
 		?>
 		<div class="wrap">
 			<h1><?php esc_html_e( 'UA FREE 404 Guard', 'ua-free-404-guard' ); ?> <small style="font-size:14px"><?php echo esc_html( UAFREE_404_VERSION ); ?></small></h1>
-			<div class="notice notice-warning inline"><p><?php esc_html_e( 'Development build. It creates no automatic redirect or 410 rules.', 'ua-free-404-guard' ); ?></p></div>
+			<div class="notice notice-info inline"><p><?php esc_html_e( 'No automatic redirect or 410 rules are created.', 'ua-free-404-guard' ); ?></p></div>
 
 			<h2><?php esc_html_e( 'General settings', 'ua-free-404-guard' ); ?></h2>
 			<form method="post" action="options.php">
@@ -91,7 +95,16 @@ final class Admin {
 
 			<h2><?php esc_html_e( 'Bounded diagnostic capture', 'ua-free-404-guard' ); ?></h2>
 			<?php if ( ! empty( $capture['active'] ) ) : ?>
-				<div class="notice notice-info inline"><p><?php echo esc_html( sprintf( __( 'Capture is active for approximately %1$d more seconds. Requests are sampled 1 in %2$d and the grouped log is written at most once every %3$d seconds.', 'ua-free-404-guard' ), $capture['seconds_remaining'], $capture['sample_denominator'], $capture['write_interval'] ) ); ?></p></div>
+				<?php
+				$capture_message = sprintf(
+					/* translators: 1: seconds remaining, 2: sampling denominator, 3: minimum seconds between grouped log writes. */
+					__( 'Capture is active for approximately %1$d more seconds. Requests are sampled 1 in %2$d and the grouped log is written at most once every %3$d seconds.', 'ua-free-404-guard' ),
+					$capture['seconds_remaining'],
+					$capture['sample_denominator'],
+					$capture['write_interval']
+				);
+				?>
+				<div class="notice notice-info inline"><p><?php echo esc_html( $capture_message ); ?></p></div>
 				<p><a class="button" href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=uafree_404_stop_capture' ), 'uafree_404_stop_capture' ) ); ?>"><?php esc_html_e( 'Stop capture now', 'ua-free-404-guard' ); ?></a></p>
 			<?php else : ?>
 				<p><?php esc_html_e( 'No public request writes are performed while capture is inactive. A capture automatically expires after ten minutes.', 'ua-free-404-guard' ); ?></p>
@@ -136,7 +149,16 @@ final class Admin {
 				<p><?php esc_html_e( 'Content is not scanned during a normal settings-page load.', 'ua-free-404-guard' ); ?></p>
 				<p><a class="button" href="<?php echo esc_url( wp_nonce_url( add_query_arg( 'uafree_404_deep', '1', admin_url( 'admin.php?page=' . self::PAGE ) ), 'uafree_404_deep_scan' ) ); ?>"><?php esc_html_e( 'Run explicit content scan', 'ua-free-404-guard' ); ?></a></p>
 			<?php else : ?>
-				<p><?php echo esc_html( sprintf( __( 'Checked %1$d posts and %2$d links. Candidates: %3$d.', 'ua-free-404-guard' ), $link_audit['posts_checked'], $link_audit['links_checked'], $link_audit['candidate_count'] ) ); ?></p>
+				<?php
+				$audit_message = sprintf(
+					/* translators: 1: posts checked, 2: links checked, 3: candidate links found. */
+					__( 'Checked %1$d posts and %2$d links. Candidates: %3$d.', 'ua-free-404-guard' ),
+					$link_audit['posts_checked'],
+					$link_audit['links_checked'],
+					$link_audit['candidate_count']
+				);
+				?>
+				<p><?php echo esc_html( $audit_message ); ?></p>
 				<?php self::candidate_table( $link_audit['items'] ); ?>
 			<?php endif; ?>
 
@@ -175,9 +197,17 @@ final class Admin {
 	public static function add_redirect(): void {
 		self::authorise();
 		check_admin_referer( 'uafree_404_add_redirect' );
-		$source = Guard::normalise_path( Guard::scalar_string( wp_unslash( $_POST['source'] ?? '' ) ) );
-		$target = Guard::normalise_same_site_url( wp_unslash( $_POST['target'] ?? '' ) );
-		$status = absint( Guard::scalar_string( $_POST['status'] ?? 301 ) );
+		$source_raw = isset( $_POST['source'] )
+			? sanitize_text_field( wp_unslash( Guard::scalar_string( $_POST['source'] ) ) )
+			: '';
+		$target_raw = isset( $_POST['target'] )
+			? sanitize_text_field( wp_unslash( Guard::scalar_string( $_POST['target'] ) ) )
+			: '';
+		$status = isset( $_POST['status'] )
+			? absint( wp_unslash( Guard::scalar_string( $_POST['status'] ) ) )
+			: 301;
+		$source = Guard::normalise_path( $source_raw );
+		$target = Guard::normalise_same_site_url( $target_raw );
 		if ( Guard::is_protected_path( $source ) || '' === $target || ! in_array( $status, array( 301, 302, 307, 308 ), true ) ) {
 			self::redirect_back( 'invalid_redirect' );
 		}
@@ -195,7 +225,9 @@ final class Admin {
 
 	public static function delete_redirect(): void {
 		self::authorise();
-		$id = sanitize_text_field( Guard::scalar_string( wp_unslash( $_GET['id'] ?? '' ) ) );
+		$id = isset( $_GET['id'] )
+			? sanitize_text_field( wp_unslash( Guard::scalar_string( $_GET['id'] ) ) )
+			: '';
 		check_admin_referer( 'uafree_404_delete_redirect_' . $id );
 		$rules = array_values( array_filter( Guard::redirects(), static fn( array $rule ): bool => (string) $rule['id'] !== $id ) );
 		update_option( Guard::REDIRECT_OPTION, $rules, false );
@@ -205,8 +237,13 @@ final class Admin {
 	public static function add_gone(): void {
 		self::authorise();
 		check_admin_referer( 'uafree_404_add_gone' );
-		$type  = sanitize_key( Guard::scalar_string( wp_unslash( $_POST['type'] ?? '' ) ) );
-		$value = Guard::normalise_gone_value( $type, wp_unslash( $_POST['value'] ?? '' ) );
+		$type = isset( $_POST['type'] )
+			? sanitize_key( wp_unslash( Guard::scalar_string( $_POST['type'] ) ) )
+			: '';
+		$value_raw = isset( $_POST['value'] )
+			? sanitize_text_field( wp_unslash( Guard::scalar_string( $_POST['value'] ) ) )
+			: '';
+		$value = Guard::normalise_gone_value( $type, $value_raw );
 		if ( '' === $value ) {
 			self::redirect_back( 'invalid_gone' );
 		}
@@ -218,7 +255,9 @@ final class Admin {
 
 	public static function delete_gone(): void {
 		self::authorise();
-		$id = sanitize_text_field( Guard::scalar_string( wp_unslash( $_GET['id'] ?? '' ) ) );
+		$id = isset( $_GET['id'] )
+			? sanitize_text_field( wp_unslash( Guard::scalar_string( $_GET['id'] ) ) )
+			: '';
 		check_admin_referer( 'uafree_404_delete_gone_' . $id );
 		$rules = array_values( array_filter( Guard::gone_rules(), static fn( array $rule ): bool => (string) $rule['id'] !== $id ) );
 		update_option( Guard::GONE_OPTION, $rules, false );
@@ -294,7 +333,11 @@ final class Admin {
 	}
 
 	private static function render_notice(): void {
-		$code = sanitize_key( Guard::scalar_string( wp_unslash( $_GET['uafree_notice'] ?? '' ) ) );
+		$code = '';
+		if ( isset( $_GET['uafree_notice'] ) ) {
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin notice; no state is changed.
+			$code = sanitize_key( wp_unslash( Guard::scalar_string( $_GET['uafree_notice'] ) ) );
+		}
 		$messages = array(
 			'redirect_added'    => array( 'success', __( 'Redirect rule added.', 'ua-free-404-guard' ) ),
 			'redirect_deleted'  => array( 'success', __( 'Redirect rule deleted.', 'ua-free-404-guard' ) ),
