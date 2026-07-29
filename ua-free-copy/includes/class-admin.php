@@ -146,8 +146,8 @@ final class Admin {
 			<div class="uafree-card">
 				<h2><?php esc_html_e( 'Diagnostics', 'ua-free-copy' ); ?></h2>
 				<?php
-				/* translators: %d: number of configured CSS selectors. */
 				$configured_selectors = sprintf(
+					/* translators: %d: number of configured CSS selectors. */
 					__( 'Configured selectors: %d', 'ua-free-copy' ),
 					count( Plugin::selectors() )
 				);
