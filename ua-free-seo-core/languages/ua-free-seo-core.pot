@@ -1,0 +1,266 @@
+# Translations template for UA FREE SEO Core.
+# Copyright (C) 2026 ORGANIZATION
+# This file is distributed under the same license as the UA FREE SEO Core project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: UA FREE SEO Core 2.0.3\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2026-07-23 08:10+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+msgid "404, redirects and URL intelligence."
+msgstr ""
+
+msgid "AI discovery"
+msgstr ""
+
+msgid "Accessibility audit"
+msgstr ""
+
+msgid "Accessible copy buttons."
+msgstr ""
+
+msgid "Active"
+msgstr ""
+
+msgid "Another SEO plugin is active."
+msgstr ""
+
+msgid "Author archives"
+msgstr ""
+
+msgid "Automatic static translation."
+msgstr ""
+
+msgid "Available separately"
+msgstr ""
+
+msgid "Canonical URL"
+msgstr ""
+
+msgid "Consent and external script control."
+msgstr ""
+
+msgid "Date archives"
+msgstr ""
+
+msgid "Deep scan completed for this page load."
+msgstr ""
+
+msgid "Default social image attachment ID"
+msgstr ""
+
+msgid "Detected metadata"
+msgstr ""
+
+msgid "Detected option groups"
+msgstr ""
+
+msgid "Detected options"
+msgstr ""
+
+msgid "Development build. It performs no cleanup and does not remove data from previous SEO plugins."
+msgstr ""
+
+msgid "Existing SEO environment"
+msgstr ""
+
+msgid "Export privacy-safe JSON report"
+msgstr ""
+
+msgid "General settings"
+msgstr ""
+
+msgid "Generate title, description, canonical, social metadata and schema"
+msgstr ""
+
+msgid "Google Ad Grants planning and landing checks."
+msgstr ""
+
+msgid "Images without useful alt text"
+msgstr ""
+
+msgid "Import and cleanup are intentionally disabled in this development build."
+msgstr ""
+
+msgid "Installed"
+msgstr ""
+
+msgid "Insufficient permissions."
+msgstr ""
+
+msgid "Items without an H1 in stored content"
+msgstr ""
+
+msgid "Keep UA FREE SEO output disabled until the migration is verified to avoid duplicate metadata."
+msgstr ""
+
+msgid "Meta description"
+msgstr ""
+
+msgid "Minimal URL-only spam filtering."
+msgstr ""
+
+msgid "No"
+msgstr ""
+
+msgid "Noindex"
+msgstr ""
+
+msgid "Not counted in quick mode"
+msgstr ""
+
+msgid "Organization description"
+msgstr ""
+
+msgid "Organization logo attachment ID"
+msgstr ""
+
+msgid "Organization name"
+msgstr ""
+
+msgid "Organization type"
+msgstr ""
+
+msgid "Origin and support"
+msgstr ""
+
+msgid "Page not found"
+msgstr ""
+
+msgid "Plugin"
+msgstr ""
+
+msgid "Plugin Suite"
+msgstr ""
+
+msgid "Potential empty links"
+msgstr ""
+
+msgid "Prevent search engine indexing"
+msgstr ""
+
+msgid "Privacy-safe donation analytics."
+msgstr ""
+
+msgid "Provide a public AI manifest"
+msgstr ""
+
+msgid "Provide llms.txt"
+msgstr ""
+
+msgid "Provider"
+msgstr ""
+
+msgid "Published items checked"
+msgstr ""
+
+msgid "Purpose"
+msgstr ""
+
+msgid ""
+"Quick mode reads plugin inventory and option presence only. Exact metadata counts run only after explicit "
+"confirmation."
+msgstr ""
+
+msgid "Read-only diagnostics API."
+msgstr ""
+
+msgid "Read-only translation diagnostics."
+msgstr ""
+
+msgid "Run deep metadata count"
+msgstr ""
+
+msgid "SEO Core"
+msgstr ""
+
+msgid "SEO output"
+msgstr ""
+
+msgid "SEO title"
+msgstr ""
+
+msgid "SEO, metadata, schema and discovery."
+msgstr ""
+
+msgid "Search pages"
+msgstr ""
+
+#, python-format
+msgid "Search results for “%s”"
+msgstr ""
+
+#, python-format
+msgid "Search results on %s."
+msgstr ""
+
+msgid "Settings"
+msgstr ""
+
+msgid "Snapshots, migration and controlled cleanup."
+msgstr ""
+
+msgid "Social image attachment ID"
+msgstr ""
+
+msgid "Status"
+msgstr ""
+
+msgid "Support development"
+msgstr ""
+
+msgid "Support the foundation"
+msgstr ""
+
+msgid "System endpoints"
+msgstr ""
+
+msgid "The final version will require a snapshot, dry run and explicit confirmation."
+msgstr ""
+
+msgid "The requested page could not be found."
+msgstr ""
+
+msgid ""
+"These lightweight WordPress plugins were originally created for the practical needs of a charitable foundation "
+"website and then rebuilt as universal tools."
+msgstr ""
+
+msgid ""
+"This scan reads only plugin headers, option names and metadata counts. It does not expose option values and does not "
+"delete anything."
+msgstr ""
+
+msgid "Title separator"
+msgstr ""
+
+msgid "UA FREE Plugin Suite"
+msgstr ""
+
+msgid "UA FREE SEO"
+msgstr ""
+
+msgid "UA FREE SEO Core"
+msgstr ""
+
+msgid "Unified local analytics dashboard."
+msgstr ""
+
+msgid "Yes"
+msgstr ""
+
+msgid ""
+"You can support the charitable foundation, share its work, place a link to it, or support plugin development "
+"separately."
+msgstr ""
+

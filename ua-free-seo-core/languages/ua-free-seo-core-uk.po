@@ -1,0 +1,271 @@
+
+msgid ""
+msgstr ""
+"Project-Id-Version: UA FREE SEO Core 2.0.3\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2026-07-23 08:10+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: uk\n"
+"Language-Team: uk <LL@li.org>\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+msgid "404, redirects and URL intelligence."
+msgstr "404, перенаправлення та аналіз URL."
+
+msgid "AI discovery"
+msgstr "AI Discovery"
+
+msgid "Accessibility audit"
+msgstr "Аудит доступності"
+
+msgid "Accessible copy buttons."
+msgstr "Доступні кнопки копіювання."
+
+msgid "Active"
+msgstr "Активний"
+
+msgid "Another SEO plugin is active."
+msgstr "Активний інший SEO-плагін."
+
+msgid "Author archives"
+msgstr "Архіви авторів"
+
+msgid "Automatic static translation."
+msgstr "Автоматичний статичний переклад."
+
+msgid "Available separately"
+msgstr "Доступний окремо"
+
+msgid "Canonical URL"
+msgstr "Канонічна URL-адреса"
+
+msgid "Consent and external script control."
+msgstr "Керування згодою та зовнішніми скриптами."
+
+msgid "Date archives"
+msgstr "Архіви за датою"
+
+msgid "Deep scan completed for this page load."
+msgstr "Поглиблене сканування завершено для цього завантаження сторінки."
+
+msgid "Default social image attachment ID"
+msgstr "ID стандартного зображення для соцмереж"
+
+msgid "Detected metadata"
+msgstr "Виявлені метадані"
+
+msgid "Detected option groups"
+msgstr "Виявлені групи налаштувань"
+
+msgid "Detected options"
+msgstr "Виявлені налаштування"
+
+msgid "Development build. It performs no cleanup and does not remove data from previous SEO plugins."
+msgstr "Версія для розробки. Вона нічого не очищує та не видаляє дані попередніх SEO-плагінів."
+
+msgid "Existing SEO environment"
+msgstr "Наявне SEO-середовище"
+
+msgid "Export privacy-safe JSON report"
+msgstr "Експортувати безпечний для приватності JSON-звіт"
+
+msgid "General settings"
+msgstr "Загальні налаштування"
+
+msgid "Generate title, description, canonical, social metadata and schema"
+msgstr "Формувати title, description, canonical, метадані соцмереж і schema"
+
+msgid "Google Ad Grants planning and landing checks."
+msgstr "Планування Google Ad Grants і перевірка посадкових сторінок."
+
+msgid "Images without useful alt text"
+msgstr "Зображення без корисного alt-тексту"
+
+msgid "Import and cleanup are intentionally disabled in this development build."
+msgstr "Імпорт і очищення навмисно вимкнені в цій версії для розробки."
+
+msgid "Installed"
+msgstr "Встановлено"
+
+msgid "Insufficient permissions."
+msgstr "Недостатньо прав."
+
+msgid "Items without an H1 in stored content"
+msgstr "Матеріали без H1 у збереженому вмісті"
+
+msgid "Keep UA FREE SEO output disabled until the migration is verified to avoid duplicate metadata."
+msgstr "Залиште SEO-вивід UA FREE вимкненим до завершення перевірки міграції, щоб уникнути дублювання метаданих."
+
+msgid "Meta description"
+msgstr "Meta description"
+
+msgid "Minimal URL-only spam filtering."
+msgstr "Мінімальна фільтрація спаму, що складається лише з URL."
+
+msgid "No"
+msgstr "Ні"
+
+msgid "Noindex"
+msgstr "Noindex"
+
+msgid "Not counted in quick mode"
+msgstr "Не підраховано у швидкому режимі"
+
+msgid "Organization description"
+msgstr "Опис організації"
+
+msgid "Organization logo attachment ID"
+msgstr "ID логотипу організації"
+
+msgid "Organization name"
+msgstr "Назва організації"
+
+msgid "Organization type"
+msgstr "Тип організації"
+
+msgid "Origin and support"
+msgstr "Походження та підтримка"
+
+msgid "Page not found"
+msgstr "Сторінку не знайдено"
+
+msgid "Plugin"
+msgstr "Плагін"
+
+msgid "Plugin Suite"
+msgstr "Комплекс плагінів"
+
+msgid "Potential empty links"
+msgstr "Ймовірні порожні посилання"
+
+msgid "Prevent search engine indexing"
+msgstr "Заборонити індексацію пошуковими системами"
+
+msgid "Privacy-safe donation analytics."
+msgstr "Статистика донатів із дотриманням приватності."
+
+msgid "Provide a public AI manifest"
+msgstr "Створювати публічний AI-маніфест"
+
+msgid "Provide llms.txt"
+msgstr "Створювати llms.txt"
+
+msgid "Provider"
+msgstr "Провайдер"
+
+msgid "Published items checked"
+msgstr "Перевірено опублікованих матеріалів"
+
+msgid "Purpose"
+msgstr "Призначення"
+
+msgid ""
+"Quick mode reads plugin inventory and option presence only. Exact metadata counts run only after explicit "
+"confirmation."
+msgstr ""
+"Швидкий режим читає лише перелік плагінів і наявність груп налаштувань. Точний підрахунок метаданих запускається "
+"тільки після явного підтвердження."
+
+msgid "Read-only diagnostics API."
+msgstr "Read-only API для діагностики."
+
+msgid "Read-only translation diagnostics."
+msgstr "Read-only діагностика перекладу."
+
+msgid "Run deep metadata count"
+msgstr "Запустити поглиблений підрахунок метаданих"
+
+msgid "SEO Core"
+msgstr "SEO Core"
+
+msgid "SEO output"
+msgstr "SEO-вивід"
+
+msgid "SEO title"
+msgstr "SEO title"
+
+msgid "SEO, metadata, schema and discovery."
+msgstr "SEO, метадані, schema та discovery."
+
+msgid "Search pages"
+msgstr "Сторінки пошуку"
+
+#, python-format
+msgid "Search results for “%s”"
+msgstr "Результати пошуку для «%s»"
+
+#, python-format
+msgid "Search results on %s."
+msgstr "Результати пошуку на сайті %s."
+
+msgid "Settings"
+msgstr "Налаштування"
+
+msgid "Snapshots, migration and controlled cleanup."
+msgstr "Знімки стану, міграція та контрольоване очищення."
+
+msgid "Social image attachment ID"
+msgstr "ID зображення для соцмереж"
+
+msgid "Status"
+msgstr "Статус"
+
+msgid "Support development"
+msgstr "Підтримати розробку"
+
+msgid "Support the foundation"
+msgstr "Підтримати фонд"
+
+msgid "System endpoints"
+msgstr "Системні адреси"
+
+msgid "The final version will require a snapshot, dry run and explicit confirmation."
+msgstr "Фінальна версія вимагатиме знімок стану, dry-run і явне підтвердження."
+
+msgid "The requested page could not be found."
+msgstr "Запитану сторінку не знайдено."
+
+msgid ""
+"These lightweight WordPress plugins were originally created for the practical needs of a charitable foundation "
+"website and then rebuilt as universal tools."
+msgstr ""
+"Ці легкі WordPress-плагіни спочатку створювалися для практичних потреб сайту благодійного фонду, а потім були "
+"перероблені як універсальні інструменти."
+
+msgid ""
+"This scan reads only plugin headers, option names and metadata counts. It does not expose option values and does not "
+"delete anything."
+msgstr ""
+"Це сканування читає лише заголовки плагінів, назви налаштувань і кількість метаданих. Воно не розкриває значення "
+"налаштувань і нічого не видаляє."
+
+msgid "Title separator"
+msgstr "Розділювач title"
+
+msgid "UA FREE Plugin Suite"
+msgstr "Комплекс плагінів UA FREE"
+
+msgid "UA FREE SEO"
+msgstr "UA FREE SEO"
+
+msgid "UA FREE SEO Core"
+msgstr "UA FREE SEO Core"
+
+msgid "Unified local analytics dashboard."
+msgstr "Єдина панель локальної аналітики."
+
+msgid "Yes"
+msgstr "Так"
+
+msgid ""
+"You can support the charitable foundation, share its work, place a link to it, or support plugin development "
+"separately."
+msgstr ""
+"Ви можете підтримати благодійний фонд, розповісти про його роботу, розмістити посилання або окремо підтримати "
+"розробку плагінів."
+

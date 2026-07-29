@@ -1,0 +1,216 @@
+# Ukrainian translations for UA FREE Translate Diagnostics.
+# Copyright (C) 2026 UA FREE
+# This file is distributed under the GPL-2.0-or-later license.
+
+msgid ""
+msgstr ""
+"Project-Id-Version: UA FREE Translate Diagnostics 0.2.9\n"
+"Report-Msgid-Bugs-To: https://uafree.org/plugins/support-development/\n"
+"POT-Creation-Date: 2026-07-22 16:30+0000\n"
+"PO-Revision-Date: 2026-07-22 16:30+0000\n"
+"Last-Translator: UA FREE\n"
+"Language: uk\n"
+"Language-Team: Ukrainian\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#, php-format
+msgid "%1$s: %2$d queue rows contain an error."
+msgstr "%1$s: %2$d рядків черги містять помилку."
+
+#, php-format
+msgid "%1$s: %2$d translation rows have a stale source hash."
+msgstr "%1$s: %2$d рядків перекладу мають застарілий хеш джерела."
+
+#, php-format
+msgid "%1$s: approximately %2$d current translation rows are missing."
+msgstr "%1$s: орієнтовно бракує %2$d актуальних рядків перекладу."
+
+msgid "(estimate)"
+msgstr "(оцінка)"
+
+msgid "Active"
+msgstr "Активний"
+
+msgid "Automatic translation is manually paused."
+msgstr "Автоматичний переклад поставлено на ручну паузу."
+
+msgid "Automatic translation is paused because the configured monthly character limit was reached."
+msgstr "Автоматичний переклад призупинено, оскільки досягнуто налаштованого місячного ліміту символів."
+
+msgid "Automatic translation is temporarily paused."
+msgstr "Автоматичний переклад тимчасово призупинено."
+
+msgid "Available"
+msgstr "Доступний"
+
+msgid "Azure key configured"
+msgstr "Ключ Azure налаштовано"
+
+msgid "Compatibility mode"
+msgstr "Режим сумісності"
+
+msgid "Data inventory"
+msgstr "Інвентаризація даних"
+
+msgid "Deep scan completed. It compares source hashes and uses heavier read-only database queries."
+msgstr "Поглиблене сканування завершено. Воно порівнює хеші джерел і використовує ресурсомісткіші read-only запити до бази даних."
+
+msgid "Detected version"
+msgstr "Виявлена версія"
+
+msgid "Diagnostic findings"
+msgstr "Діагностичні висновки"
+
+msgid "Diagnostic mode"
+msgstr "Режим діагностики"
+
+msgid "Diagnostics"
+msgstr "Діагностика"
+
+msgid "Download deep privacy-safe JSON report"
+msgstr "Завантажити поглиблений privacy-safe JSON-звіт"
+
+msgid "Exists"
+msgstr "Існує"
+
+msgid "Expected segments"
+msgstr "Очікувані сегменти"
+
+msgid "Inactive"
+msgstr "Неактивне"
+
+msgid "Installed"
+msgstr "Встановлено"
+
+msgid "Language"
+msgstr "Мова"
+
+msgid "Languages"
+msgstr "Мови"
+
+msgid "Last runtime error"
+msgstr "Остання помилка виконання"
+
+msgid "Manual pause"
+msgstr "Ручна пауза"
+
+msgid "Memory"
+msgstr "Пам’ять"
+
+msgid "Migration freeze"
+msgstr "Блокування на час міграції"
+
+msgid "Missing estimate"
+msgstr "Орієнтовно відсутні"
+
+#, php-format
+msgid "Missing translator tables: %s."
+msgstr "Відсутні таблиці перекладача: %s."
+
+msgid "No"
+msgstr "Ні"
+
+msgid "No automatic findings were generated."
+msgstr "Автоматичних висновків не сформовано."
+
+msgid "No queue rows"
+msgstr "Рядків черги немає"
+
+msgid "No target languages were detected."
+msgstr "Цільові мови не виявлено."
+
+msgid "No translation sources were found."
+msgstr "Джерела перекладу не знайдено."
+
+msgid "Not checked"
+msgstr "Не перевірено"
+
+msgid "Pause reason"
+msgstr "Причина паузи"
+
+msgid "Privacy"
+msgstr "Приватність"
+
+msgid "Public diagnostics API"
+msgstr "Публічний діагностичний API"
+
+msgid "Queue"
+msgstr "Черга"
+
+msgid "Quick scan is active. It uses metadata and limited recent-row reads only; full-table aggregates and hash joins are deferred to deep mode."
+msgstr "Активне швидке сканування. Воно використовує лише метадані та обмежене читання останніх рядків; повні агрегати таблиць і зіставлення хешів виконуються лише в поглибленому режимі."
+
+msgid "Read-only:"
+msgstr "Read-only:"
+
+msgid "Ready"
+msgstr "Готово"
+
+msgid "Rows"
+msgstr "Рядки"
+
+msgid "Run deep hash scan"
+msgstr "Запустити поглиблену перевірку хешів"
+
+msgid "Source language"
+msgstr "Мова джерела"
+
+msgid "Stale"
+msgstr "Застарілі"
+
+msgid "Table"
+msgstr "Таблиця"
+
+msgid "The Azure Translator key is not configured."
+msgstr "Ключ Azure Translator не налаштовано."
+
+msgid "The exported report uses an allowlisted translator API contract, removes raw plugin paths and table names, fingerprints operational identifiers, and applies a final privacy pass after third-party filters."
+msgstr "Експортований звіт використовує дозволений перелік полів API перекладача, не містить відкритих шляхів плагінів і назв таблиць, замінює операційні ідентифікатори відбитками та виконує фінальну перевірку приватності після сторонніх фільтрів."
+
+msgid "Quick mode does not calculate completeness totals. Deep mode calculates the missing estimate from current translatable segments and exact ready translation rows; translation memory may reduce the work required."
+msgstr "Швидкий режим не обчислює повні показники готовності. Поглиблений режим оцінює відсутні переклади за поточними перекладними сегментами й точними готовими рядками; пам’ять перекладів може зменшити фактичний обсяг роботи."
+
+msgid "The plugin first uses the translator public diagnostics API. For older translator versions it automatically falls back to a read-only compatibility scan."
+msgstr "Спочатку плагін використовує публічний діагностичний API перекладача. Для старіших версій він автоматично переходить до read-only сканування сумісності."
+
+msgid "The quick scan does not compare translation hashes. Run the deep scan before treating stale-row counts as verified."
+msgstr "Швидке сканування не порівнює хеші перекладів. Перед тим як вважати кількість застарілих рядків перевіреною, запустіть поглиблене сканування."
+
+msgid "The translator plugin is installed but inactive."
+msgstr "Плагін перекладача встановлено, але не активовано."
+
+msgid "The translator public diagnostics API is unavailable; the report uses the read-only database compatibility layer."
+msgstr "Публічний діагностичний API перекладача недоступний; звіт використовує read-only шар сумісності з базою даних."
+
+msgid "The translator public diagnostics API returned an error."
+msgstr "Публічний діагностичний API перекладача повернув помилку."
+
+msgid "The translator reports an active migration freeze."
+msgstr "Перекладач повідомляє про активне блокування на час міграції."
+
+msgid "Translation Diagnostics"
+msgstr "Діагностика перекладу"
+
+msgid "Translation sources:"
+msgstr "Джерела перекладу:"
+
+msgid "Translator status"
+msgstr "Стан перекладача"
+
+msgid "UA FREE Static Translate was not detected."
+msgstr "UA FREE Static Translate не виявлено."
+
+msgid "UA FREE Translate Diagnostics"
+msgstr "UA FREE Translate Diagnostics"
+
+msgid "Yes"
+msgstr "Так"
+
+msgid "You do not have permission to export this report."
+msgstr "У вас немає прав для експорту цього звіту."
+
+msgid "this plugin does not call Azure, run the translation queue, change options, alter cron, clear caches or modify translation data."
+msgstr "цей плагін не викликає Azure, не запускає чергу перекладу, не змінює налаштування чи cron, не очищає кеші та не змінює дані перекладу."

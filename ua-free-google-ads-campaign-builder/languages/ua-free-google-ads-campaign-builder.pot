@@ -1,0 +1,251 @@
+msgid ""
+msgstr "Project-Id-Version: UA FREE Google Ads Campaign Builder 1.3.1\\nMIME-Version: 1.0\\nContent-Type: text/plain; charset=UTF-8\\nContent-Transfer-Encoding: 8bit\\n"
+
+msgid "%1$s / %2$s was skipped because it did not contain enough valid ad copy."
+msgstr ""
+
+msgid "%s: no complete ad groups were generated."
+msgstr ""
+
+msgid "%s: no target locations are configured."
+msgstr ""
+
+msgid "A neutral internal key for the review checklist. The plugin does not create a Google Ads conversion action."
+msgstr ""
+
+msgid "A non-source language requires Azure translation unless you generate that language separately."
+msgstr ""
+
+msgid "Ad groups"
+msgstr ""
+
+msgid "AdSense displays third-party ads on a publisher website; this plugin prepares advertiser campaign files for Google Ads."
+msgstr ""
+
+msgid "Advertising account type"
+msgstr ""
+
+msgid "All campaigns are generated as Paused."
+msgstr ""
+
+msgid "Allow Azure to translate generated ad copy during package generation"
+msgstr ""
+
+msgid "An error occurred."
+msgstr ""
+
+msgid "Automatic ad-copy translation is disabled."
+msgstr ""
+
+msgid "Azure Translator is not configured."
+msgstr ""
+
+msgid "Azure Translator returned an invalid response (HTTP %d)."
+msgstr ""
+
+msgid "Azure copy translation"
+msgstr ""
+
+msgid "Bid strategy"
+msgstr ""
+
+msgid "Build reviewable, paused campaign packages for Google Ad Grants or Standard Google Ads. The plugin never sends or launches campaigns."
+msgstr ""
+
+msgid "Callouts"
+msgstr ""
+
+msgid "Campaign %s has no target location."
+msgstr ""
+
+msgid "Campaign %s is not paused."
+msgstr ""
+
+msgid "Campaign languages"
+msgstr ""
+
+msgid "Campaigns"
+msgstr ""
+
+msgid "Candidate landing pages"
+msgstr ""
+
+msgid "Configure the actual conversion source in Google Ads or the connected analytics/tagging system. This package does not create tracking tags."
+msgstr ""
+
+msgid "Configured through UA FREE Static Translate"
+msgstr ""
+
+msgid "Conversion tracking has not been confirmed."
+msgstr ""
+
+msgid "Created"
+msgstr ""
+
+msgid "Delete package from server"
+msgstr ""
+
+msgid "Delete settings and the last package when the plugin is uninstalled"
+msgstr ""
+
+msgid "Detected source language"
+msgstr ""
+
+msgid "Do not include the initial question mark."
+msgstr ""
+
+msgid "Download ZIP"
+msgstr ""
+
+msgid "Environment"
+msgstr ""
+
+msgid "Final URL suffix"
+msgstr ""
+
+msgid "For a standard paid Google Ads account. Conversion tracking is recommended but does not block package generation."
+msgstr ""
+
+msgid "For approved nonprofit organisations. The package uses stricter keyword checks and treats confirmed meaningful conversion tracking as a launch requirement."
+msgstr ""
+
+msgid "GOOGLE ADS EDITOR IMPORT PACKAGE"
+msgstr ""
+
+msgid "Generate %s package"
+msgstr ""
+
+msgid "Generate package"
+msgstr ""
+
+msgid "Generation may call Azure only when translation is explicitly enabled and a non-source language is selected. The resulting campaigns remain paused."
+msgstr ""
+
+msgid "Google AdSense is not a mode of this plugin."
+msgstr ""
+
+msgid "Google Ads Builder"
+msgstr ""
+
+msgid "Google Ads Editor formats can change. Treat these CSV files as a reviewable starting point, not an automatic launch instruction."
+msgstr ""
+
+msgid "Google Ads package generated."
+msgstr ""
+
+msgid "Include Search Partners"
+msgstr ""
+
+msgid "Issues / warnings"
+msgstr ""
+
+msgid "Last package"
+msgstr ""
+
+msgid "Maximum landing pages per campaign"
+msgstr ""
+
+msgid "Meaningful conversion tracking has not been confirmed for the Ad Grants mode."
+msgstr ""
+
+msgid "Meaningful conversion tracking is configured"
+msgstr ""
+
+msgid "Mode"
+msgstr ""
+
+msgid "Mode: %s"
+msgstr ""
+
+msgid "Monthly budget"
+msgstr ""
+
+msgid "Negative keywords"
+msgstr ""
+
+msgid "No campaign could be generated. Check the selected languages, target locations and translation settings."
+msgstr ""
+
+msgid "No suitable published landing pages were found."
+msgstr ""
+
+msgid "Not configured"
+msgstr ""
+
+msgid "One location per line: language|Google geo ID|name. Use * for every selected language. Example: en|2840|United States"
+msgstr ""
+
+msgid "Open"
+msgstr ""
+
+msgid "Optional, one callout per line."
+msgstr ""
+
+msgid "Optional, one phrase per line. Nothing is added automatically."
+msgstr ""
+
+msgid "Options"
+msgstr ""
+
+msgid "Organisation name"
+msgstr ""
+
+msgid "Package deleted from the server."
+msgstr ""
+
+msgid "Package settings"
+msgstr ""
+
+msgid "Primary conversion key"
+msgstr ""
+
+msgid "Recommended order:"
+msgstr ""
+
+msgid "Review imported changes, target locations, budgets, language targeting, landing URLs, ad copy and conversion tracking before posting anything."
+msgstr ""
+
+msgid "Save settings"
+msgstr ""
+
+msgid "Selected landing pages"
+msgstr ""
+
+msgid "Settings saved."
+msgstr ""
+
+msgid "Target locations"
+msgstr ""
+
+msgid "The PHP ZipArchive extension is unavailable."
+msgstr ""
+
+msgid "The ZIP package could not be created."
+msgstr ""
+
+msgid "The generated package is unavailable."
+msgstr ""
+
+msgid "The private package directory could not be created."
+msgstr ""
+
+msgid "This is a technical preflight report, not a guarantee of Google policy approval or campaign performance."
+msgstr ""
+
+msgid "Title"
+msgstr ""
+
+msgid "Translated URL pattern"
+msgstr ""
+
+msgid "UA FREE Google Ads Campaign Builder"
+msgstr ""
+
+msgid "Use {language} and {path}. Leave empty to reuse source URLs. Verify every generated landing URL before import."
+msgstr ""
+
+msgid "Words"
+msgstr ""
+
+msgid "You are not allowed to manage this plugin."
+msgstr ""

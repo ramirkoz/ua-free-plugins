@@ -1,0 +1,45 @@
+.uafree-agb{max-width:1280px}
+.uafree-agb .nav-tab-wrapper{margin-bottom:18px}
+.uafree-agb-hero{background:#fff;border:1px solid #dcdcde;border-left:6px solid #dba617;padding:20px 22px;margin:18px 0}
+.uafree-agb-hero.is-good{border-left-color:#00a32a}
+.uafree-agb-hero>span{display:block;color:#50575e;margin-bottom:6px}
+.uafree-agb-hero>strong{display:block;font-size:24px;line-height:1.25}
+.uafree-agb-hero>p{margin:8px 0 0;color:#50575e}
+.uafree-agb-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:18px 0 28px}
+.uafree-agb-cards>div,.uafree-agb-package-grid>div{background:#fff;border:1px solid #dcdcde;padding:16px}
+.uafree-agb-cards span,.uafree-agb-package-grid span{display:block;color:#50575e;margin-bottom:8px}
+.uafree-agb-cards strong{display:block;font-size:23px;line-height:1.25}
+.uafree-agb-section{margin:26px 0}
+.uafree-agb-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+.uafree-agb-item{background:#fff;border:1px solid #dcdcde;border-left:5px solid #00a32a;padding:15px}
+.uafree-agb-item.is-warning{border-left-color:#dba617}
+.uafree-agb-item.is-critical{border-left-color:#d63638}
+.uafree-agb-item h3{font-size:16px;margin:0 0 7px}
+.uafree-agb-item p{margin:0;color:#50575e;line-height:1.5}
+.uafree-agb-empty{background:#fff;border:1px solid #dcdcde;padding:14px}
+.uafree-agb-generate,.uafree-agb-last-package,.uafree-agb-settings-intro{background:#fff;border:1px solid #dcdcde;padding:18px;margin:26px 0}
+.uafree-agb-package-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-bottom:15px}
+.uafree-agb-package-grid strong{display:block}
+.uafree-agb-technical{background:#fff;border:1px solid #dcdcde;margin:28px 0}
+.uafree-agb-technical>summary{cursor:pointer;font-weight:600;padding:16px}
+.uafree-agb-technical>div{padding:0 16px 16px}
+.uafree-agb-technical table{margin:12px 0}
+.uafree-agb .form-table{background:#fff;border:1px solid #dcdcde;padding:12px}
+@media(max-width:782px){.uafree-agb-list,.uafree-agb-cards,.uafree-agb-package-grid{grid-template-columns:1fr}}
+
+.uafree-agb-country-grid{
+	display:grid;
+	grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+	gap:8px 14px;
+	max-width:980px;
+	margin:12px 0;
+	padding:14px;
+	background:#fff;
+	border:1px solid #dcdcde
+}
+.uafree-agb-country-grid label{
+	display:flex;
+	align-items:center;
+	gap:7px;
+	min-height:28px
+}

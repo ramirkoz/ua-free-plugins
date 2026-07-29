@@ -1,0 +1,199 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: UA FREE Copy 1.0.3\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Domain: ua-free-copy\n"
+
+
+msgid "Copied"
+msgstr ""
+
+msgid "Could not copy"
+msgstr ""
+
+msgid "Copy to clipboard"
+msgstr ""
+
+msgid "UA FREE Copy performs clipboard actions in the visitor browser. It does not store copied values, IP addresses, cookies, identifiers or analytics data, and it makes no external requests."
+msgstr ""
+
+msgid "Automatic static translation."
+msgstr ""
+
+msgid "SEO, metadata, schema and discovery."
+msgstr ""
+
+msgid "404, redirects and URL intelligence."
+msgstr ""
+
+msgid "Snapshots, migration and controlled cleanup."
+msgstr ""
+
+msgid "Read-only diagnostics API."
+msgstr ""
+
+msgid "Google Ad Grants and standard Google Ads campaign planning."
+msgstr ""
+
+msgid "Privacy-safe donation analytics."
+msgstr ""
+
+msgid "Accessible copy-to-clipboard actions."
+msgstr ""
+
+msgid "Read-only translation diagnostics."
+msgstr ""
+
+msgid "Minimal URL-only spam filtering."
+msgstr ""
+
+msgid "Unified local analytics dashboard."
+msgstr ""
+
+msgid "Consent and external script control."
+msgstr ""
+
+msgid "UA FREE Copy"
+msgstr ""
+
+msgid "Copy"
+msgstr ""
+
+msgid "Settings"
+msgstr ""
+
+msgid "Accessible copy-to-clipboard actions without storing the copied values or loading an external service."
+msgstr ""
+
+msgid "Another active clipboard plugin was detected."
+msgstr ""
+
+msgid "Do not enable two copy handlers on the same elements until you have tested the result."
+msgstr ""
+
+msgid "Activation and scope"
+msgstr ""
+
+msgid "Enable copy actions"
+msgstr ""
+
+msgid "Load the copy handler on matching public pages."
+msgstr ""
+
+msgid "Allowed paths"
+msgstr ""
+
+msgid "Optional. One local path per line. Use an ending * for a prefix. Leave empty to allow all public paths. Query strings and external URLs are rejected."
+msgstr ""
+
+msgid "Copy targets"
+msgstr ""
+
+msgid "CSS selectors"
+msgstr ""
+
+msgid "One simple class, ID or approved data attribute selector per line. Complex selectors are rejected to reduce accidental page-wide bindings."
+msgstr ""
+
+msgid "The value is read from data-copy-value, an allowed #id in data-copy-target, a form field value, or the visible text. The plugin never writes that value to WordPress."
+msgstr ""
+
+msgid "Behaviour and accessibility"
+msgstr ""
+
+msgid "Whitespace"
+msgstr ""
+
+msgid "Collapse repeated whitespace"
+msgstr ""
+
+msgid "Preserve formatting"
+msgstr ""
+
+msgid "Visual feedback"
+msgstr ""
+
+msgid "Show copy icon"
+msgstr ""
+
+msgid "Show success or error message"
+msgstr ""
+
+msgid "Message duration"
+msgstr ""
+
+msgid "Message position"
+msgstr ""
+
+msgid "Bottom centre"
+msgstr ""
+
+msgid "Bottom left"
+msgstr ""
+
+msgid "Bottom right"
+msgstr ""
+
+msgid "Target decoration"
+msgstr ""
+
+msgid "Add keyboard focus and accessible button semantics to non-interactive elements."
+msgstr ""
+
+msgid "Links"
+msgstr ""
+
+msgid "Prevent navigation when a matching link is clicked."
+msgstr ""
+
+msgid "Enable only when the link is intentionally used as a copy control."
+msgstr ""
+
+msgid "Save settings"
+msgstr ""
+
+msgid "Diagnostics"
+msgstr ""
+
+msgid "Configured selectors: %d"
+msgstr ""
+
+msgid "Copied values stored by this plugin: no. External requests: no. Cookies: no. Telemetry: no."
+msgstr ""
+
+msgid "No other installed clipboard plugins were detected from their public plugin headers."
+msgstr ""
+
+msgid "Detected plugin"
+msgstr ""
+
+msgid "Version"
+msgstr ""
+
+msgid "Status"
+msgstr ""
+
+msgid "Active"
+msgstr ""
+
+msgid "Installed"
+msgstr ""
+
+msgid "A successful browser copy dispatches the local custom event uafree:copy-success. Its detail contains only a configured target key, never the copied value."
+msgstr ""
+
+msgid "UA FREE Plugin Suite"
+msgstr ""
+
+msgid "A modular set of lightweight WordPress tools originally developed to solve practical needs of a charitable foundation website."
+msgstr ""
+
+msgid "Plugin"
+msgstr ""
+
+msgid "Purpose"
+msgstr ""
+
+msgid "Available separately"
+msgstr ""

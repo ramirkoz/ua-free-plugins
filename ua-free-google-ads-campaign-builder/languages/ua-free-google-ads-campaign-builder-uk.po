@@ -1,0 +1,251 @@
+msgid ""
+msgstr "Project-Id-Version: UA FREE Google Ads Campaign Builder 1.3.1\\nLanguage: uk\\nMIME-Version: 1.0\\nContent-Type: text/plain; charset=UTF-8\\nContent-Transfer-Encoding: 8bit\\nPlural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\\n"
+
+msgid "%1$s / %2$s was skipped because it did not contain enough valid ad copy."
+msgstr "%1$s / %2$s пропущено, оскільки не вистачає коректних рекламних текстів."
+
+msgid "%s: no complete ad groups were generated."
+msgstr "%s: не сформовано жодної повної групи оголошень."
+
+msgid "%s: no target locations are configured."
+msgstr "%s: цільові місцеположення не налаштовано."
+
+msgid "A neutral internal key for the review checklist. The plugin does not create a Google Ads conversion action."
+msgstr "Нейтральний внутрішній ключ для контрольного списку. Плагін не створює дію-конверсію в Google Ads."
+
+msgid "A non-source language requires Azure translation unless you generate that language separately."
+msgstr "Для мови, яка не є мовою оригіналу, потрібен Azure Translator, якщо пакет цією мовою не готується окремо."
+
+msgid "Ad groups"
+msgstr "Групи оголошень"
+
+msgid "AdSense displays third-party ads on a publisher website; this plugin prepares advertiser campaign files for Google Ads."
+msgstr "AdSense показує сторонню рекламу на сайті видавця, а цей плагін готує файли рекламних кампаній для Google Ads."
+
+msgid "Advertising account type"
+msgstr "Тип рекламного облікового запису"
+
+msgid "All campaigns are generated as Paused."
+msgstr "Усі кампанії створюються зі статусом «Призупинено»."
+
+msgid "Allow Azure to translate generated ad copy during package generation"
+msgstr "Дозволити Azure перекладати рекламні тексти під час формування пакета"
+
+msgid "An error occurred."
+msgstr "Сталася помилка."
+
+msgid "Automatic ad-copy translation is disabled."
+msgstr "Автоматичний переклад рекламних текстів вимкнено."
+
+msgid "Azure Translator is not configured."
+msgstr "Azure Translator не налаштовано."
+
+msgid "Azure Translator returned an invalid response (HTTP %d)."
+msgstr "Azure Translator повернув некоректну відповідь (HTTP %d)."
+
+msgid "Azure copy translation"
+msgstr "Переклад рекламних текстів через Azure"
+
+msgid "Bid strategy"
+msgstr "Стратегія призначення ставок"
+
+msgid "Build reviewable, paused campaign packages for Google Ad Grants or Standard Google Ads. The plugin never sends or launches campaigns."
+msgstr "Створює пакети призупинених кампаній для перевірки в Google Ad Grants або звичайному Google Ads. Плагін ніколи не надсилає і не запускає кампанії."
+
+msgid "Callouts"
+msgstr "Уточнення"
+
+msgid "Campaign %s has no target location."
+msgstr "Кампанія %s не має цільового місцеположення."
+
+msgid "Campaign %s is not paused."
+msgstr "Кампанія %s не призупинена."
+
+msgid "Campaign languages"
+msgstr "Мови кампаній"
+
+msgid "Campaigns"
+msgstr "Кампанії"
+
+msgid "Candidate landing pages"
+msgstr "Кандидати на посадкові сторінки"
+
+msgid "Configure the actual conversion source in Google Ads or the connected analytics/tagging system. This package does not create tracking tags."
+msgstr "Налаштуйте фактичне джерело конверсії в Google Ads або у підключеній системі аналітики чи тегів. Цей пакет не створює теги відстеження."
+
+msgid "Configured through UA FREE Static Translate"
+msgstr "Налаштовано через UA FREE Static Translate"
+
+msgid "Conversion tracking has not been confirmed."
+msgstr "Налаштування відстеження конверсій не підтверджено."
+
+msgid "Created"
+msgstr "Створено"
+
+msgid "Delete package from server"
+msgstr "Видалити пакет із сервера"
+
+msgid "Delete settings and the last package when the plugin is uninstalled"
+msgstr "Видалити налаштування та останній пакет під час деінсталяції плагіна"
+
+msgid "Detected source language"
+msgstr "Визначена мова оригіналу"
+
+msgid "Do not include the initial question mark."
+msgstr "Не додавайте початковий знак питання."
+
+msgid "Download ZIP"
+msgstr "Завантажити ZIP"
+
+msgid "Environment"
+msgstr "Середовище"
+
+msgid "Final URL suffix"
+msgstr "Суфікс кінцевої URL-адреси"
+
+msgid "For a standard paid Google Ads account. Conversion tracking is recommended but does not block package generation."
+msgstr "Для звичайного платного облікового запису Google Ads. Відстеження конверсій рекомендоване, але його відсутність не блокує формування пакета."
+
+msgid "For approved nonprofit organisations. The package uses stricter keyword checks and treats confirmed meaningful conversion tracking as a launch requirement."
+msgstr "Для схвалених неприбуткових організацій. Пакет застосовує суворішу перевірку ключових слів і вважає підтверджене відстеження значущих конверсій умовою запуску."
+
+msgid "GOOGLE ADS EDITOR IMPORT PACKAGE"
+msgstr "ПАКЕТ ІМПОРТУ ДЛЯ GOOGLE ADS EDITOR"
+
+msgid "Generate %s package"
+msgstr "Сформувати пакет %s"
+
+msgid "Generate package"
+msgstr "Сформувати пакет"
+
+msgid "Generation may call Azure only when translation is explicitly enabled and a non-source language is selected. The resulting campaigns remain paused."
+msgstr "Під час формування можливий запит до Azure лише тоді, коли переклад явно дозволено і вибрано мову, відмінну від мови оригіналу. Створені кампанії залишаються призупиненими."
+
+msgid "Google AdSense is not a mode of this plugin."
+msgstr "Google AdSense не є режимом цього плагіна."
+
+msgid "Google Ads Builder"
+msgstr "Конструктор Google Ads"
+
+msgid "Google Ads Editor formats can change. Treat these CSV files as a reviewable starting point, not an automatic launch instruction."
+msgstr "Формати Google Ads Editor можуть змінюватися. Сприймайте ці CSV-файли як початковий матеріал для перевірки, а не як інструкцію з автоматичного запуску."
+
+msgid "Google Ads package generated."
+msgstr "Пакет Google Ads сформовано."
+
+msgid "Include Search Partners"
+msgstr "Додати пошукових партнерів"
+
+msgid "Issues / warnings"
+msgstr "Проблеми / попередження"
+
+msgid "Last package"
+msgstr "Останній пакет"
+
+msgid "Maximum landing pages per campaign"
+msgstr "Максимальна кількість посадкових сторінок на кампанію"
+
+msgid "Meaningful conversion tracking has not been confirmed for the Ad Grants mode."
+msgstr "Для режиму Ad Grants не підтверджено відстеження значущих конверсій."
+
+msgid "Meaningful conversion tracking is configured"
+msgstr "Відстеження значущих конверсій налаштовано"
+
+msgid "Mode"
+msgstr "Режим"
+
+msgid "Mode: %s"
+msgstr "Режим: %s"
+
+msgid "Monthly budget"
+msgstr "Місячний бюджет"
+
+msgid "Negative keywords"
+msgstr "Мінус-слова"
+
+msgid "No campaign could be generated. Check the selected languages, target locations and translation settings."
+msgstr "Не вдалося сформувати жодної кампанії. Перевірте вибрані мови, цільові місцеположення та налаштування перекладу."
+
+msgid "No suitable published landing pages were found."
+msgstr "Не знайдено придатних опублікованих посадкових сторінок."
+
+msgid "Not configured"
+msgstr "Не налаштовано"
+
+msgid "One location per line: language|Google geo ID|name. Use * for every selected language. Example: en|2840|United States"
+msgstr "Одне місцеположення на рядок: мова|Google geo ID|назва. Використовуйте * для всіх вибраних мов. Приклад: en|2840|United States"
+
+msgid "Open"
+msgstr "Відкрити"
+
+msgid "Optional, one callout per line."
+msgstr "Необов’язково, одне уточнення на рядок."
+
+msgid "Optional, one phrase per line. Nothing is added automatically."
+msgstr "Необов’язково, одна фраза на рядок. Нічого не додається автоматично."
+
+msgid "Options"
+msgstr "Параметри"
+
+msgid "Organisation name"
+msgstr "Назва організації"
+
+msgid "Package deleted from the server."
+msgstr "Пакет видалено із сервера."
+
+msgid "Package settings"
+msgstr "Налаштування пакета"
+
+msgid "Primary conversion key"
+msgstr "Ключ основної конверсії"
+
+msgid "Recommended order:"
+msgstr "Рекомендована послідовність:"
+
+msgid "Review imported changes, target locations, budgets, language targeting, landing URLs, ad copy and conversion tracking before posting anything."
+msgstr "Перед публікацією перевірте імпортовані зміни, цільові місцеположення, бюджети, мовний таргетинг, посадкові URL-адреси, рекламні тексти та відстеження конверсій."
+
+msgid "Save settings"
+msgstr "Зберегти налаштування"
+
+msgid "Selected landing pages"
+msgstr "Вибрані посадкові сторінки"
+
+msgid "Settings saved."
+msgstr "Налаштування збережено."
+
+msgid "Target locations"
+msgstr "Цільові місцеположення"
+
+msgid "The PHP ZipArchive extension is unavailable."
+msgstr "Розширення PHP ZipArchive недоступне."
+
+msgid "The ZIP package could not be created."
+msgstr "Не вдалося створити ZIP-пакет."
+
+msgid "The generated package is unavailable."
+msgstr "Сформований пакет недоступний."
+
+msgid "The private package directory could not be created."
+msgstr "Не вдалося створити приватний каталог пакетів."
+
+msgid "This is a technical preflight report, not a guarantee of Google policy approval or campaign performance."
+msgstr "Це технічний попередній звіт, а не гарантія схвалення політиками Google або результативності кампанії."
+
+msgid "Title"
+msgstr "Назва"
+
+msgid "Translated URL pattern"
+msgstr "Шаблон перекладеної URL-адреси"
+
+msgid "UA FREE Google Ads Campaign Builder"
+msgstr "UA FREE Google Ads Campaign Builder"
+
+msgid "Use {language} and {path}. Leave empty to reuse source URLs. Verify every generated landing URL before import."
+msgstr "Використовуйте {language} і {path}. Залиште поле порожнім, щоб повторно використовувати URL-адреси оригіналу. Перевірте кожну сформовану посадкову URL-адресу перед імпортом."
+
+msgid "Words"
+msgstr "Слів"
+
+msgid "You are not allowed to manage this plugin."
+msgstr "У вас немає дозволу керувати цим плагіном."

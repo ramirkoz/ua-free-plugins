@@ -1,0 +1,217 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: UA FREE Migration & Cleanup 0.8.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: en\n"
+
+msgid "404 intelligence, bot filtering and controlled redirect recommendations."
+msgstr ""
+
+msgid "A lightweight, read-only environment scanner and snapshot foundation. Destructive cleanup is available only through verified adapters."
+msgstr ""
+
+msgid "About & Support"
+msgstr ""
+
+msgid "Active"
+msgstr ""
+
+msgid "Active plugins"
+msgstr ""
+
+msgid "Automatic multilingual translation with migration tools for previous translation solutions."
+msgstr ""
+
+msgid "Available"
+msgstr ""
+
+msgid "Back to plugin inventory"
+msgstr ""
+
+msgid "Bilingual privacy and consent controls for optional external services."
+msgstr ""
+
+msgid "Candidate matches are heuristic. A plugin-specific adapter, dry run, snapshot and explicit confirmation are required before any cleanup operation can exist."
+msgstr ""
+
+msgid "Cron hooks"
+msgstr ""
+
+msgid "Database tables"
+msgstr ""
+
+msgid "Detected search patterns:"
+msgstr ""
+
+msgid "Development support is separate from charitable donations. The dedicated privacy-first cryptocurrency support page will be linked here after it is published."
+msgstr ""
+
+msgid "Do not treat heuristic matches as confirmed ownership."
+msgstr ""
+
+msgid "Environment"
+msgstr ""
+
+msgid "Environment inventory, snapshots, migration and controlled cleanup."
+msgstr ""
+
+msgid "Estimated autoload size"
+msgstr ""
+
+msgid "Export environment snapshot"
+msgstr ""
+
+msgid "Export plugin inspection"
+msgstr ""
+
+msgid "Export the JSON snapshot before developing or enabling a cleanup adapter."
+msgstr ""
+
+msgid "File"
+msgstr ""
+
+msgid "Google Ad Grants package generation and landing page health checks."
+msgstr ""
+
+msgid "How to use this version"
+msgstr ""
+
+msgid "Inactive"
+msgstr ""
+
+msgid "Inspect"
+msgstr ""
+
+msgid "Inspect a plugin to find likely database and cron leftovers. The scan is read-only and intentionally conservative."
+msgstr ""
+
+msgid "Installed plugins"
+msgstr ""
+
+msgid "Lightweight accessible copy-to-clipboard actions for configured values."
+msgstr ""
+
+msgid "Matches are candidates, not proof of ownership. Cleanup requires a dedicated adapter and a verified snapshot."
+msgstr ""
+
+msgid "Migration & Cleanup"
+msgstr ""
+
+msgid "Minimal URL-only comment spam filter with an optional allowlist."
+msgstr ""
+
+msgid "Network active"
+msgstr ""
+
+msgid "No likely matches found."
+msgstr ""
+
+msgid "Not installed yet. The public repository link will appear after release."
+msgstr ""
+
+msgid "Open a plugin inspection to review likely options, metadata, tables and cron hooks."
+msgstr ""
+
+msgid "Open the Environment tab and inspect the installed plugin list."
+msgstr ""
+
+msgid "Open the foundation donation page"
+msgstr ""
+
+msgid "Options"
+msgstr ""
+
+msgid "Overview"
+msgstr ""
+
+msgid "Plugin"
+msgstr ""
+
+msgid "Plugin Suite"
+msgstr ""
+
+msgid "Plugin sections"
+msgstr ""
+
+msgid "Post metadata"
+msgstr ""
+
+msgid "Privacy-safe local donation page and conversion statistics."
+msgstr ""
+
+msgid "Project origin"
+msgstr ""
+
+msgid "Protected read-only diagnostics API for authorized internal audits."
+msgstr ""
+
+msgid "Read-only by default."
+msgstr ""
+
+msgid "Read-only diagnostics for UA FREE Static Translate."
+msgstr ""
+
+msgid "Refresh inventory"
+msgstr ""
+
+msgid "Safety model"
+msgstr ""
+
+msgid "Standalone SEO, sitemap, structured data, AI discovery and accessibility checks."
+msgstr ""
+
+msgid "Status"
+msgstr ""
+
+msgid "Support development"
+msgstr ""
+
+msgid "Support the foundation"
+msgstr ""
+
+msgid "Term metadata"
+msgstr ""
+
+msgid "The environment inventory was refreshed."
+msgstr ""
+
+msgid "The exported JSON contains the full limited result set."
+msgstr ""
+
+msgid "The selected plugin is not installed."
+msgstr ""
+
+msgid "The suite was born from real operational needs of a charitable foundation website and is being rebuilt as a universal collection of lightweight WordPress tools."
+msgstr ""
+
+msgid "The universal scanner does not delete data, change plugin state, export option values or collect personal data."
+msgstr ""
+
+msgid "This plugin was originally created to solve real operational needs of a charitable foundation website and was later rebuilt as a universal WordPress tool."
+msgstr ""
+
+msgid "UA FREE Migration & Cleanup"
+msgstr ""
+
+msgid "UA FREE Plugin Suite"
+msgstr ""
+
+msgid "Unified local dashboard for installed UA FREE plugins."
+msgstr ""
+
+msgid "User metadata"
+msgstr ""
+
+msgid "Version"
+msgstr ""
+
+msgid "WordPress database tables"
+msgstr ""
+
+msgid "You can donate, share the foundation’s work or publish a link to it."
+msgstr ""
+
+msgid "You do not have permission to perform this action."
+msgstr ""
+

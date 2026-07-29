@@ -1,0 +1,80 @@
+msgid ""
+msgstr ""
+
+msgid "Analytics Dashboard"
+msgstr ""
+
+msgid "Open dashboard"
+msgstr ""
+
+msgid "Consent Manager is unavailable. Optional analytics must remain disabled."
+msgstr ""
+
+msgid "SEO Core reports another active output provider."
+msgstr ""
+
+msgid "Translate Diagnostics reports unresolved hints."
+msgstr ""
+
+msgid "404 Guard is available but disabled."
+msgstr ""
+
+msgid "Donate Stats is unavailable."
+msgstr ""
+
+msgid "No immediate Suite warnings were detected."
+msgstr ""
+
+msgid "You do not have permission to view this dashboard."
+msgstr ""
+
+msgid "UA FREE Suite Control Center"
+msgstr ""
+
+msgid "Allowlist-only local metrics. No arbitrary provider payloads or metric extensions."
+msgstr ""
+
+msgid "Period:"
+msgstr ""
+
+msgid "%d days"
+msgstr ""
+
+msgid "Export privacy-safe JSON"
+msgstr ""
+
+msgid "Providers available"
+msgstr ""
+
+msgid "Metrics"
+msgstr ""
+
+msgid "Findings"
+msgstr ""
+
+msgid "Metric"
+msgstr ""
+
+msgid "Value"
+msgstr ""
+
+msgid "Unit"
+msgstr ""
+
+msgid "Providers"
+msgstr ""
+
+msgid "Provider"
+msgstr ""
+
+msgid "State"
+msgstr ""
+
+msgid "Version"
+msgstr ""
+
+msgid "Privacy boundary"
+msgstr ""
+
+msgid "You do not have permission to export this report."
+msgstr ""

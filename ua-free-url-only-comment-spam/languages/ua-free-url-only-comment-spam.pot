@@ -1,0 +1,191 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: UA FREE URL-Only Comment Spam 1.0.2\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-07-21 13:40+0000\n"
+"PO-Revision-Date: 2026-07-21 13:40+0000\n"
+"Last-Translator: UA FREE\n"
+"Language-Team: Ukrainian\n"
+"Language: uk\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"X-Domain: ua-free-url-only-comment-spam\n"
+
+msgid "Static multilingual publishing with translation memory."
+msgstr ""
+
+msgid "Read-only diagnostics for translation data and queues."
+msgstr ""
+
+msgid "Lightweight SEO, schema, sitemap and discovery metadata."
+msgstr ""
+
+msgid "Privacy-safe 404 logging, redirects and URL diagnostics."
+msgstr ""
+
+msgid "Controlled discovery, snapshots and cleanup workflows."
+msgstr ""
+
+msgid "Restricted read-only site diagnostics API."
+msgstr ""
+
+msgid "Campaign packages for Google Ad Grants and standard Google Ads."
+msgstr ""
+
+msgid "Privacy-first donation interaction statistics."
+msgstr ""
+
+msgid "Accessible clipboard actions without tracking copied values."
+msgstr ""
+
+msgid "Privacy-first filtering of URL-only comments."
+msgstr ""
+
+msgid "A unified local analytics view for Suite events."
+msgstr ""
+
+msgid "Consent controls for optional analytics integrations."
+msgstr ""
+
+msgid "UA FREE Suite"
+msgstr ""
+
+msgid "URL-only comment spam"
+msgstr ""
+
+msgid "URL Comment Spam"
+msgstr ""
+
+msgid "Settings"
+msgstr ""
+
+msgid "UA FREE URL-Only Comment Spam"
+msgstr ""
+
+msgid "A small privacy-first filter for comments that contain only one or more URLs."
+msgstr ""
+
+msgid "Current status"
+msgstr ""
+
+msgid "Filtering"
+msgstr ""
+
+msgid "Enabled"
+msgstr ""
+
+msgid "Disabled"
+msgstr ""
+
+msgid "Handled comments"
+msgstr ""
+
+msgid "Last detection"
+msgstr ""
+
+msgid "None yet"
+msgstr ""
+
+msgid "Stored personal data"
+msgstr ""
+
+msgid "None. No IP, user agent, comment text or detected URL is stored."
+msgstr ""
+
+msgid "How detection works"
+msgstr ""
+
+msgid "HTML and invisible spacing characters are removed. If the remaining text contains only URLs and punctuation, the configured action is applied."
+msgstr ""
+
+msgid "Pingbacks, trackbacks, administrators and comment moderators are never processed."
+msgstr ""
+
+msgid "Enable filtering"
+msgstr ""
+
+msgid "Process new standard comments."
+msgstr ""
+
+msgid "Action"
+msgstr ""
+
+msgid "Mark as spam"
+msgstr ""
+
+msgid "Hold for moderation"
+msgstr ""
+
+msgid "Minimum URL count"
+msgstr ""
+
+msgid "Logged-in users"
+msgstr ""
+
+msgid "Do not process comments from any logged-in user."
+msgstr ""
+
+msgid "Trusted destinations"
+msgstr ""
+
+msgid "Do not flag comments when every URL points to this site."
+msgstr ""
+
+msgid "Optional trusted domains, one per line. A comment is exempt only when every detected URL is trusted."
+msgstr ""
+
+msgid "Uninstall"
+msgstr ""
+
+msgid "Delete settings and aggregate counters when the plugin is uninstalled."
+msgstr ""
+
+msgid "Test the detector"
+msgstr ""
+
+msgid "The sample is analyzed in this request only and is never saved."
+msgstr ""
+
+msgid "Analyze sample"
+msgstr ""
+
+msgid "Result: the comment would be handled by the plugin."
+msgstr ""
+
+msgid "Result: the comment would continue through normal WordPress moderation."
+msgstr ""
+
+msgid "Counter"
+msgstr ""
+
+msgid "Resetting the counter does not move or delete any WordPress comments."
+msgstr ""
+
+msgid "Reset aggregate counter"
+msgstr ""
+
+msgid "UA FREE Plugin Suite"
+msgstr ""
+
+msgid "These lightweight plugins were originally created to solve practical needs of a charitable foundation website and are being generalized for other WordPress sites."
+msgstr ""
+
+msgid "Origin and support"
+msgstr ""
+
+msgid "Support for the charitable foundation and support for plugin development are separate destinations. No credit link is inserted into the public site."
+msgstr ""
+
+msgid "You do not have permission to perform this action."
+msgstr ""
+
+msgid "Active"
+msgstr ""
+
+msgid "Installed"
+msgstr ""
+
+msgid "Available separately"
+msgstr ""

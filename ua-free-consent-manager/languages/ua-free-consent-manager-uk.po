@@ -1,0 +1,110 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: UA FREE Consent Manager 0.1.2\n"
+"Language: uk\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+
+msgid "Consent Manager"
+msgstr "Керування згодою"
+
+msgid "You are not allowed to change these settings."
+msgstr "Ви не маєте права змінювати ці налаштування."
+
+msgid "Settings saved."
+msgstr "Налаштування збережено."
+
+msgid "Optional consent is disabled by default. The plugin stores no IP addresses, User-Agent values, emails or consent event logs."
+msgstr "Необов’язкова згода вимкнена за замовчуванням. Плагін не зберігає IP-адреси, User-Agent, email або журнал подій згоди."
+
+msgid "Consent banner"
+msgstr "Банер згоди"
+
+msgid "Enable the frontend banner"
+msgstr "Увімкнути банер на сайті"
+
+msgid "Policy version"
+msgstr "Версія політики"
+
+msgid "Changing this value asks every visitor for consent again."
+msgstr "Зміна цього значення повторно запитає згоду в кожного відвідувача."
+
+msgid "Cookie lifetime, days"
+msgstr "Строк cookie, днів"
+
+msgid "Debug mode"
+msgstr "Режим діагностики"
+
+msgid "Show browser console messages without persistent logging"
+msgstr "Показувати повідомлення в консолі браузера без постійного журналювання"
+
+msgid "Banner title"
+msgstr "Заголовок банера"
+
+msgid "Banner message"
+msgstr "Текст банера"
+
+msgid "Accept-all button"
+msgstr "Кнопка прийняття всіх категорій"
+
+msgid "Reject-optional button"
+msgstr "Кнопка відхилення необов’язкових категорій"
+
+msgid "Customize button"
+msgstr "Кнопка налаштування"
+
+msgid "Save-selection button"
+msgstr "Кнопка збереження вибору"
+
+msgid "Reopen-settings button"
+msgstr "Кнопка повторного відкриття налаштувань"
+
+msgid "Registered local integrations"
+msgstr "Зареєстровані локальні інтеграції"
+
+msgid "No optional script integrations are registered on this request."
+msgstr "У цьому запиті немає зареєстрованих інтеграцій необов’язкових скриптів."
+
+msgid "ID"
+msgstr "ID"
+
+msgid "Name"
+msgstr "Назва"
+
+msgid "Category"
+msgstr "Категорія"
+
+msgid "Script handles"
+msgstr "Ідентифікатори скриптів"
+
+msgid "Public read-only contract"
+msgstr "Публічний контракт лише для читання"
+
+msgid "Necessary"
+msgstr "Необхідні"
+
+msgid "Always active for core site functions."
+msgstr "Завжди активні для основних функцій сайту."
+
+msgid "Analytics"
+msgstr "Аналітика"
+
+msgid "Helps understand site usage."
+msgstr "Допомагає зрозуміти використання сайту."
+
+msgid "Advertising"
+msgstr "Реклама"
+
+msgid "Allows advertising and conversion scripts."
+msgstr "Дозволяє рекламні скрипти та вимірювання конверсій."
+
+msgid "External media"
+msgstr "Зовнішні медіа"
+
+msgid "Allows embedded third-party media adapters."
+msgstr "Дозволяє адаптери вбудованих сторонніх медіа."
+
+msgid "Privacy policy"
+msgstr "Політика конфіденційності"

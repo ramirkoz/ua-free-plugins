@@ -1,0 +1,63 @@
+.uafree-control-center{max-width:1180px}
+.uafree-manager-hero{background:#fff;border:1px solid #dcdcde;border-left:6px solid #dba617;padding:20px 22px;margin:18px 0}
+.uafree-manager-hero.is-good{border-left-color:#00a32a}
+.uafree-manager-hero.is-critical{border-left-color:#d63638}
+.uafree-manager-hero .uafree-manager-kicker{display:block;color:#50575e;font-size:13px;margin-bottom:6px}
+.uafree-manager-hero strong{display:block;font-size:24px;line-height:1.25}
+.uafree-manager-hero p{margin:8px 0 0;color:#50575e}
+.uafree-manager-cards{display:grid;grid-template-columns:repeat(3,minmax(180px,1fr));gap:14px;margin:18px 0 28px}
+.uafree-manager-card{background:#fff;border:1px solid #dcdcde;padding:18px}
+.uafree-manager-card span{display:block;color:#50575e;margin-bottom:8px}
+.uafree-manager-card strong{font-size:28px}
+.uafree-manager-section{margin:28px 0}
+.uafree-manager-section h2{font-size:20px;margin-bottom:12px}
+.uafree-manager-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.uafree-manager-item{background:#fff;border:1px solid #dcdcde;border-left:5px solid #00a32a;padding:16px}
+.uafree-manager-item.is-warning{border-left-color:#dba617}
+.uafree-manager-item.is-info{border-left-color:#72aee6}
+.uafree-manager-item.is-critical{border-left-color:#d63638}
+.uafree-manager-item h3{font-size:16px;margin:0 0 7px}
+.uafree-manager-item p{margin:0;color:#50575e;line-height:1.5}
+.uafree-empty{background:#fff;border:1px solid #dcdcde;padding:14px}
+.uafree-technical-details{margin:34px 0;background:#fff;border:1px solid #dcdcde}
+.uafree-technical-details>summary{cursor:pointer;font-weight:600;padding:16px}
+.uafree-technical-inner{padding:0 16px 20px}
+.uafree-analytics .uafree-toolbar{display:flex;gap:8px;align-items:center;margin:16px 0}
+.uafree-analytics .uafree-privacy{columns:2}
+.uafree-analytics table{max-width:100%}
+@media(max-width:782px){
+ .uafree-manager-cards{grid-template-columns:1fr}
+ .uafree-manager-list{grid-template-columns:1fr}
+ .uafree-analytics .uafree-privacy{columns:1}
+}
+
+#toplevel_page_uafree-suite .wp-menu-image:before{
+ content:"UA"!important;
+ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;
+ font-size:13px!important;
+ font-weight:800!important;
+ line-height:20px!important;
+ letter-spacing:-1px;
+}
+.uafree-suite-shell{max-width:1420px}
+.uafree-suite-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.uafree-suite-card{background:#fff;border:1px solid #dcdcde;border-left:5px solid #a7aaad;padding:16px}
+.uafree-suite-card.is-active{border-left-color:#00a32a}
+.uafree-suite-card.is-installed{border-left-color:#dba617}
+.uafree-suite-card h2{font-size:18px;margin:0 0 10px}
+.uafree-suite-state{margin:14px 0}
+.uafree-suite-warning{background:#fcf0f1;border-left:4px solid #d63638;padding:8px}
+.uafree-background-badge{display:inline-block;background:#d7f2dd;border-radius:999px;padding:5px 10px;font-weight:600}
+.uafree-support-block{background:#fff;border:1px solid #dcdcde;border-left:5px solid #2271b1;margin:26px 0;padding:18px}
+.uafree-support-block.is-global{margin:24px 20px 24px 180px;max-width:1180px}
+.folded .uafree-support-block.is-global{margin-left:56px}
+.uafree-support-actions{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.uafree-wallet-list code{user-select:all;word-break:break-all}
+.uafree-settings-card{background:#fff;border:1px solid #dcdcde;margin:28px 0;padding:18px}
+.uafree-field{display:block;margin:15px 0}
+.uafree-field>span{display:block;font-weight:600;margin-bottom:6px}
+.uafree-field small{display:block;color:#646970;margin-top:5px}
+.uafree-checkbox{display:block;margin:12px 0}
+@media(max-width:782px){
+ .uafree-support-block.is-global{margin:20px 10px}
+}

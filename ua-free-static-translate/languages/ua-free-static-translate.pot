@@ -1,0 +1,312 @@
+msgid ""
+msgstr "Project-Id-Version: UA FREE Static Translate 0.7.4-dev\\nMIME-Version: 1.0\\nContent-Type: text/plain; charset=UTF-8\\nContent-Transfer-Encoding: 8bit\\n"
+
+msgid "1. System status"
+msgstr ""
+
+msgid "2. Content and queue"
+msgstr ""
+
+msgid "3. Language progress"
+msgstr ""
+
+msgid "4. Settings"
+msgstr ""
+
+msgid "5. Previous translation systems"
+msgstr ""
+
+msgid "A new monthly cycle started. The queue was resumed."
+msgstr ""
+
+msgid "All published content of the selected types"
+msgstr ""
+
+msgid "All segments failed automatic validation."
+msgstr ""
+
+msgid "Automatic worker"
+msgstr ""
+
+msgid "Azure API works. Response: %s"
+msgstr ""
+
+msgid "Azure Translator key is not configured."
+msgstr ""
+
+msgid "Azure key is not configured."
+msgstr ""
+
+msgid "Azure returned a different number of translations than requested."
+msgstr ""
+
+msgid "Azure returned an invalid 2026-06-06 response."
+msgstr ""
+
+msgid "Azure returned an invalid v3.0 response."
+msgstr ""
+
+msgid "Azure test succeeded."
+msgstr ""
+
+msgid "Azure v3.0 returned a different number of translations than requested."
+msgstr ""
+
+msgid "Candidate cron hooks"
+msgstr ""
+
+msgid "Candidate options"
+msgstr ""
+
+msgid "Candidate tables"
+msgstr ""
+
+msgid "Characters"
+msgstr ""
+
+msgid "Connection test"
+msgstr ""
+
+msgid "Content scope"
+msgstr ""
+
+msgid "Content types"
+msgstr ""
+
+msgid "Current translations, memory, queue, usage and logs were reset. Azure settings and the key were preserved. Public language routes and the automatic queue were disabled until a new controlled run."
+msgstr ""
+
+msgid "Detected translators"
+msgstr ""
+
+msgid "Done"
+msgstr ""
+
+msgid "Done."
+msgstr ""
+
+msgid "Dynamically translated %1$d of %2$d strings."
+msgstr ""
+
+msgid "Empty HTML or DOMDocument is unavailable."
+msgstr ""
+
+msgid "Estimated queued characters"
+msgstr ""
+
+msgid "Features"
+msgstr ""
+
+msgid "Insufficient permissions."
+msgstr ""
+
+msgid "Inventory refreshed."
+msgstr ""
+
+msgid "Language"
+msgstr ""
+
+msgid "Last error"
+msgstr ""
+
+msgid "Monthly character limit"
+msgstr ""
+
+msgid "No text segments were found."
+msgstr ""
+
+msgid "No translatable segments remain, but the job is not complete."
+msgstr ""
+
+msgid "Only content already present in the translation inventory"
+msgstr ""
+
+msgid "Other available languages"
+msgstr ""
+
+msgid "Pause queue"
+msgstr ""
+
+msgid "Pending"
+msgstr ""
+
+msgid "Public language routes"
+msgstr ""
+
+msgid "Published content items"
+msgstr ""
+
+msgid "Queue"
+msgstr ""
+
+msgid "Read in the source language"
+msgstr ""
+
+msgid "Recovered from a stale worker lock."
+msgstr ""
+
+msgid "Refresh inventory"
+msgstr ""
+
+msgid "Resume queue"
+msgstr ""
+
+msgid "Run one step"
+msgstr ""
+
+msgid "Run scan again"
+msgstr ""
+
+msgid "Save settings"
+msgstr ""
+
+msgid "Settings"
+msgstr ""
+
+msgid "Source language"
+msgstr ""
+
+msgid "Source scanning failed; a retry was scheduled."
+msgstr ""
+
+msgid "Static Translate"
+msgstr ""
+
+msgid "Stored %1$d; validation failed for %2$d."
+msgstr ""
+
+msgid "Target languages"
+msgstr ""
+
+msgid "Test Azure API"
+msgstr ""
+
+msgid "The automatic queue was paused."
+msgstr ""
+
+msgid "The automatic queue was resumed."
+msgstr ""
+
+msgid "The existing-inventory mode is migration-safe and prevents newly discovered content from being sent for translation until you intentionally expand the scope."
+msgstr ""
+
+msgid "The invalid job was skipped."
+msgstr ""
+
+msgid "The job was completed from translation memory."
+msgstr ""
+
+msgid "The language version is ready for its public route."
+msgstr ""
+
+msgid "The language version was completed; protected values were preserved without translation."
+msgstr ""
+
+msgid "The local monthly Azure Translator budget is exhausted."
+msgstr ""
+
+msgid "The monthly balance is insufficient even for a test."
+msgstr ""
+
+msgid "The monthly character limit is exhausted."
+msgstr ""
+
+msgid "The page language version was completed."
+msgstr ""
+
+msgid "The page will refresh automatically in %s seconds."
+msgstr ""
+
+msgid "The plugin was created for real needs of a charitable foundation website and rebuilt as a universal tool. This is a development build: automatic translation and public routes are disabled by default."
+msgstr ""
+
+msgid "The queue is manually paused."
+msgstr ""
+
+msgid "The queue is temporarily paused: %s"
+msgstr ""
+
+msgid "The queue was paused until the next cycle."
+msgstr ""
+
+msgid "The remaining monthly budget is insufficient for the next segment."
+msgstr ""
+
+msgid "The scanner checks actually installed plugins and lists possible leftovers. Cleanup is disabled in this development build: no tables, options or cron events are changed."
+msgstr ""
+
+msgid "The source page could not be scanned."
+msgstr ""
+
+msgid "The source row was not found."
+msgstr ""
+
+msgid "The worker is already running."
+msgstr ""
+
+msgid "There are no ready jobs in the queue."
+msgstr ""
+
+msgid "This language version is still being prepared by the automatic translator."
+msgstr ""
+
+msgid "Translated segments: %1$d. Remaining: %2$d."
+msgstr ""
+
+msgid "Translation is being prepared"
+msgstr ""
+
+msgid "UA FREE Static Translate"
+msgstr ""
+
+msgid "Unknown error."
+msgstr ""
+
+msgid "Unknown job language."
+msgstr ""
+
+msgid "Unknown target language."
+msgstr ""
+
+msgid "Used in current cycle"
+msgstr ""
+
+msgid "Working…"
+msgstr ""
+
+msgid "automatic queue"
+msgstr ""
+
+msgid "configured"
+msgstr ""
+
+msgid "disabled"
+msgstr ""
+
+msgid "dynamic text translation"
+msgstr ""
+
+msgid "enabled"
+msgstr ""
+
+msgid "floating language switcher"
+msgstr ""
+
+msgid "none"
+msgstr ""
+
+msgid "none found"
+msgstr ""
+
+msgid "not configured"
+msgstr ""
+
+msgid "not selected"
+msgstr ""
+
+msgid "public language routes"
+msgstr ""
+
+msgid "remove saved key"
+msgstr ""
+

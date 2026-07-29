@@ -1,0 +1,333 @@
+# Ukrainian translations for UA FREE 404 Guard.
+# Copyright (C) 2026 ORGANIZATION
+# This file is distributed under the same license as the UA FREE 404 Guard project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: UA FREE 404 Guard 2.0.3\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-07-23 09:25+0000\n"
+"PO-Revision-Date: 2026-07-23 09:25+0000\n"
+"Last-Translator: UA FREE\n"
+"Language: uk\n"
+"Language-Team: UA FREE\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+msgid "404 Guard"
+msgstr "404 Guard"
+
+msgid "404/410 intelligence log"
+msgstr "Журнал аналізу 404/410"
+
+msgid "410 rule added."
+msgstr "Правило 410 додано."
+
+msgid "410 rule deleted."
+msgstr "Правило 410 видалено."
+
+msgid "410 rules"
+msgstr "Правила 410"
+
+msgid "A 410 rule is active."
+msgstr "Правило 410 активне."
+
+msgid "A redirect already exists for this source path."
+msgstr "Для цього вихідного шляху вже існує переспрямування."
+
+msgid "A service query key was detected. Review it before creating a 410 rule."
+msgstr "Виявлено службовий ключ запиту. Перевірте його перед створенням правила 410."
+
+msgid "A service query pair was detected. Review it before creating a 410 rule."
+msgstr "Виявлено службову пару параметрів запиту. Перевірте її перед створенням правила 410."
+
+msgid "A ten-minute sampled capture window was started."
+msgstr "Десятихвилинне вікно вибіркового захоплення запущено."
+
+msgid "Active"
+msgstr "Активний"
+
+msgid "Add 410 rule"
+msgstr "Додати правило 410"
+
+msgid "Add redirect"
+msgstr "Додати переспрямування"
+
+msgid "Bot 404 response"
+msgstr "Відповідь 404 для ботів"
+
+msgid "Bounded diagnostic capture"
+msgstr "Обмежене діагностичне захоплення"
+
+msgid "Candidate URL"
+msgstr "URL-кандидат"
+
+msgid "Capture cannot start until the legacy or oversized log is explicitly sanitized."
+msgstr "Захоплення не можна запустити, доки застарілий або завеликий журнал не буде явно очищено."
+
+msgid "Capture is active for approximately %1$d more seconds. Requests are sampled 1 in %2$d and the grouped log is written at most once every %3$d seconds."
+msgstr "Захоплення буде активним ще приблизно %1$d секунд. Відбирається 1 із %2$d запитів, а згрупований журнал записується не частіше одного разу на %3$d секунд."
+
+msgid "Captured count"
+msgstr "Кількість захоплень"
+
+msgid "Check and fix the internal link."
+msgstr "Перевірте та виправте внутрішнє посилання."
+
+msgid "Checked %1$d posts and %2$d links. Candidates: %3$d."
+msgstr "Перевірено записів: %1$d, посилань: %2$d. Кандидатів: %3$d."
+
+msgid "Clear log"
+msgstr "Очистити журнал"
+
+msgid "Clear the local log?"
+msgstr "Очистити локальний журнал?"
+
+msgid "Content"
+msgstr "Вміст"
+
+msgid "Content is not scanned during a normal settings-page load."
+msgstr "Під час звичайного відкриття сторінки налаштувань вміст не сканується."
+
+msgid "Content removed"
+msgstr "Вміст видалено"
+
+msgid "Data layer"
+msgstr "Data Layer"
+
+msgid "Delete"
+msgstr "Видалити"
+
+msgid "Detected environment"
+msgstr "Виявлене середовище"
+
+msgid "Development build. It creates no automatic redirect or 410 rules."
+msgstr "Розробницька версія. Вона не створює автоматичних переспрямувань або правил 410."
+
+msgid "Diagnostic capture"
+msgstr "Діагностичне захоплення"
+
+msgid "Emit a local event with a salted path fingerprint"
+msgstr "Створювати локальну подію із salted-відбитком шляху"
+
+msgid "Enable request handling"
+msgstr "Увімкнути обробку запитів"
+
+msgid "Exact path"
+msgstr "Точний шлях"
+
+msgid "Exact same-site rules only. Duplicate sources, protected paths and redirect cycles are rejected."
+msgstr "Лише точні правила в межах сайту. Дублікати джерел, захищені шляхи та цикли переспрямувань відхиляються."
+
+msgid "Export privacy-safe JSON report"
+msgstr "Експортувати privacy-safe JSON-звіт"
+
+msgid "Frequent request. Review whether a redirect is appropriate."
+msgstr "Частий запит. Перевірте, чи доречне переспрямування."
+
+msgid "General settings"
+msgstr "Загальні налаштування"
+
+msgid "Include human and unknown requests during an explicit capture window"
+msgstr "Включати запити людей і невизначені запити під час явного вікна захоплення"
+
+msgid "Include obvious bots during an explicit capture window"
+msgstr "Включати очевидних ботів під час явного вікна захоплення"
+
+msgid "Installed"
+msgstr "Встановлено"
+
+msgid "Insufficient permissions."
+msgstr "Недостатньо прав."
+
+msgid "Internal link candidates"
+msgstr "Кандидати внутрішніх посилань"
+
+msgid "Last seen"
+msgstr "Останній запит"
+
+msgid "Legacy log rows were rewritten using the privacy-safe schema."
+msgstr "Старі записи журналу переписано за privacy-safe схемою."
+
+msgid "Likely automated probing. Keep 404 or add a narrow 410 rule."
+msgstr "Ймовірне автоматизоване сканування. Залиште 404 або додайте вузьке правило 410."
+
+msgid "Local log cleared."
+msgstr "Локальний журнал очищено."
+
+msgid "Log size"
+msgstr "Розмір журналу"
+
+msgid "Match type"
+msgstr "Тип збігу"
+
+msgid "Maximum grouped captured entries."
+msgstr "Максимальна кількість згрупованих захоплених записів."
+
+msgid "Monitor. No automatic action is recommended."
+msgstr "Спостерігайте. Автоматичні дії не рекомендовані."
+
+msgid "No"
+msgstr "Ні"
+
+msgid "No 410 rules."
+msgstr "Правил 410 немає."
+
+msgid "No candidates found in the checked content."
+msgstr "У перевіреному вмісті кандидатів не знайдено."
+
+msgid "No captured entries yet."
+msgstr "Захоплених записів ще немає."
+
+msgid "No public request writes are performed while capture is inactive. A capture automatically expires after ten minutes."
+msgstr "Коли захоплення неактивне, публічні запити нічого не записують. Захоплення автоматично завершується через десять хвилин."
+
+msgid "No raw URL, query value or referrer is added to the event."
+msgstr "До події не додаються сирі URL, значення параметрів або referrer."
+
+msgid "No redirect rules."
+msgstr "Правил переспрямування немає."
+
+msgid "Page builders"
+msgstr "Конструктори сторінок"
+
+msgid "Page not found"
+msgstr "Сторінку не знайдено"
+
+msgid "Path fingerprint"
+msgstr "Відбиток шляху"
+
+msgid "Path prefix"
+msgstr "Префікс шляху"
+
+msgid "Persistent logging is disabled unless an administrator starts a ten-minute capture window."
+msgstr "Постійне журналювання вимкнене, доки адміністратор не запустить десятихвилинне вікно захоплення."
+
+msgid "Plugin"
+msgstr "Плагін"
+
+msgid "Protection"
+msgstr "Захист"
+
+msgid "Query key"
+msgstr "Ключ запиту"
+
+msgid "Query key=value"
+msgstr "Ключ=значення запиту"
+
+msgid "Query-key fingerprints"
+msgstr "Відбитки ключів запиту"
+
+msgid "Recommendation"
+msgstr "Рекомендація"
+
+msgid "Redirect rule added."
+msgstr "Правило переспрямування додано."
+
+msgid "Redirect rule deleted."
+msgstr "Правило переспрямування видалено."
+
+msgid "Redirect rules"
+msgstr "Правила переспрямування"
+
+msgid "Referrer scope"
+msgstr "Тип джерела переходу"
+
+msgid "Return a lightweight page without the theme for obvious bots"
+msgstr "Повертати очевидним ботам легку сторінку без теми"
+
+msgid "Return to the homepage"
+msgstr "Повернутися на головну"
+
+msgid "Review-only suggestions"
+msgstr "Пропозиції лише для перегляду"
+
+msgid "Rules are exact or boundary-aware. Query values are never written to the 404 log."
+msgstr "Правила є точними або враховують межі шляху. Значення параметрів ніколи не записуються до журналу 404."
+
+msgid "Run explicit content scan"
+msgstr "Запустити явне сканування вмісту"
+
+msgid "Sample"
+msgstr "Вибірка"
+
+msgid "Sanitize legacy log now"
+msgstr "Очистити старий журнал за новою схемою"
+
+msgid "Sanitize or reduce the stored log before starting capture."
+msgstr "Перед запуском захоплення очистіть або зменште збережений журнал."
+
+msgid "Settings"
+msgstr "Налаштування"
+
+msgid "Source"
+msgstr "Джерело"
+
+msgid "Source path"
+msgstr "Вихідний шлях"
+
+msgid "Start ten-minute sampled capture"
+msgstr "Запустити десятихвилинне вибіркове захоплення"
+
+msgid "Status"
+msgstr "Статус"
+
+msgid "Stop capture now"
+msgstr "Зупинити захоплення зараз"
+
+msgid "Store salted query-key fingerprints, never names or values"
+msgstr "Зберігати salted-відбитки ключів запиту, але не їхні назви чи значення"
+
+msgid "Target"
+msgstr "Ціль"
+
+msgid "Target path or same-site URL"
+msgstr "Цільовий шлях або URL цього ж сайту"
+
+msgid "The 410 rule was not saved. Check the type, value and protected paths."
+msgstr "Правило 410 не збережено. Перевірте тип, значення та захищені шляхи."
+
+msgid "The JSON report could not be generated."
+msgstr "Не вдалося сформувати JSON-звіт."
+
+msgid "The quick scanner reads plugin headers only and creates no rules."
+msgstr "Швидкий сканер читає лише заголовки плагінів і не створює правил."
+
+msgid "The redirect was not saved because it creates a redirect cycle."
+msgstr "Переспрямування не збережено, оскільки воно створює цикл."
+
+msgid "The redirect was not saved. Use a non-system source path and a valid same-site HTTP/HTTPS target."
+msgstr "Переспрямування не збережено. Використайте несистемний вихідний шлях і коректну HTTP/HTTPS-ціль цього ж сайту."
+
+msgid "The requested page was not found."
+msgstr "Запитувану сторінку не знайдено."
+
+msgid "The sampled capture log stores no IP address, raw path, raw User-Agent, raw referrer, query name or query value."
+msgstr "Журнал вибіркового захоплення не зберігає IP-адресу, сирий шлях, сирий User-Agent, сирий referrer, назву або значення параметра запиту."
+
+msgid "The sampled capture window was stopped."
+msgstr "Вікно вибіркового захоплення зупинено."
+
+msgid "This content is no longer available."
+msgstr "Цей вміст більше недоступний."
+
+msgid "Type"
+msgstr "Тип"
+
+msgid "UA FREE 404 Guard"
+msgstr "UA FREE 404 Guard"
+
+msgid "URL and redirect plugins"
+msgstr "Плагіни URL і переспрямувань"
+
+msgid "Value"
+msgstr "Значення"
+
+msgid "Yes"
+msgstr "Так"
+

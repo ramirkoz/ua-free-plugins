@@ -1,0 +1,207 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: UA FREE Copy 1.0.3\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-07-21 00:00+0000\n"
+"PO-Revision-Date: 2026-07-21 00:00+0000\n"
+"Last-Translator: UA FREE\n"
+"Language-Team: Ukrainian\n"
+"Language: uk\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"X-Domain: ua-free-copy\n"
+
+
+msgid "Copied"
+msgstr "Скопійовано"
+
+msgid "Could not copy"
+msgstr "Не вдалося скопіювати"
+
+msgid "Copy to clipboard"
+msgstr "Копіювати в буфер обміну"
+
+msgid "UA FREE Copy performs clipboard actions in the visitor browser. It does not store copied values, IP addresses, cookies, identifiers or analytics data, and it makes no external requests."
+msgstr "UA FREE Copy виконує копіювання у браузері відвідувача. Він не зберігає скопійовані значення, IP-адреси, cookies, ідентифікатори чи аналітичні дані та не виконує зовнішніх запитів."
+
+msgid "Automatic static translation."
+msgstr "Автоматичний статичний переклад."
+
+msgid "SEO, metadata, schema and discovery."
+msgstr "SEO, метадані, schema та індексація."
+
+msgid "404, redirects and URL intelligence."
+msgstr "404, переспрямування та аналіз URL."
+
+msgid "Snapshots, migration and controlled cleanup."
+msgstr "Знімки, міграція та контрольоване очищення."
+
+msgid "Read-only diagnostics API."
+msgstr "Діагностичний API лише для читання."
+
+msgid "Google Ad Grants and standard Google Ads campaign planning."
+msgstr "Планування кампаній Google Ad Grants і звичайного Google Ads."
+
+msgid "Privacy-safe donation analytics."
+msgstr "Аналітика пожертв із захистом приватності."
+
+msgid "Accessible copy-to-clipboard actions."
+msgstr "Доступні дії копіювання в буфер обміну."
+
+msgid "Read-only translation diagnostics."
+msgstr "Діагностика перекладу лише для читання."
+
+msgid "Minimal URL-only spam filtering."
+msgstr "Мінімальна фільтрація URL-спаму."
+
+msgid "Unified local analytics dashboard."
+msgstr "Єдина локальна панель аналітики."
+
+msgid "Consent and external script control."
+msgstr "Керування згодою та зовнішніми скриптами."
+
+msgid "UA FREE Copy"
+msgstr "UA FREE Copy"
+
+msgid "Copy"
+msgstr "Копіювання"
+
+msgid "Settings"
+msgstr "Налаштування"
+
+msgid "Accessible copy-to-clipboard actions without storing the copied values or loading an external service."
+msgstr "Доступне копіювання в буфер обміну без збереження значень і завантаження зовнішніх сервісів."
+
+msgid "Another active clipboard plugin was detected."
+msgstr "Виявлено інший активний плагін буфера обміну."
+
+msgid "Do not enable two copy handlers on the same elements until you have tested the result."
+msgstr "Не вмикайте два обробники копіювання для тих самих елементів, доки не перевірите результат."
+
+msgid "Activation and scope"
+msgstr "Активація та область роботи"
+
+msgid "Enable copy actions"
+msgstr "Увімкнути копіювання"
+
+msgid "Load the copy handler on matching public pages."
+msgstr "Завантажувати обробник копіювання на відповідних публічних сторінках."
+
+msgid "Allowed paths"
+msgstr "Дозволені шляхи"
+
+msgid "Optional. One local path per line. Use an ending * for a prefix. Leave empty to allow all public paths. Query strings and external URLs are rejected."
+msgstr "Необов’язково. Один локальний шлях у рядку. Використовуйте * наприкінці для префікса. Залиште порожнім для всіх публічних шляхів. Query string і зовнішні URL відхиляються."
+
+msgid "Copy targets"
+msgstr "Цілі копіювання"
+
+msgid "CSS selectors"
+msgstr "CSS-селектори"
+
+msgid "One simple class, ID or approved data attribute selector per line. Complex selectors are rejected to reduce accidental page-wide bindings."
+msgstr "Один простий клас, ID або дозволений селектор data-атрибута в рядку. Складні селектори відхиляються, щоб випадково не прив’язати обробник до всієї сторінки."
+
+msgid "The value is read from data-copy-value, an allowed #id in data-copy-target, a form field value, or the visible text. The plugin never writes that value to WordPress."
+msgstr "Значення береться з data-copy-value, дозволеного #id у data-copy-target, поля форми або видимого тексту. Плагін ніколи не записує це значення у WordPress."
+
+msgid "Behaviour and accessibility"
+msgstr "Поведінка та доступність"
+
+msgid "Whitespace"
+msgstr "Пробіли"
+
+msgid "Collapse repeated whitespace"
+msgstr "Об’єднувати повторювані пробіли"
+
+msgid "Preserve formatting"
+msgstr "Зберігати форматування"
+
+msgid "Visual feedback"
+msgstr "Візуальний відгук"
+
+msgid "Show copy icon"
+msgstr "Показувати значок копіювання"
+
+msgid "Show success or error message"
+msgstr "Показувати повідомлення про успіх або помилку"
+
+msgid "Message duration"
+msgstr "Тривалість повідомлення"
+
+msgid "Message position"
+msgstr "Позиція повідомлення"
+
+msgid "Bottom centre"
+msgstr "Знизу по центру"
+
+msgid "Bottom left"
+msgstr "Знизу ліворуч"
+
+msgid "Bottom right"
+msgstr "Знизу праворуч"
+
+msgid "Target decoration"
+msgstr "Оформлення цілі"
+
+msgid "Add keyboard focus and accessible button semantics to non-interactive elements."
+msgstr "Додавати фокус клавіатури та доступну семантику кнопки неінтерактивним елементам."
+
+msgid "Links"
+msgstr "Посилання"
+
+msgid "Prevent navigation when a matching link is clicked."
+msgstr "Не переходити за посиланням, якщо воно є ціллю копіювання."
+
+msgid "Enable only when the link is intentionally used as a copy control."
+msgstr "Вмикайте лише тоді, коли посилання навмисно використовується як кнопка копіювання."
+
+msgid "Save settings"
+msgstr "Зберегти налаштування"
+
+msgid "Diagnostics"
+msgstr "Діагностика"
+
+msgid "Configured selectors: %d"
+msgstr "Налаштовано селекторів: %d"
+
+msgid "Copied values stored by this plugin: no. External requests: no. Cookies: no. Telemetry: no."
+msgstr "Скопійовані значення зберігаються: ні. Зовнішні запити: ні. Cookies: ні. Телеметрія: ні."
+
+msgid "No other installed clipboard plugins were detected from their public plugin headers."
+msgstr "За публічними заголовками плагінів інших інструментів буфера обміну не виявлено."
+
+msgid "Detected plugin"
+msgstr "Виявлений плагін"
+
+msgid "Version"
+msgstr "Версія"
+
+msgid "Status"
+msgstr "Статус"
+
+msgid "Active"
+msgstr "Активний"
+
+msgid "Installed"
+msgstr "Встановлений"
+
+msgid "A successful browser copy dispatches the local custom event uafree:copy-success. Its detail contains only a configured target key, never the copied value."
+msgstr "Успішне копіювання створює локальну подію uafree:copy-success. Вона містить лише налаштований ключ цілі, але ніколи не скопійоване значення."
+
+msgid "UA FREE Plugin Suite"
+msgstr "UA FREE Plugin Suite"
+
+msgid "A modular set of lightweight WordPress tools originally developed to solve practical needs of a charitable foundation website."
+msgstr "Модульний набір легких інструментів WordPress, спочатку розроблений для практичних потреб сайту благодійного фонду."
+
+msgid "Plugin"
+msgstr "Плагін"
+
+msgid "Purpose"
+msgstr "Призначення"
+
+msgid "Available separately"
+msgstr "Доступний окремо"

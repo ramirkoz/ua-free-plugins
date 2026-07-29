@@ -1,0 +1,312 @@
+msgid ""
+msgstr "Project-Id-Version: UA FREE Static Translate 0.7.4-dev\\nLanguage: uk\\nMIME-Version: 1.0\\nContent-Type: text/plain; charset=UTF-8\\nContent-Transfer-Encoding: 8bit\\nPlural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\\n"
+
+msgid "1. System status"
+msgstr "1. Стан системи"
+
+msgid "2. Content and queue"
+msgstr "2. Контент і черга"
+
+msgid "3. Language progress"
+msgstr "3. Прогрес мов"
+
+msgid "4. Settings"
+msgstr "4. Налаштування"
+
+msgid "5. Previous translation systems"
+msgstr "5. Попередні системи перекладу"
+
+msgid "A new monthly cycle started. The queue was resumed."
+msgstr "Новий місячний цикл. Чергу відновлено."
+
+msgid "All published content of the selected types"
+msgstr "Увесь опублікований контент вибраних типів"
+
+msgid "All segments failed automatic validation."
+msgstr "Усі сегменти не пройшли автоматичну валідацію."
+
+msgid "Automatic worker"
+msgstr "Автоматичний worker"
+
+msgid "Azure API works. Response: %s"
+msgstr "Azure API працює. Відповідь: %s"
+
+msgid "Azure Translator key is not configured."
+msgstr "Azure Translator key не налаштований."
+
+msgid "Azure key is not configured."
+msgstr "Azure key не налаштований."
+
+msgid "Azure returned a different number of translations than requested."
+msgstr "Azure повернув іншу кількість перекладів, ніж було надіслано."
+
+msgid "Azure returned an invalid 2026-06-06 response."
+msgstr "Azure повернув некоректну відповідь 2026-06-06."
+
+msgid "Azure returned an invalid v3.0 response."
+msgstr "Azure повернув некоректну v3.0 відповідь."
+
+msgid "Azure test succeeded."
+msgstr "Azure test успішний."
+
+msgid "Azure v3.0 returned a different number of translations than requested."
+msgstr "Azure v3.0 повернув іншу кількість перекладів."
+
+msgid "Candidate cron hooks"
+msgstr "Кандидати cron"
+
+msgid "Candidate options"
+msgstr "Кандидати-options"
+
+msgid "Candidate tables"
+msgstr "Кандидати-таблиці"
+
+msgid "Characters"
+msgstr "Символів"
+
+msgid "Connection test"
+msgstr "Перевірка підключення"
+
+msgid "Content scope"
+msgstr "Обсяг контенту"
+
+msgid "Content types"
+msgstr "Типи контенту"
+
+msgid "Current translations, memory, queue, usage and logs were reset. Azure settings and the key were preserved. Public language routes and the automatic queue were disabled until a new controlled run."
+msgstr "Поточні переклади, memory, queue, usage та logs скинуто. Налаштування Azure і ключ збережено. Публічні мовні URL та автоматичну чергу вимкнено до нового контрольного запуску."
+
+msgid "Detected translators"
+msgstr "Виявлені перекладачі"
+
+msgid "Done"
+msgstr "Готово"
+
+msgid "Done."
+msgstr "Готово."
+
+msgid "Dynamically translated %1$d of %2$d strings."
+msgstr "Динамічно перекладено %d із %d рядків."
+
+msgid "Empty HTML or DOMDocument is unavailable."
+msgstr "Порожній HTML або DOMDocument недоступний."
+
+msgid "Estimated queued characters"
+msgstr "Орієнтовно символів у черзі"
+
+msgid "Features"
+msgstr "Функції"
+
+msgid "Insufficient permissions."
+msgstr "Недостатньо прав."
+
+msgid "Inventory refreshed."
+msgstr "Інвентаризацію оновлено."
+
+msgid "Language"
+msgstr "Мова"
+
+msgid "Last error"
+msgstr "Остання помилка"
+
+msgid "Monthly character limit"
+msgstr "Місячний ліміт символів"
+
+msgid "No text segments were found."
+msgstr "Текстові сегменти не знайдено."
+
+msgid "No translatable segments remain, but the job is not complete."
+msgstr "Немає сегментів для перекладу, але job ще не завершений."
+
+msgid "Only content already present in the translation inventory"
+msgstr "Лише контент, який уже є в інвентарі перекладу"
+
+msgid "Other available languages"
+msgstr "Інші доступні мови"
+
+msgid "Pause queue"
+msgstr "Поставити на паузу"
+
+msgid "Pending"
+msgstr "Очікує"
+
+msgid "Public language routes"
+msgstr "Публічні мовні маршрути"
+
+msgid "Published content items"
+msgstr "Опубліковані матеріали"
+
+msgid "Queue"
+msgstr "Черга"
+
+msgid "Read in the source language"
+msgstr "Читати мовою оригіналу"
+
+msgid "Recovered from a stale worker lock."
+msgstr "Відновлено після завислого worker lock."
+
+msgid "Refresh inventory"
+msgstr "Оновити інвентаризацію"
+
+msgid "Resume queue"
+msgstr "Відновити чергу"
+
+msgid "Run one step"
+msgstr "Виконати один крок"
+
+msgid "Run scan again"
+msgstr "Повторити сканування"
+
+msgid "Save settings"
+msgstr "Зберегти налаштування"
+
+msgid "Settings"
+msgstr "Налаштування"
+
+msgid "Source language"
+msgstr "Основна мова"
+
+msgid "Source scanning failed; a retry was scheduled."
+msgstr "Сканування джерела не вдалося; заплановано повтор."
+
+msgid "Static Translate"
+msgstr "Статичний переклад"
+
+msgid "Stored %1$d; validation failed for %2$d."
+msgstr "Збережено %d, не пройшло валідацію %d."
+
+msgid "Target languages"
+msgstr "Цільові мови"
+
+msgid "Test Azure API"
+msgstr "Перевірити Azure API"
+
+msgid "The automatic queue was paused."
+msgstr "Автоматичну чергу поставлено на паузу."
+
+msgid "The automatic queue was resumed."
+msgstr "Автоматичну чергу відновлено."
+
+msgid "The existing-inventory mode is migration-safe and prevents newly discovered content from being sent for translation until you intentionally expand the scope."
+msgstr "Режим наявного інвентарю є безпечним для міграції та не дозволяє надсилати щойно виявлений контент на переклад, доки ви свідомо не розширите обсяг."
+
+msgid "The invalid job was skipped."
+msgstr "Некоректний job пропущено."
+
+msgid "The job was completed from translation memory."
+msgstr "Job уже завершений через translation memory."
+
+msgid "The language version is ready for its public route."
+msgstr "Мовна версія готова до публічного маршруту."
+
+msgid "The language version was completed; protected values were preserved without translation."
+msgstr "Мовну версію завершено: захищені реквізити збережено без перекладу."
+
+msgid "The local monthly Azure Translator budget is exhausted."
+msgstr "Локальний місячний бюджет Azure Translator вичерпано."
+
+msgid "The monthly balance is insufficient even for a test."
+msgstr "Недостатньо місячного залишку навіть для тесту."
+
+msgid "The monthly character limit is exhausted."
+msgstr "Місячний ліміт вичерпано."
+
+msgid "The page language version was completed."
+msgstr "Мовну версію сторінки завершено."
+
+msgid "The page will refresh automatically in %s seconds."
+msgstr "Сторінка оновиться автоматично через %s с."
+
+msgid "The plugin was created for real needs of a charitable foundation website and rebuilt as a universal tool. This is a development build: automatic translation and public routes are disabled by default."
+msgstr "Плагін створено для реальних потреб сайту благодійного фонду та перероблено як універсальний інструмент. Версія розробницька: автоматичний переклад і публічні маршрути за замовчуванням вимкнені."
+
+msgid "The queue is manually paused."
+msgstr "Черга поставлена на ручну паузу."
+
+msgid "The queue is temporarily paused: %s"
+msgstr "Чергу тимчасово призупинено: %s"
+
+msgid "The queue was paused until the next cycle."
+msgstr "Чергу призупинено до нового циклу."
+
+msgid "The remaining monthly budget is insufficient for the next segment."
+msgstr "Недостатньо залишку місячного бюджету для наступного сегмента."
+
+msgid "The scanner checks actually installed plugins and lists possible leftovers. Cleanup is disabled in this development build: no tables, options or cron events are changed."
+msgstr "Сканер перевіряє реально встановлені плагіни та показує можливі залишки. У цій dev-версії видалення вимкнене: жодні таблиці, options або cron-завдання не змінюються."
+
+msgid "The source page could not be scanned."
+msgstr "Не вдалося просканувати українську сторінку."
+
+msgid "The source row was not found."
+msgstr "Source row не знайдено."
+
+msgid "The worker is already running."
+msgstr "Worker уже виконується."
+
+msgid "There are no ready jobs in the queue."
+msgstr "Готових jobs у черзі немає."
+
+msgid "This language version is still being prepared by the automatic translator."
+msgstr "Ця мовна версія ще готується автоматичним перекладачем."
+
+msgid "Translated segments: %1$d. Remaining: %2$d."
+msgstr "Перекладено сегментів: %d. Залишилося: %d."
+
+msgid "Translation is being prepared"
+msgstr "Переклад готується"
+
+msgid "UA FREE Static Translate"
+msgstr "UA FREE Static Translate"
+
+msgid "Unknown error."
+msgstr "Невідома помилка."
+
+msgid "Unknown job language."
+msgstr "Невідома мова job."
+
+msgid "Unknown target language."
+msgstr "Невідома цільова мова."
+
+msgid "Used in current cycle"
+msgstr "Використано в поточному циклі"
+
+msgid "Working…"
+msgstr "Виконується…"
+
+msgid "automatic queue"
+msgstr "автоматична черга"
+
+msgid "configured"
+msgstr "налаштовано"
+
+msgid "disabled"
+msgstr "вимкнено"
+
+msgid "dynamic text translation"
+msgstr "переклад динамічного тексту"
+
+msgid "enabled"
+msgstr "увімкнено"
+
+msgid "floating language switcher"
+msgstr "плаваючий перемикач"
+
+msgid "none"
+msgstr "немає"
+
+msgid "none found"
+msgstr "не знайдено"
+
+msgid "not configured"
+msgstr "не налаштовано"
+
+msgid "not selected"
+msgstr "не вибрані"
+
+msgid "public language routes"
+msgstr "публічні мовні маршрути"
+
+msgid "remove saved key"
+msgstr "видалити збережений ключ"
+

@@ -1,0 +1,461 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: UA FREE Donate Stats & Conversions 1.2.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-07-21 00:00+0000\n"
+"PO-Revision-Date: 2026-07-21 00:00+0000\n"
+"Last-Translator: UA FREE\n"
+"Language-Team: Ukrainian\n"
+"Language: uk\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"X-Domain: ua-free-donate-stats\n"
+
+msgid "%d days"
+msgstr "%d днів"
+
+msgid "(no title)"
+msgstr "(без назви)"
+
+msgid "A reported success is an event reported by a configured page marker or a server integration. It is not a financial ledger and does not prove that money was settled."
+msgstr "Підтверджений успіх — це подія, передана налаштованим маркером сторінки або серверною інтеграцією. Це не фінансовий облік і не доказ фактичного зарахування коштів."
+
+msgid "A small rule that sends URL-only comments to spam."
+msgstr "Невелике правило, яке надсилає коментарі, що містять лише URL, до спаму."
+
+msgid "A unified local dashboard for available UA FREE plugin data."
+msgstr "Єдина локальна панель даних доступних плагінів UA FREE."
+
+msgid "Accessible copy-to-clipboard actions for administrator-selected values."
+msgstr "Доступне копіювання до буфера обміну для значень, обраних адміністратором."
+
+msgid "Account mode"
+msgstr "Режим рекламного облікового запису"
+
+msgid "Active"
+msgstr "Активний"
+
+msgid "Additional local path patterns"
+msgstr "Додаткові шаблони локальних шляхів"
+
+msgid "Allow a front-end success marker to report donation_success"
+msgstr "Дозволити маркеру успіху на сторінці передавати donation_success"
+
+msgid "Allowed payment hostnames"
+msgstr "Дозволені домени платіжних сервісів"
+
+msgid "Authenticated read-only diagnostics for authorized clients and AI actions."
+msgstr "Автентифікована діагностика лише для читання для дозволених клієнтів і ШІ-дій."
+
+msgid "Automated multilingual publishing with translation memory and controlled cleanup."
+msgstr "Автоматизована багатомовна публікація з пам’яттю перекладів і контрольованим очищенням."
+
+msgid "Available separately"
+msgstr "Доступний окремо"
+
+msgid "Campaign planning and exports for Google Ad Grants or standard Google Ads."
+msgstr "Планування та експорт кампаній для Google Ad Grants або звичайного Google Ads."
+
+msgid "Consent categories, script gating and Google Consent Mode integration."
+msgstr "Категорії згоди, блокування скриптів та інтеграція з Google Consent Mode."
+
+msgid "Consent category"
+msgstr "Категорія згоди"
+
+msgid "Consent gate"
+msgstr "Умова згоди"
+
+msgid "Context"
+msgstr "Контекст"
+
+msgid "Copied details"
+msgstr "Копіювання реквізитів"
+
+msgid "Copies"
+msgstr "Копіювання"
+
+msgid "Copy action selector"
+msgstr "CSS-селектор дії копіювання"
+
+msgid "Copy click"
+msgstr "Клік копіювання"
+
+msgid "Could not open export stream."
+msgstr "Не вдалося відкрити потік експорту."
+
+msgid "Count"
+msgstr "Кількість"
+
+msgid "Daily activity"
+msgstr "Активність за днями"
+
+msgid "Date"
+msgstr "Дата"
+
+msgid "Delete aggregate statistics"
+msgstr "Видалення агрегованої статистики"
+
+msgid "Delete all statistics"
+msgstr "Видалити всю статистику"
+
+msgid "Do not gate events"
+msgstr "Не блокувати події за згодою"
+
+msgid "Donate Stats"
+msgstr "Статистика донатів"
+
+msgid "Donate Stats & Conversions"
+msgstr "Статистика донатів і конверсій"
+
+msgid "Donate action selector"
+msgstr "CSS-селектор дії донату"
+
+msgid "Donate click"
+msgstr "Клік донату"
+
+msgid "Donate clicks"
+msgstr "Кліки донату"
+
+msgid "Enable local aggregate tracking"
+msgstr "Увімкнути локальний агрегований облік"
+
+msgid "Engagements"
+msgstr "Взаємодії"
+
+msgid "Environment inventory, snapshots, dry-run migration and controlled cleanup."
+msgstr "Інвентаризація середовища, знімки, пробна міграція та контрольоване очищення."
+
+msgid "Event"
+msgstr "Подія"
+
+msgid "Event selectors"
+msgstr "Селектори подій"
+
+msgid "Exclude WordPress administrators"
+msgstr "Не враховувати адміністраторів WordPress"
+
+msgid "Export CSV"
+msgstr "Експортувати CSV"
+
+msgid "Export JSON"
+msgstr "Експортувати JSON"
+
+msgid "Gate dataLayer only"
+msgstr "Блокувати за згодою лише dataLayer"
+
+msgid "Gate local and dataLayer events"
+msgstr "Блокувати за згодою локальні події та dataLayer"
+
+msgid "Google Ad Grants"
+msgstr "Google Ad Grants"
+
+msgid "Google advertising workflow"
+msgstr "Робота з рекламою Google"
+
+msgid "Independent, privacy-conscious WordPress tools originally developed to solve real operational needs of a charitable foundation website."
+msgstr "Незалежні WordPress-інструменти з повагою до приватності, спочатку розроблені для реальних потреб сайту благодійного фонду."
+
+msgid "Installed"
+msgstr "Встановлений"
+
+msgid "It performs no telemetry or external requests. Support links are intentionally supplied by the final distribution channel rather than injected into other sites."
+msgstr "Плагін не використовує телеметрію та не виконує зовнішніх запитів. Посилання на підтримку навмисно додаються каналом поширення, а не вбудовуються в чужі сайти."
+
+msgid "Language"
+msgstr "Мова"
+
+msgid "Languages"
+msgstr "Мови"
+
+msgid "Legacy external click"
+msgstr "Старий зовнішній клік"
+
+msgid "Local aggregate donation journey statistics without IP addresses, referrers, fingerprinting, payment values or copied account details."
+msgstr "Локальна агрегована статистика шляху до пожертви без IP-адрес, referrer, fingerprinting, сум платежів або скопійованих реквізитів."
+
+msgid "Local privacy-safe donation journey events and conversion reporting."
+msgstr "Локальні privacy-safe події шляху до пожертви та звітність про конверсії."
+
+msgid "No Google advertising"
+msgstr "Без реклами Google"
+
+msgid "No data yet."
+msgstr "Даних ще немає."
+
+msgid "No published public content was found."
+msgstr "Опублікованого публічного контенту не знайдено."
+
+msgid "One hostname per line. The plugin stores only the hostname, never a full external URL."
+msgstr "Один домен у рядку. Плагін зберігає лише домен, ніколи не повну зовнішню URL-адресу."
+
+msgid "One local path per line. Use * as a wildcard. Full external URLs, query strings and fragments are rejected."
+msgstr "Один локальний шлях у рядку. Використовуйте * як шаблон. Повні зовнішні URL, query string і фрагменти відхиляються."
+
+msgid "Overview"
+msgstr "Огляд"
+
+msgid "Page view"
+msgstr "Перегляд сторінки"
+
+msgid "Page views"
+msgstr "Перегляди сторінок"
+
+msgid "Pages and paths"
+msgstr "Сторінки та шляхи"
+
+msgid "Payment link selector"
+msgstr "CSS-селектор платіжного посилання"
+
+msgid "Payment open"
+msgstr "Відкриття платежу"
+
+msgid "Payment opens"
+msgstr "Відкриття платежів"
+
+msgid "Plugin Suite"
+msgstr "Комплекс плагінів"
+
+msgid "Privacy-conscious 404/410 logging, redirects and URL diagnostics."
+msgstr "Журналювання 404/410, переспрямування та URL-діагностика з повагою до приватності."
+
+msgid "Project origin"
+msgstr "Походження проєкту"
+
+msgid "Push privacy-safe events to dataLayer"
+msgstr "Передавати privacy-safe події до dataLayer"
+
+msgid "Read-only translation queue, memory, limits, cron and error diagnostics."
+msgstr "Діагностика черги перекладів, пам’яті, лімітів, cron і помилок лише для читання."
+
+msgid "Reported success"
+msgstr "Зафіксований успіх"
+
+msgid "Reported success marker selector"
+msgstr "CSS-селектор маркера успішної пожертви"
+
+msgid "Reported successes"
+msgstr "Зафіксовані успіхи"
+
+msgid "Retention and session"
+msgstr "Зберігання та сесія"
+
+msgid "Retention days"
+msgstr "Строк зберігання, днів"
+
+msgid "Save settings"
+msgstr "Зберегти налаштування"
+
+msgid "Select published WordPress content that contains a donation form or donation actions."
+msgstr "Виберіть опублікований контент WordPress, що містить форму пожертви або дії для донату."
+
+msgid "Session inactivity minutes"
+msgstr "Тривалість сесії без активності, хвилин"
+
+msgid "Sessions"
+msgstr "Сесії"
+
+msgid "Settings"
+msgstr "Налаштування"
+
+msgid "Standalone SEO, sitemap, schema, AI discovery and accessibility checks."
+msgstr "Автономне SEO, sitemap, schema, AI discovery та перевірки доступності."
+
+msgid "Standard Google Ads"
+msgstr "Звичайний Google Ads"
+
+msgid "Successes"
+msgstr "Успіхи"
+
+msgid "Successes per session"
+msgstr "Успіхів на сесію"
+
+msgid "Target key"
+msgstr "Ключ цілі"
+
+msgid "The browser identifier is kept in sessionStorage and the database receives only a daily HMAC hash."
+msgstr "Ідентифікатор браузера зберігається в sessionStorage, а до бази потрапляє лише щоденний HMAC-хеш."
+
+msgid "The confirmation phrase does not match."
+msgstr "Фраза підтвердження не збігається."
+
+msgid "The future UA FREE Consent Manager can answer whether this category is allowed. Until a compatible manager is present, gated events remain blocked."
+msgstr "Майбутній UA FREE Consent Manager зможе повідомити, чи дозволена ця категорія. Поки сумісного менеджера немає, події, залежні від згоди, залишаються заблокованими."
+
+msgid "This plugin began as a small internal tool for a charitable foundation website and was rebuilt as a reusable public component without domain, page ID, payment provider or theme assumptions."
+msgstr "Плагін починався як невеликий внутрішній інструмент для сайту благодійного фонду, а потім був перебудований у повторно використовуваний публічний компонент без прив’язки до домену, ID сторінок, платіжного сервісу чи теми."
+
+msgid "This truncates only the two statistics tables. Settings and plugin files remain."
+msgstr "Ця дія очищає лише дві таблиці статистики. Налаштування та файли плагіна залишаються."
+
+msgid "Top event targets"
+msgstr "Найпопулярніші цілі подій"
+
+msgid "Tracked contexts"
+msgstr "Відстежувані контексти"
+
+msgid "Tracking does not start until at least one WordPress item or local path is selected."
+msgstr "Відстеження не почнеться, доки не вибрано хоча б один матеріал WordPress або локальний шлях."
+
+msgid "Tracking state"
+msgstr "Стан відстеження"
+
+msgid "Type %s to confirm"
+msgstr "Введіть %s для підтвердження"
+
+msgid "UA FREE Donate Stats & Conversions"
+msgstr "UA FREE Статистика донатів і конверсій"
+
+msgid "UA FREE Plugin Suite"
+msgstr "Комплекс плагінів UA FREE"
+
+msgid "Unique daily sessions"
+msgstr "Унікальні денні сесії"
+
+msgid "Use this only when the marker appears after a genuine payment callback. For reliable accounting, record a server event instead."
+msgstr "Використовуйте це лише тоді, коли маркер з’являється після справжнього callback від платіжної системи. Для надійного обліку краще реєструвати серверну подію."
+
+msgid "Views"
+msgstr "Перегляди"
+
+msgid "You do not have permission to delete this data."
+msgstr "У вас немає прав для видалення цих даних."
+
+msgid "You do not have permission to export this data."
+msgstr "У вас немає прав для експорту цих даних."
+
+msgid "dataLayer event name"
+msgstr "Назва події dataLayer"
+
+msgid "Статистика донатів вимкнена"
+msgstr "Статистика донатів вимкнена"
+
+msgid "Плагін встановлено, але події на сторінках не збираються."
+msgstr "Плагін встановлено, але події на сторінках не збираються."
+
+msgid "Увімкнути збір статистики"
+msgstr "Увімкнути збір статистики"
+
+msgid "У налаштуваннях виберіть сторінку донатів і ввімкніть локальний збір."
+msgstr "У налаштуваннях виберіть сторінку донатів і ввімкніть локальний збір."
+
+msgid "Не вибрано сторінку донатів"
+msgstr "Не вибрано сторінку донатів"
+
+msgid "Плагін увімкнений, але не знає, на яких сторінках рахувати дії."
+msgstr "Плагін увімкнений, але не знає, на яких сторінках рахувати дії."
+
+msgid "Вибрати сторінку донатів"
+msgstr "Вибрати сторінку донатів"
+
+msgid "Відкрийте налаштування та позначте сторінку або локальний шлях."
+msgstr "Відкрийте налаштування та позначте сторінку або локальний шлях."
+
+msgid "Люди заходять, але не натискають підтримати"
+msgstr "Люди заходять, але не натискають підтримати"
+
+msgid "Сторінку відвідують, але кнопка донату не дає зафіксованих натискань."
+msgstr "Сторінку відвідують, але кнопка донату не дає зафіксованих натискань."
+
+msgid "Перевірити кнопку підтримки"
+msgstr "Перевірити кнопку підтримки"
+
+msgid "Переконайтеся, що кнопка має правильний data-атрибут або selector."
+msgstr "Переконайтеся, що кнопка має правильний data-атрибут або selector."
+
+msgid "Оплату відкривають, але підтверджень ще немає"
+msgstr "Оплату відкривають, але підтверджень ще немає"
+
+msgid "Це може означати відсутність server callback або те, що донати ще не завершували."
+msgstr "Це може означати відсутність server callback або те, що донати ще не завершували."
+
+msgid "Перевірити підтвердження донату"
+msgstr "Перевірити підтвердження донату"
+
+msgid "Для надійної статистики підключіть server-confirmed donation_success."
+msgstr "Для надійної статистики підключіть server-confirmed donation_success."
+
+msgid "Потрібно завершити налаштування"
+msgstr "Потрібно завершити налаштування"
+
+msgid "Потрібно вибрати сторінку донатів"
+msgstr "Потрібно вибрати сторінку донатів"
+
+msgid "Збір даних увімкнено. Чекаємо перші відвідування"
+msgstr "Збір даних увімкнено. Чекаємо перші відвідування"
+
+msgid "Воронка донатів працює"
+msgstr "Воронка донатів працює"
+
+msgid "Люди переходять до оплати"
+msgstr "Люди переходять до оплати"
+
+msgid "Статистика збирається"
+msgstr "Статистика збирається"
+
+msgid "Нічого термінового"
+msgstr "Нічого термінового"
+
+msgid "Воронка працює. Перевіряйте результати після змін сторінки або реклами."
+msgstr "Воронка працює. Перевіряйте результати після змін сторінки або реклами."
+
+msgid "Стан воронки донатів"
+msgstr "Стан воронки донатів"
+
+msgid "Показуємо лише те, що допомагає прийняти рішення. Технічні таблиці заховані нижче."
+msgstr "Показуємо лише те, що допомагає прийняти рішення. Технічні таблиці заховані нижче."
+
+msgid "Відвідали сторінку"
+msgstr "Відвідали сторінку"
+
+msgid "Унікальні денні сесії"
+msgstr "Унікальні денні сесії"
+
+msgid "Натиснули підтримати"
+msgstr "Натиснули підтримати"
+
+msgid "Відкрили оплату"
+msgstr "Відкрили оплату"
+
+msgid "Підтверджені донати"
+msgstr "Підтверджені донати"
+
+msgid "Не бухгалтерський реєстр"
+msgstr "Не бухгалтерський реєстр"
+
+msgid "Конверсія"
+msgstr "Конверсія"
+
+msgid "Потрібна увага"
+msgstr "Потрібна увага"
+
+msgid "Проблем, що потребують уваги, немає."
+msgstr "Проблем, що потребують уваги, немає."
+
+msgid "Що зробити"
+msgstr "Що зробити"
+
+msgid "Технічні дані та експорт"
+msgstr "Технічні дані та експорт"
+
+msgid "Підтверджений донат — це подія від сторінки або server integration. Це не фінансова виписка і не доказ зарахування коштів."
+msgstr "Підтверджений донат — це подія від сторінки або server integration. Це не фінансова виписка і не доказ зарахування коштів."
+
+msgid "Збір статистики готовий"
+msgstr "Збір статистики готовий"
+
+msgid "Потрібно завершити швидке налаштування"
+msgstr "Потрібно завершити швидке налаштування"
+
+msgid "Увімкнути локальний збір статистики"
+msgstr "Увімкнути локальний збір статистики"
+
+msgid "Вибрати сторінку донатів або локальний шлях"
+msgstr "Вибрати сторінку донатів або локальний шлях"
+
+msgid "Додати платіжні домени, якщо використовуються зовнішні сервіси"
+msgstr "Додати платіжні домени, якщо використовуються зовнішні сервіси"
+
+msgid "Підключити підтвердження успішного донату"
+msgstr "Підключити підтвердження успішного донату"

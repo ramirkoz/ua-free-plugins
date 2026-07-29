@@ -1,0 +1,69 @@
+.uafree-copy-target {
+	position: relative;
+	display: inline-block;
+	cursor: copy;
+	border-radius: 4px;
+	outline-offset: 3px;
+	transition: background-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.uafree-copy-target.uafree-copy-icon::after {
+	content: "⧉";
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 1.35em;
+	height: 1.35em;
+	margin-inline-start: 0.4em;
+	padding: 0 0.2em;
+	border-radius: 0.35em;
+	font-size: 0.72em;
+	line-height: 1;
+	vertical-align: middle;
+	opacity: 0.65;
+	background: rgb(17 24 39 / 8%);
+	transition: opacity 0.15s ease, background-color 0.15s ease;
+}
+
+.uafree-copy-target:hover::after,
+.uafree-copy-target:focus-visible::after {
+	opacity: 1;
+	background: rgb(17 24 39 / 14%);
+}
+
+.uafree-copy-target:hover { background: rgb(37 99 235 / 6%); }
+.uafree-copy-target:focus-visible { outline: 2px solid currentColor; }
+.uafree-copy-target.uafree-copy-success {
+	background: rgb(22 163 74 / 12%);
+	box-shadow: 0 0 0 2px rgb(22 163 74 / 18%);
+	transform: translateY(-1px);
+}
+
+#uafree-copy-toast {
+	position: fixed;
+	z-index: 2147483647;
+	max-width: calc(100vw - 32px);
+	padding: 10px 16px;
+	border-radius: 8px;
+	background: rgb(17 24 39 / 94%);
+	color: #fff;
+	font: 600 14px/1.3 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+	box-shadow: 0 8px 30px rgb(0 0 0 / 22%);
+	opacity: 0;
+	pointer-events: none;
+	transform: translateY(12px);
+	transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+#uafree-copy-toast.uafree-copy-toast-bottom-center { left: 50%; bottom: 28px; transform: translate(-50%, 12px); }
+#uafree-copy-toast.uafree-copy-toast-bottom-left { left: 20px; bottom: 28px; }
+#uafree-copy-toast.uafree-copy-toast-bottom-right { right: 20px; bottom: 28px; }
+#uafree-copy-toast.is-visible { opacity: 1; transform: translateY(0); }
+#uafree-copy-toast.uafree-copy-toast-bottom-center.is-visible { transform: translate(-50%, 0); }
+#uafree-copy-toast.is-error { background: rgb(153 27 27 / 96%); }
+
+@media (prefers-reduced-motion: reduce) {
+	.uafree-copy-target,
+	.uafree-copy-target::after,
+	#uafree-copy-toast { transition: none; }
+}

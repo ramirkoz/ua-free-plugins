@@ -1,0 +1,191 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: UA FREE URL-Only Comment Spam 1.0.2\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-07-21 13:40+0000\n"
+"PO-Revision-Date: 2026-07-21 13:40+0000\n"
+"Last-Translator: UA FREE\n"
+"Language-Team: Ukrainian\n"
+"Language: uk\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"X-Domain: ua-free-url-only-comment-spam\n"
+
+msgid "Static multilingual publishing with translation memory."
+msgstr "Статична багатомовна публікація з пам’яттю перекладів."
+
+msgid "Read-only diagnostics for translation data and queues."
+msgstr "Діагностика даних перекладу та черг у режимі лише читання."
+
+msgid "Lightweight SEO, schema, sitemap and discovery metadata."
+msgstr "Легке SEO, schema, карта сайту та метадані для пошуку."
+
+msgid "Privacy-safe 404 logging, redirects and URL diagnostics."
+msgstr "Безпечне для приватності журналювання 404, перенаправлення та діагностика URL."
+
+msgid "Controlled discovery, snapshots and cleanup workflows."
+msgstr "Контрольоване виявлення, знімки стану та сценарії очищення."
+
+msgid "Restricted read-only site diagnostics API."
+msgstr "Обмежений API діагностики сайту в режимі лише читання."
+
+msgid "Campaign packages for Google Ad Grants and standard Google Ads."
+msgstr "Пакети кампаній для Google Ad Grants і звичайного Google Ads."
+
+msgid "Privacy-first donation interaction statistics."
+msgstr "Статистика взаємодії з пожертвами з пріоритетом приватності."
+
+msgid "Accessible clipboard actions without tracking copied values."
+msgstr "Доступне копіювання без відстеження скопійованих значень."
+
+msgid "Privacy-first filtering of URL-only comments."
+msgstr "Фільтрування коментарів лише з URL із пріоритетом приватності."
+
+msgid "A unified local analytics view for Suite events."
+msgstr "Єдина локальна аналітика подій компонентів Suite."
+
+msgid "Consent controls for optional analytics integrations."
+msgstr "Керування згодою для необов’язкових аналітичних інтеграцій."
+
+msgid "UA FREE Suite"
+msgstr "UA FREE Suite"
+
+msgid "URL-only comment spam"
+msgstr "Спам-коментарі лише з URL"
+
+msgid "URL Comment Spam"
+msgstr "URL-спам у коментарях"
+
+msgid "Settings"
+msgstr "Налаштування"
+
+msgid "UA FREE URL-Only Comment Spam"
+msgstr "UA FREE URL-Only Comment Spam"
+
+msgid "A small privacy-first filter for comments that contain only one or more URLs."
+msgstr "Невеликий фільтр із пріоритетом приватності для коментарів, що містять лише одну або кілька URL-адрес."
+
+msgid "Current status"
+msgstr "Поточний стан"
+
+msgid "Filtering"
+msgstr "Фільтрування"
+
+msgid "Enabled"
+msgstr "Увімкнено"
+
+msgid "Disabled"
+msgstr "Вимкнено"
+
+msgid "Handled comments"
+msgstr "Оброблено коментарів"
+
+msgid "Last detection"
+msgstr "Останнє спрацювання"
+
+msgid "None yet"
+msgstr "Ще не було"
+
+msgid "Stored personal data"
+msgstr "Збережені персональні дані"
+
+msgid "None. No IP, user agent, comment text or detected URL is stored."
+msgstr "Жодних. IP, User-Agent, текст коментаря та виявлені URL не зберігаються."
+
+msgid "How detection works"
+msgstr "Як працює виявлення"
+
+msgid "HTML and invisible spacing characters are removed. If the remaining text contains only URLs and punctuation, the configured action is applied."
+msgstr "HTML і невидимі пробільні символи видаляються. Якщо залишаються лише URL та розділові знаки, застосовується вибрана дія."
+
+msgid "Pingbacks, trackbacks, administrators and comment moderators are never processed."
+msgstr "Pingback, trackback, адміністратори та модератори коментарів ніколи не обробляються."
+
+msgid "Enable filtering"
+msgstr "Увімкнути фільтрування"
+
+msgid "Process new standard comments."
+msgstr "Обробляти нові звичайні коментарі."
+
+msgid "Action"
+msgstr "Дія"
+
+msgid "Mark as spam"
+msgstr "Позначати як спам"
+
+msgid "Hold for moderation"
+msgstr "Залишати на модерації"
+
+msgid "Minimum URL count"
+msgstr "Мінімальна кількість URL"
+
+msgid "Logged-in users"
+msgstr "Авторизовані користувачі"
+
+msgid "Do not process comments from any logged-in user."
+msgstr "Не обробляти коментарі жодного авторизованого користувача."
+
+msgid "Trusted destinations"
+msgstr "Довірені адреси"
+
+msgid "Do not flag comments when every URL points to this site."
+msgstr "Не позначати коментар, якщо всі URL ведуть на цей сайт."
+
+msgid "Optional trusted domains, one per line. A comment is exempt only when every detected URL is trusted."
+msgstr "Необов’язкові довірені домени, по одному в рядку. Коментар не обробляється лише тоді, коли всі виявлені URL є довіреними."
+
+msgid "Uninstall"
+msgstr "Видалення плагіна"
+
+msgid "Delete settings and aggregate counters when the plugin is uninstalled."
+msgstr "Видалити налаштування та зведені лічильники під час видалення плагіна."
+
+msgid "Test the detector"
+msgstr "Перевірка детектора"
+
+msgid "The sample is analyzed in this request only and is never saved."
+msgstr "Зразок аналізується лише в межах цього запиту й ніколи не зберігається."
+
+msgid "Analyze sample"
+msgstr "Проаналізувати зразок"
+
+msgid "Result: the comment would be handled by the plugin."
+msgstr "Результат: плагін обробив би цей коментар."
+
+msgid "Result: the comment would continue through normal WordPress moderation."
+msgstr "Результат: коментар пройшов би звичайну модерацію WordPress."
+
+msgid "Counter"
+msgstr "Лічильник"
+
+msgid "Resetting the counter does not move or delete any WordPress comments."
+msgstr "Скидання лічильника не переміщує і не видаляє коментарі WordPress."
+
+msgid "Reset aggregate counter"
+msgstr "Скинути зведений лічильник"
+
+msgid "UA FREE Plugin Suite"
+msgstr "Набір плагінів UA FREE"
+
+msgid "These lightweight plugins were originally created to solve practical needs of a charitable foundation website and are being generalized for other WordPress sites."
+msgstr "Ці легкі плагіни спочатку створювалися для практичних потреб сайту благодійного фонду, а тепер узагальнюються для інших сайтів WordPress."
+
+msgid "Origin and support"
+msgstr "Походження та підтримка"
+
+msgid "Support for the charitable foundation and support for plugin development are separate destinations. No credit link is inserted into the public site."
+msgstr "Підтримка благодійного фонду та підтримка розробки плагінів ведуть на окремі сторінки. Плагін не додає посилань у публічну частину сайту."
+
+msgid "You do not have permission to perform this action."
+msgstr "У вас немає прав для виконання цієї дії."
+
+msgid "Active"
+msgstr "Активний"
+
+msgid "Installed"
+msgstr "Встановлений"
+
+msgid "Available separately"
+msgstr "Доступний окремо"

@@ -1,0 +1,80 @@
+msgid ""
+msgstr "Project-Id-Version: UA FREE Suite Control Center 0.3.5\\nContent-Type: text/plain; charset=UTF-8\\nContent-Transfer-Encoding: 8bit\\nLanguage: uk\\nPlural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\\n"
+
+msgid "Analytics Dashboard"
+msgstr "Аналітична панель"
+
+msgid "Open dashboard"
+msgstr "Відкрити панель"
+
+msgid "Consent Manager is unavailable. Optional analytics must remain disabled."
+msgstr "Consent Manager недоступний. Необов’язкова аналітика має залишатися вимкненою."
+
+msgid "SEO Core reports another active output provider."
+msgstr "SEO Core повідомляє про інший активний постачальник output."
+
+msgid "Translate Diagnostics reports unresolved hints."
+msgstr "Translate Diagnostics повідомляє про невирішені підказки."
+
+msgid "404 Guard is available but disabled."
+msgstr "404 Guard доступний, але вимкнений."
+
+msgid "Donate Stats is unavailable."
+msgstr "Donate Stats недоступний."
+
+msgid "No immediate Suite warnings were detected."
+msgstr "Негайних попереджень Suite не виявлено."
+
+msgid "You do not have permission to view this dashboard."
+msgstr "У вас немає дозволу переглядати цю панель."
+
+msgid "UA FREE Suite Control Center"
+msgstr "UA FREE Suite Control Center"
+
+msgid "Allowlist-only local metrics. No arbitrary provider payloads or metric extensions."
+msgstr "Локальні метрики лише за allowlist. Без довільних provider payloads і metric extensions."
+
+msgid "Period:"
+msgstr "Період:"
+
+msgid "%d days"
+msgstr "%d днів"
+
+msgid "Export privacy-safe JSON"
+msgstr "Експортувати privacy-safe JSON"
+
+msgid "Providers available"
+msgstr "Доступні постачальники"
+
+msgid "Metrics"
+msgstr "Метрики"
+
+msgid "Findings"
+msgstr "Висновки"
+
+msgid "Metric"
+msgstr "Метрика"
+
+msgid "Value"
+msgstr "Значення"
+
+msgid "Unit"
+msgstr "Одиниця"
+
+msgid "Providers"
+msgstr "Постачальники"
+
+msgid "Provider"
+msgstr "Постачальник"
+
+msgid "State"
+msgstr "Стан"
+
+msgid "Version"
+msgstr "Версія"
+
+msgid "Privacy boundary"
+msgstr "Межа приватності"
+
+msgid "You do not have permission to export this report."
+msgstr "У вас немає дозволу експортувати цей звіт."

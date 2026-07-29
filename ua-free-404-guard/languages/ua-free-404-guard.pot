@@ -1,0 +1,331 @@
+# Translations template for UA FREE 404 Guard.
+# Copyright (C) 2026 ORGANIZATION
+# This file is distributed under the same license as the UA FREE 404 Guard project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: UA FREE 404 Guard 2.0.3\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2026-07-23 09:25+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+msgid "404 Guard"
+msgstr ""
+
+msgid "404/410 intelligence log"
+msgstr ""
+
+msgid "410 rule added."
+msgstr ""
+
+msgid "410 rule deleted."
+msgstr ""
+
+msgid "410 rules"
+msgstr ""
+
+msgid "A 410 rule is active."
+msgstr ""
+
+msgid "A redirect already exists for this source path."
+msgstr ""
+
+msgid "A service query key was detected. Review it before creating a 410 rule."
+msgstr ""
+
+msgid "A service query pair was detected. Review it before creating a 410 rule."
+msgstr ""
+
+msgid "A ten-minute sampled capture window was started."
+msgstr ""
+
+msgid "Active"
+msgstr ""
+
+msgid "Add 410 rule"
+msgstr ""
+
+msgid "Add redirect"
+msgstr ""
+
+msgid "Bot 404 response"
+msgstr ""
+
+msgid "Bounded diagnostic capture"
+msgstr ""
+
+msgid "Candidate URL"
+msgstr ""
+
+msgid "Capture cannot start until the legacy or oversized log is explicitly sanitized."
+msgstr ""
+
+msgid "Capture is active for approximately %1$d more seconds. Requests are sampled 1 in %2$d and the grouped log is written at most once every %3$d seconds."
+msgstr ""
+
+msgid "Captured count"
+msgstr ""
+
+msgid "Check and fix the internal link."
+msgstr ""
+
+msgid "Checked %1$d posts and %2$d links. Candidates: %3$d."
+msgstr ""
+
+msgid "Clear log"
+msgstr ""
+
+msgid "Clear the local log?"
+msgstr ""
+
+msgid "Content"
+msgstr ""
+
+msgid "Content is not scanned during a normal settings-page load."
+msgstr ""
+
+msgid "Content removed"
+msgstr ""
+
+msgid "Data layer"
+msgstr ""
+
+msgid "Delete"
+msgstr ""
+
+msgid "Detected environment"
+msgstr ""
+
+msgid "Development build. It creates no automatic redirect or 410 rules."
+msgstr ""
+
+msgid "Diagnostic capture"
+msgstr ""
+
+msgid "Emit a local event with a salted path fingerprint"
+msgstr ""
+
+msgid "Enable request handling"
+msgstr ""
+
+msgid "Exact path"
+msgstr ""
+
+msgid "Exact same-site rules only. Duplicate sources, protected paths and redirect cycles are rejected."
+msgstr ""
+
+msgid "Export privacy-safe JSON report"
+msgstr ""
+
+msgid "Frequent request. Review whether a redirect is appropriate."
+msgstr ""
+
+msgid "General settings"
+msgstr ""
+
+msgid "Include human and unknown requests during an explicit capture window"
+msgstr ""
+
+msgid "Include obvious bots during an explicit capture window"
+msgstr ""
+
+msgid "Installed"
+msgstr ""
+
+msgid "Insufficient permissions."
+msgstr ""
+
+msgid "Internal link candidates"
+msgstr ""
+
+msgid "Last seen"
+msgstr ""
+
+msgid "Legacy log rows were rewritten using the privacy-safe schema."
+msgstr ""
+
+msgid "Likely automated probing. Keep 404 or add a narrow 410 rule."
+msgstr ""
+
+msgid "Local log cleared."
+msgstr ""
+
+msgid "Log size"
+msgstr ""
+
+msgid "Match type"
+msgstr ""
+
+msgid "Maximum grouped captured entries."
+msgstr ""
+
+msgid "Monitor. No automatic action is recommended."
+msgstr ""
+
+msgid "No"
+msgstr ""
+
+msgid "No 410 rules."
+msgstr ""
+
+msgid "No candidates found in the checked content."
+msgstr ""
+
+msgid "No captured entries yet."
+msgstr ""
+
+msgid "No public request writes are performed while capture is inactive. A capture automatically expires after ten minutes."
+msgstr ""
+
+msgid "No raw URL, query value or referrer is added to the event."
+msgstr ""
+
+msgid "No redirect rules."
+msgstr ""
+
+msgid "Page builders"
+msgstr ""
+
+msgid "Page not found"
+msgstr ""
+
+msgid "Path fingerprint"
+msgstr ""
+
+msgid "Path prefix"
+msgstr ""
+
+msgid "Persistent logging is disabled unless an administrator starts a ten-minute capture window."
+msgstr ""
+
+msgid "Plugin"
+msgstr ""
+
+msgid "Protection"
+msgstr ""
+
+msgid "Query key"
+msgstr ""
+
+msgid "Query key=value"
+msgstr ""
+
+msgid "Query-key fingerprints"
+msgstr ""
+
+msgid "Recommendation"
+msgstr ""
+
+msgid "Redirect rule added."
+msgstr ""
+
+msgid "Redirect rule deleted."
+msgstr ""
+
+msgid "Redirect rules"
+msgstr ""
+
+msgid "Referrer scope"
+msgstr ""
+
+msgid "Return a lightweight page without the theme for obvious bots"
+msgstr ""
+
+msgid "Return to the homepage"
+msgstr ""
+
+msgid "Review-only suggestions"
+msgstr ""
+
+msgid "Rules are exact or boundary-aware. Query values are never written to the 404 log."
+msgstr ""
+
+msgid "Run explicit content scan"
+msgstr ""
+
+msgid "Sample"
+msgstr ""
+
+msgid "Sanitize legacy log now"
+msgstr ""
+
+msgid "Sanitize or reduce the stored log before starting capture."
+msgstr ""
+
+msgid "Settings"
+msgstr ""
+
+msgid "Source"
+msgstr ""
+
+msgid "Source path"
+msgstr ""
+
+msgid "Start ten-minute sampled capture"
+msgstr ""
+
+msgid "Status"
+msgstr ""
+
+msgid "Stop capture now"
+msgstr ""
+
+msgid "Store salted query-key fingerprints, never names or values"
+msgstr ""
+
+msgid "Target"
+msgstr ""
+
+msgid "Target path or same-site URL"
+msgstr ""
+
+msgid "The 410 rule was not saved. Check the type, value and protected paths."
+msgstr ""
+
+msgid "The JSON report could not be generated."
+msgstr ""
+
+msgid "The quick scanner reads plugin headers only and creates no rules."
+msgstr ""
+
+msgid "The redirect was not saved because it creates a redirect cycle."
+msgstr ""
+
+msgid "The redirect was not saved. Use a non-system source path and a valid same-site HTTP/HTTPS target."
+msgstr ""
+
+msgid "The requested page was not found."
+msgstr ""
+
+msgid "The sampled capture log stores no IP address, raw path, raw User-Agent, raw referrer, query name or query value."
+msgstr ""
+
+msgid "The sampled capture window was stopped."
+msgstr ""
+
+msgid "This content is no longer available."
+msgstr ""
+
+msgid "Type"
+msgstr ""
+
+msgid "UA FREE 404 Guard"
+msgstr ""
+
+msgid "URL and redirect plugins"
+msgstr ""
+
+msgid "Value"
+msgstr ""
+
+msgid "Yes"
+msgstr ""
+

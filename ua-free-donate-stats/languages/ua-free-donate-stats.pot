@@ -1,0 +1,329 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: UA FREE Donate Stats & Conversions 1.2.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-07-21 00:00+0000\n"
+"PO-Revision-Date: 2026-07-21 00:00+0000\n"
+"Last-Translator: UA FREE\n"
+"Language-Team: Ukrainian\n"
+"Language: uk\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"X-Domain: ua-free-donate-stats\n"
+
+msgid "%d days"
+msgstr ""
+
+msgid "(no title)"
+msgstr ""
+
+msgid "A reported success is an event reported by a configured page marker or a server integration. It is not a financial ledger and does not prove that money was settled."
+msgstr ""
+
+msgid "A small rule that sends URL-only comments to spam."
+msgstr ""
+
+msgid "A unified local dashboard for available UA FREE plugin data."
+msgstr ""
+
+msgid "Accessible copy-to-clipboard actions for administrator-selected values."
+msgstr ""
+
+msgid "Account mode"
+msgstr ""
+
+msgid "Active"
+msgstr ""
+
+msgid "Additional local path patterns"
+msgstr ""
+
+msgid "Allow a front-end success marker to report donation_success"
+msgstr ""
+
+msgid "Allowed payment hostnames"
+msgstr ""
+
+msgid "Authenticated read-only diagnostics for authorized clients and AI actions."
+msgstr ""
+
+msgid "Automated multilingual publishing with translation memory and controlled cleanup."
+msgstr ""
+
+msgid "Available separately"
+msgstr ""
+
+msgid "Campaign planning and exports for Google Ad Grants or standard Google Ads."
+msgstr ""
+
+msgid "Consent categories, script gating and Google Consent Mode integration."
+msgstr ""
+
+msgid "Consent category"
+msgstr ""
+
+msgid "Consent gate"
+msgstr ""
+
+msgid "Context"
+msgstr ""
+
+msgid "Copied details"
+msgstr ""
+
+msgid "Copies"
+msgstr ""
+
+msgid "Copy action selector"
+msgstr ""
+
+msgid "Copy click"
+msgstr ""
+
+msgid "Could not open export stream."
+msgstr ""
+
+msgid "Count"
+msgstr ""
+
+msgid "Daily activity"
+msgstr ""
+
+msgid "Date"
+msgstr ""
+
+msgid "Delete aggregate statistics"
+msgstr ""
+
+msgid "Delete all statistics"
+msgstr ""
+
+msgid "Do not gate events"
+msgstr ""
+
+msgid "Donate Stats"
+msgstr ""
+
+msgid "Donate Stats & Conversions"
+msgstr ""
+
+msgid "Donate action selector"
+msgstr ""
+
+msgid "Donate click"
+msgstr ""
+
+msgid "Donate clicks"
+msgstr ""
+
+msgid "Enable local aggregate tracking"
+msgstr ""
+
+msgid "Engagements"
+msgstr ""
+
+msgid "Environment inventory, snapshots, dry-run migration and controlled cleanup."
+msgstr ""
+
+msgid "Event"
+msgstr ""
+
+msgid "Event selectors"
+msgstr ""
+
+msgid "Exclude WordPress administrators"
+msgstr ""
+
+msgid "Export CSV"
+msgstr ""
+
+msgid "Export JSON"
+msgstr ""
+
+msgid "Gate dataLayer only"
+msgstr ""
+
+msgid "Gate local and dataLayer events"
+msgstr ""
+
+msgid "Google Ad Grants"
+msgstr ""
+
+msgid "Google advertising workflow"
+msgstr ""
+
+msgid "Independent, privacy-conscious WordPress tools originally developed to solve real operational needs of a charitable foundation website."
+msgstr ""
+
+msgid "Installed"
+msgstr ""
+
+msgid "It performs no telemetry or external requests. Support links are intentionally supplied by the final distribution channel rather than injected into other sites."
+msgstr ""
+
+msgid "Language"
+msgstr ""
+
+msgid "Languages"
+msgstr ""
+
+msgid "Legacy external click"
+msgstr ""
+
+msgid "Local aggregate donation journey statistics without IP addresses, referrers, fingerprinting, payment values or copied account details."
+msgstr ""
+
+msgid "Local privacy-safe donation journey events and conversion reporting."
+msgstr ""
+
+msgid "No Google advertising"
+msgstr ""
+
+msgid "No data yet."
+msgstr ""
+
+msgid "No published public content was found."
+msgstr ""
+
+msgid "One hostname per line. The plugin stores only the hostname, never a full external URL."
+msgstr ""
+
+msgid "One local path per line. Use * as a wildcard. Full external URLs, query strings and fragments are rejected."
+msgstr ""
+
+msgid "Overview"
+msgstr ""
+
+msgid "Page view"
+msgstr ""
+
+msgid "Page views"
+msgstr ""
+
+msgid "Pages and paths"
+msgstr ""
+
+msgid "Payment link selector"
+msgstr ""
+
+msgid "Payment open"
+msgstr ""
+
+msgid "Payment opens"
+msgstr ""
+
+msgid "Plugin Suite"
+msgstr ""
+
+msgid "Privacy-conscious 404/410 logging, redirects and URL diagnostics."
+msgstr ""
+
+msgid "Project origin"
+msgstr ""
+
+msgid "Push privacy-safe events to dataLayer"
+msgstr ""
+
+msgid "Read-only translation queue, memory, limits, cron and error diagnostics."
+msgstr ""
+
+msgid "Reported success"
+msgstr ""
+
+msgid "Reported success marker selector"
+msgstr ""
+
+msgid "Reported successes"
+msgstr ""
+
+msgid "Retention and session"
+msgstr ""
+
+msgid "Retention days"
+msgstr ""
+
+msgid "Save settings"
+msgstr ""
+
+msgid "Select published WordPress content that contains a donation form or donation actions."
+msgstr ""
+
+msgid "Session inactivity minutes"
+msgstr ""
+
+msgid "Sessions"
+msgstr ""
+
+msgid "Settings"
+msgstr ""
+
+msgid "Standalone SEO, sitemap, schema, AI discovery and accessibility checks."
+msgstr ""
+
+msgid "Standard Google Ads"
+msgstr ""
+
+msgid "Successes"
+msgstr ""
+
+msgid "Successes per session"
+msgstr ""
+
+msgid "Target key"
+msgstr ""
+
+msgid "The browser identifier is kept in sessionStorage and the database receives only a daily HMAC hash."
+msgstr ""
+
+msgid "The confirmation phrase does not match."
+msgstr ""
+
+msgid "The future UA FREE Consent Manager can answer whether this category is allowed. Until a compatible manager is present, gated events remain blocked."
+msgstr ""
+
+msgid "This plugin began as a small internal tool for a charitable foundation website and was rebuilt as a reusable public component without domain, page ID, payment provider or theme assumptions."
+msgstr ""
+
+msgid "This truncates only the two statistics tables. Settings and plugin files remain."
+msgstr ""
+
+msgid "Top event targets"
+msgstr ""
+
+msgid "Tracked contexts"
+msgstr ""
+
+msgid "Tracking does not start until at least one WordPress item or local path is selected."
+msgstr ""
+
+msgid "Tracking state"
+msgstr ""
+
+msgid "Type %s to confirm"
+msgstr ""
+
+msgid "UA FREE Donate Stats & Conversions"
+msgstr ""
+
+msgid "UA FREE Plugin Suite"
+msgstr ""
+
+msgid "Unique daily sessions"
+msgstr ""
+
+msgid "Use this only when the marker appears after a genuine payment callback. For reliable accounting, record a server event instead."
+msgstr ""
+
+msgid "Views"
+msgstr ""
+
+msgid "You do not have permission to delete this data."
+msgstr ""
+
+msgid "You do not have permission to export this data."
+msgstr ""
+
+msgid "dataLayer event name"
+msgstr ""

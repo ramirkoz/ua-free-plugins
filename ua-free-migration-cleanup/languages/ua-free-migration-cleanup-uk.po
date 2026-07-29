@@ -1,0 +1,221 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: UA FREE Migration & Cleanup 0.8.0\n"
+"Language: uk\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+
+msgid "404 intelligence, bot filtering and controlled redirect recommendations."
+msgstr "Інтелектуальний аналіз 404, фільтрація ботів і контрольовані рекомендації щодо перенаправлень."
+
+msgid "A lightweight, read-only environment scanner and snapshot foundation. Destructive cleanup is available only through verified adapters."
+msgstr "Легкий сканер середовища в режимі лише читання та основа для snapshot. Руйнівне очищення доступне лише через перевірені адаптери."
+
+msgid "About & Support"
+msgstr "Про проєкт і підтримка"
+
+msgid "Active"
+msgstr "Активний"
+
+msgid "Active plugins"
+msgstr "Активні плагіни"
+
+msgid "Automatic multilingual translation with migration tools for previous translation solutions."
+msgstr "Автоматичний багатомовний переклад з інструментами міграції з попередніх рішень."
+
+msgid "Available"
+msgstr "Доступний"
+
+msgid "Back to plugin inventory"
+msgstr "Назад до переліку плагінів"
+
+msgid "Bilingual privacy and consent controls for optional external services."
+msgstr "Двомовне керування приватністю та згодою для необов’язкових зовнішніх сервісів."
+
+msgid "Candidate matches are heuristic. A plugin-specific adapter, dry run, snapshot and explicit confirmation are required before any cleanup operation can exist."
+msgstr "Кандидатні збіги визначаються евристично. Для будь-якого очищення потрібні окремий адаптер плагіна, dry-run, snapshot і явне підтвердження."
+
+msgid "Cron hooks"
+msgstr "Cron-події"
+
+msgid "Database tables"
+msgstr "Таблиці бази даних"
+
+msgid "Detected search patterns:"
+msgstr "Виявлені шаблони пошуку:"
+
+msgid "Development support is separate from charitable donations. The dedicated privacy-first cryptocurrency support page will be linked here after it is published."
+msgstr "Підтримка розробки відокремлена від благодійних пожертв. Посилання на окрему privacy-first сторінку криптопідтримки з’явиться тут після її публікації."
+
+msgid "Do not treat heuristic matches as confirmed ownership."
+msgstr "Не вважайте евристичні збіги підтвердженою належністю даних."
+
+msgid "Environment"
+msgstr "Середовище"
+
+msgid "Environment inventory, snapshots, migration and controlled cleanup."
+msgstr "Інвентаризація середовища, snapshot, міграція та контрольоване очищення."
+
+msgid "Estimated autoload size"
+msgstr "Орієнтовний розмір autoload"
+
+msgid "Export environment snapshot"
+msgstr "Експортувати snapshot середовища"
+
+msgid "Export plugin inspection"
+msgstr "Експортувати перевірку плагіна"
+
+msgid "Export the JSON snapshot before developing or enabling a cleanup adapter."
+msgstr "Експортуйте JSON snapshot перед розробкою або увімкненням адаптера очищення."
+
+msgid "File"
+msgstr "Файл"
+
+msgid "Google Ad Grants package generation and landing page health checks."
+msgstr "Формування пакетів Google Ad Grants і перевірка працездатності посадкових сторінок."
+
+msgid "How to use this version"
+msgstr "Як користуватися цією версією"
+
+msgid "Inactive"
+msgstr "Неактивний"
+
+msgid "Inspect"
+msgstr "Перевірити"
+
+msgid "Inspect a plugin to find likely database and cron leftovers. The scan is read-only and intentionally conservative."
+msgstr "Перевірте плагін, щоб знайти ймовірні залишки в базі даних і cron. Сканування працює лише на читання та навмисно є консервативним."
+
+msgid "Installed plugins"
+msgstr "Встановлені плагіни"
+
+msgid "Lightweight accessible copy-to-clipboard actions for configured values."
+msgstr "Легке доступне копіювання налаштованих значень у буфер обміну."
+
+msgid "Matches are candidates, not proof of ownership. Cleanup requires a dedicated adapter and a verified snapshot."
+msgstr "Збіги є лише кандидатами, а не доказом належності даних. Для очищення потрібні окремий адаптер і перевірений snapshot."
+
+msgid "Migration & Cleanup"
+msgstr "Міграція та очищення"
+
+msgid "Minimal URL-only comment spam filter with an optional allowlist."
+msgstr "Мінімальний фільтр URL-only спаму в коментарях з необов’язковим білим списком."
+
+msgid "Network active"
+msgstr "Активний у мережі"
+
+msgid "No likely matches found."
+msgstr "Ймовірних збігів не знайдено."
+
+msgid "Not installed yet. The public repository link will appear after release."
+msgstr "Ще не встановлено. Посилання на публічний репозиторій з’явиться після релізу."
+
+msgid "Open a plugin inspection to review likely options, metadata, tables and cron hooks."
+msgstr "Відкрийте перевірку плагіна, щоб переглянути ймовірні опції, метадані, таблиці та cron-події."
+
+msgid "Open the Environment tab and inspect the installed plugin list."
+msgstr "Відкрийте вкладку «Середовище» та перегляньте перелік встановлених плагінів."
+
+msgid "Open the foundation donation page"
+msgstr "Відкрити сторінку донатів фонду"
+
+msgid "Options"
+msgstr "Опції"
+
+msgid "Overview"
+msgstr "Огляд"
+
+msgid "Plugin"
+msgstr "Плагін"
+
+msgid "Plugin Suite"
+msgstr "Комплекс плагінів"
+
+msgid "Plugin sections"
+msgstr "Розділи плагіна"
+
+msgid "Post metadata"
+msgstr "Метадані записів"
+
+msgid "Privacy-safe local donation page and conversion statistics."
+msgstr "Локальна privacy-safe статистика сторінок донатів і конверсій."
+
+msgid "Project origin"
+msgstr "Походження проєкту"
+
+msgid "Protected read-only diagnostics API for authorized internal audits."
+msgstr "Захищений read-only API діагностики для авторизованих внутрішніх аудитів."
+
+msgid "Read-only by default."
+msgstr "За замовчуванням лише читання."
+
+msgid "Read-only diagnostics for UA FREE Static Translate."
+msgstr "Read-only діагностика UA FREE Static Translate."
+
+msgid "Refresh inventory"
+msgstr "Оновити інвентаризацію"
+
+msgid "Safety model"
+msgstr "Модель безпеки"
+
+msgid "Standalone SEO, sitemap, structured data, AI discovery and accessibility checks."
+msgstr "Автономне SEO, sitemap, структуровані дані, AI Discovery і перевірки доступності."
+
+msgid "Status"
+msgstr "Статус"
+
+msgid "Support development"
+msgstr "Підтримати розробку"
+
+msgid "Support the foundation"
+msgstr "Підтримати фонд"
+
+msgid "Term metadata"
+msgstr "Метадані термінів"
+
+msgid "The environment inventory was refreshed."
+msgstr "Інвентаризацію середовища оновлено."
+
+msgid "The exported JSON contains the full limited result set."
+msgstr "Експортований JSON містить повний набір результатів у межах установленого ліміту."
+
+msgid "The selected plugin is not installed."
+msgstr "Вибраний плагін не встановлено."
+
+msgid "The suite was born from real operational needs of a charitable foundation website and is being rebuilt as a universal collection of lightweight WordPress tools."
+msgstr "Комплекс виник із реальних операційних потреб сайту благодійного фонду й перебудовується як універсальний набір легких інструментів WordPress."
+
+msgid "The universal scanner does not delete data, change plugin state, export option values or collect personal data."
+msgstr "Універсальний сканер не видаляє дані, не змінює стан плагінів, не експортує значення опцій і не збирає персональні дані."
+
+msgid "This plugin was originally created to solve real operational needs of a charitable foundation website and was later rebuilt as a universal WordPress tool."
+msgstr "Цей плагін спочатку створили для вирішення реальних операційних потреб сайту благодійного фонду, а згодом перебудували як універсальний інструмент WordPress."
+
+msgid "UA FREE Migration & Cleanup"
+msgstr "UA FREE Migration & Cleanup"
+
+msgid "UA FREE Plugin Suite"
+msgstr "Комплекс плагінів UA FREE"
+
+msgid "Unified local dashboard for installed UA FREE plugins."
+msgstr "Єдина локальна панель для встановлених плагінів UA FREE."
+
+msgid "User metadata"
+msgstr "Метадані користувачів"
+
+msgid "Version"
+msgstr "Версія"
+
+msgid "WordPress database tables"
+msgstr "Таблиці бази даних WordPress"
+
+msgid "You can donate, share the foundation’s work or publish a link to it."
+msgstr "Можна зробити пожертву, розповісти про роботу фонду або розмістити посилання на нього."
+
+msgid "You do not have permission to perform this action."
+msgstr "У вас немає прав для виконання цієї дії."
+
+msgid "The universal scanner does not delete data, change plugin state, export option values or collect personal data."
+msgstr "Універсальний сканер не видаляє дані, не змінює стан плагінів, не експортує значення опцій і не збирає персональні дані."
