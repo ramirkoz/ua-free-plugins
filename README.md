@@ -56,6 +56,10 @@ Each plugin is stored in its own folder. For normal WordPress installation, use 
 
 The suite grew from practical work on the UA FREE foundation website rather than from a theoretical plugin checklist. The public versions keep that experience but remove foundation-specific assumptions wherever possible so the plugins can be used independently on other WordPress sites.
 
+## AI-assisted development and testing
+
+Development, review and test preparation were performed with the assistance of OpenAI ChatGPT using the GPT-5.6 Thinking model. Final decisions, release scope and live-site validation remained under human control.
+
 ## Support the developer
 
 These wallet addresses belong to the plugin developer. They are not donation details of the UA FREE charitable foundation.
