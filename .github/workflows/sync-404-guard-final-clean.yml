@@ -1,0 +1,108 @@
+name: Finalize UA FREE 404 Guard
+
+on:
+  push:
+    paths:
+      - '.github/workflows/sync-404-guard-final-clean.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Apply final Plugin Check cleanup
+        shell: python
+        run: |
+          from pathlib import Path
+
+          admin = Path('ua-free-404-guard/includes/class-admin.php')
+          guard = Path('ua-free-404-guard/includes/class-guard.php')
+
+          def replace_once(text: str, old: str, new: str, label: str) -> str:
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'{label}: expected one match, found {count}')
+              return text.replace(old, new, 1)
+
+          text = admin.read_text(encoding='utf-8')
+
+          text = replace_once(
+              text,
+              "\t\t$deep_value = '';\n\t\tif ( isset( $_GET['uafree_404_deep'] ) ) {\n\t\t\t$deep_value = sanitize_key( wp_unslash( Guard::scalar_string( $_GET['uafree_404_deep'] ) ) );\n\t\t}\n\t\t$deep = '1' === $deep_value;",
+              "\t\t// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- The deep-scan nonce is checked below before any scan runs.\n\t\t$deep_value = isset( $_GET['uafree_404_deep'] ) && is_string( $_GET['uafree_404_deep'] )\n\t\t\t? sanitize_key( wp_unslash( $_GET['uafree_404_deep'] ) )\n\t\t\t: '';\n\t\t$deep = '1' === $deep_value;",
+              'deep scan input',
+          )
+
+          text = replace_once(
+              text,
+              "\t\t$source_raw = isset( $_POST['source'] )\n\t\t\t? sanitize_text_field( wp_unslash( Guard::scalar_string( $_POST['source'] ) ) )\n\t\t\t: '';\n\t\t$target_raw = isset( $_POST['target'] )\n\t\t\t? sanitize_text_field( wp_unslash( Guard::scalar_string( $_POST['target'] ) ) )\n\t\t\t: '';\n\t\t$status = isset( $_POST['status'] )\n\t\t\t? absint( wp_unslash( Guard::scalar_string( $_POST['status'] ) ) )\n\t\t\t: 301;",
+              "\t\t$source_raw = isset( $_POST['source'] ) && is_string( $_POST['source'] )\n\t\t\t? sanitize_text_field( wp_unslash( $_POST['source'] ) )\n\t\t\t: '';\n\t\t$target_raw = isset( $_POST['target'] ) && is_string( $_POST['target'] )\n\t\t\t? sanitize_text_field( wp_unslash( $_POST['target'] ) )\n\t\t\t: '';\n\t\t$status = isset( $_POST['status'] ) && is_scalar( $_POST['status'] )\n\t\t\t? absint( wp_unslash( $_POST['status'] ) )\n\t\t\t: 301;",
+              'redirect inputs',
+          )
+
+          old_id = "\t\t$id = isset( $_GET['id'] )\n\t\t\t? sanitize_text_field( wp_unslash( Guard::scalar_string( $_GET['id'] ) ) )\n\t\t\t: '';"
+          new_id = "\t\t// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- The nonce action contains this record ID and is checked immediately below.\n\t\t$id = isset( $_GET['id'] ) && is_string( $_GET['id'] )\n\t\t\t? sanitize_text_field( wp_unslash( $_GET['id'] ) )\n\t\t\t: '';"
+          if text.count(old_id) != 2:
+              raise SystemExit(f'delete IDs: expected two matches, found {text.count(old_id)}')
+          text = text.replace(old_id, new_id)
+
+          text = replace_once(
+              text,
+              "\t\t$type = isset( $_POST['type'] )\n\t\t\t? sanitize_key( wp_unslash( Guard::scalar_string( $_POST['type'] ) ) )\n\t\t\t: '';\n\t\t$value_raw = isset( $_POST['value'] )\n\t\t\t? sanitize_text_field( wp_unslash( Guard::scalar_string( $_POST['value'] ) ) )\n\t\t\t: '';",
+              "\t\t$type = isset( $_POST['type'] ) && is_string( $_POST['type'] )\n\t\t\t? sanitize_key( wp_unslash( $_POST['type'] ) )\n\t\t\t: '';\n\t\t$value_raw = isset( $_POST['value'] ) && is_string( $_POST['value'] )\n\t\t\t? sanitize_text_field( wp_unslash( $_POST['value'] ) )\n\t\t\t: '';",
+              '410 inputs',
+          )
+
+          text = replace_once(
+              text,
+              "\tprivate static function render_notice(): void {\n\t\t$code = '';\n\t\tif ( isset( $_GET['uafree_notice'] ) ) {\n\t\t\t// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin notice; no state is changed.\n\t\t\t$code = sanitize_key( wp_unslash( Guard::scalar_string( $_GET['uafree_notice'] ) ) );\n\t\t}",
+              "\tprivate static function render_notice(): void {\n\t\t$code = filter_input( INPUT_GET, 'uafree_notice', FILTER_SANITIZE_SPECIAL_CHARS );\n\t\t$code = is_string( $code ) ? sanitize_key( $code ) : '';",
+              'admin notice',
+          )
+
+          admin.write_text(text, encoding='utf-8')
+
+          text = guard.read_text(encoding='utf-8')
+
+          text = replace_once(
+              text,
+              "\tpublic static function request_uri(): string {\n\t\t$uri = isset( $_SERVER['REQUEST_URI'] )\n\t\t\t? sanitize_text_field( wp_unslash( self::scalar_string( $_SERVER['REQUEST_URI'] ) ) )\n\t\t\t: '/';",
+              "\tpublic static function request_uri(): string {\n\t\t$uri = isset( $_SERVER['REQUEST_URI'] ) && is_string( $_SERVER['REQUEST_URI'] )\n\t\t\t? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) )\n\t\t\t: '/';",
+              'request URI',
+          )
+
+          text = replace_once(
+              text,
+              "\tpublic static function user_agent(): string {\n\t\t$ua = isset( $_SERVER['HTTP_USER_AGENT'] )\n\t\t\t? sanitize_text_field( wp_unslash( self::scalar_string( $_SERVER['HTTP_USER_AGENT'] ) ) )\n\t\t\t: '';",
+              "\tpublic static function user_agent(): string {\n\t\t$ua = isset( $_SERVER['HTTP_USER_AGENT'] ) && is_string( $_SERVER['HTTP_USER_AGENT'] )\n\t\t\t? sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) )\n\t\t\t: '';",
+              'user agent',
+          )
+
+          text = replace_once(
+              text,
+              "\t\t$referrer_raw = isset( $_SERVER['HTTP_REFERER'] )\n\t\t\t? esc_url_raw( wp_unslash( self::scalar_string( $_SERVER['HTTP_REFERER'] ) ) )\n\t\t\t: '';",
+              "\t\t$referrer_raw = isset( $_SERVER['HTTP_REFERER'] ) && is_string( $_SERVER['HTTP_REFERER'] )\n\t\t\t? esc_url_raw( wp_unslash( $_SERVER['HTTP_REFERER'] ) )\n\t\t\t: '';",
+              'referrer',
+          )
+
+          guard.write_text(text, encoding='utf-8')
+
+      - name: Validate PHP syntax
+        run: |
+          find ua-free-404-guard -name '*.php' -print0 | xargs -0 -n1 php -l
+
+      - name: Commit final synchronized files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          rm .github/workflows/sync-404-guard-final-clean.yml
+          git add ua-free-404-guard/includes/class-admin.php ua-free-404-guard/includes/class-guard.php .github/workflows/sync-404-guard-final-clean.yml
+          git commit -m "Finalize UA FREE 404 Guard Plugin Check cleanup"
+          git push
