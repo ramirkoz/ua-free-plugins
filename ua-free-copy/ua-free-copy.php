@@ -31,7 +31,6 @@ register_activation_hook( __FILE__, array( 'UAFree\\CopyTool\\Plugin', 'activate
 add_action(
 	'plugins_loaded',
 	static function (): void {
-		load_plugin_textdomain( 'ua-free-copy', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
 		\UAFree\CopyTool\Plugin::init();
 		\UAFree\CopyTool\Admin::init();
 	}
