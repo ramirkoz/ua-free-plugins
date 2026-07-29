@@ -25,20 +25,22 @@ if ( ! class_exists( 'UAFree_Admin_Support_Footer', false ) ) {
 		}
 
 		private static function is_uafree_screen(): bool {
-			$page = isset( $_GET['page'] )
-				? strtolower( sanitize_text_field( wp_unslash( (string) $_GET['page'] ) ) )
-				: '';
-			$screen_id = '';
-			if ( function_exists( 'get_current_screen' ) ) {
-				$screen = get_current_screen();
-				$screen_id = is_object( $screen ) ? strtolower( (string) $screen->id ) : '';
+			if ( ! function_exists( 'get_current_screen' ) ) {
+				return false;
 			}
 
-			foreach ( array( $page, $screen_id ) as $value ) {
+			$screen = get_current_screen();
+			if ( ! is_object( $screen ) ) {
+				return false;
+			}
+
+			foreach ( array( (string) $screen->id, (string) $screen->base ) as $value ) {
+				$value = strtolower( $value );
 				if ( str_contains( $value, 'uafree' ) || str_contains( $value, 'ua-free' ) ) {
 					return true;
 				}
 			}
+
 			return false;
 		}
 
