@@ -176,8 +176,8 @@ final class Guard {
 	}
 
 	public static function request_uri(): string {
-		$uri = isset( $_SERVER['REQUEST_URI'] )
-			? sanitize_text_field( wp_unslash( self::scalar_string( $_SERVER['REQUEST_URI'] ) ) )
+		$uri = isset( $_SERVER['REQUEST_URI'] ) && is_string( $_SERVER['REQUEST_URI'] )
+			? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) )
 			: '/';
 		$uri = preg_replace( '/[\x00-\x1F\x7F].*$/s', '', $uri ) ?? '/';
 		return self::truncate( '' !== $uri ? $uri : '/', self::MAX_REQUEST_BYTES );
@@ -194,8 +194,8 @@ final class Guard {
 	}
 
 	public static function user_agent(): string {
-		$ua = isset( $_SERVER['HTTP_USER_AGENT'] )
-			? sanitize_text_field( wp_unslash( self::scalar_string( $_SERVER['HTTP_USER_AGENT'] ) ) )
+		$ua = isset( $_SERVER['HTTP_USER_AGENT'] ) && is_string( $_SERVER['HTTP_USER_AGENT'] )
+			? sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) )
 			: '';
 		return self::truncate( $ua, 400 );
 	}
@@ -576,8 +576,8 @@ final class Guard {
 		$key              = md5( $status . '|' . $kind . '|' . $source . '|' . $path_fingerprint . '|' . implode( ',', $query_key_fingerprints ) );
 		$log              = self::log_map();
 		$now              = current_time( 'mysql' );
-		$referrer_raw = isset( $_SERVER['HTTP_REFERER'] )
-			? esc_url_raw( wp_unslash( self::scalar_string( $_SERVER['HTTP_REFERER'] ) ) )
+		$referrer_raw = isset( $_SERVER['HTTP_REFERER'] ) && is_string( $_SERVER['HTTP_REFERER'] )
+			? esc_url_raw( wp_unslash( $_SERVER['HTTP_REFERER'] ) )
 			: '';
 		$referrer = self::referrer_summary( $referrer_raw );
 

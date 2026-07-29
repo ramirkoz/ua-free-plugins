@@ -60,10 +60,10 @@ final class Admin {
 		$redirects  = Guard::redirects();
 		$gone_rules = Guard::gone_rules();
 		$scan       = Environment_Scanner::scan();
-		$deep_value = '';
-		if ( isset( $_GET['uafree_404_deep'] ) ) {
-			$deep_value = sanitize_key( wp_unslash( Guard::scalar_string( $_GET['uafree_404_deep'] ) ) );
-		}
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- The deep-scan nonce is checked below before any scan runs.
+		$deep_value = isset( $_GET['uafree_404_deep'] ) && is_string( $_GET['uafree_404_deep'] )
+			? sanitize_key( wp_unslash( $_GET['uafree_404_deep'] ) )
+			: '';
 		$deep = '1' === $deep_value;
 		if ( $deep ) {
 			check_admin_referer( 'uafree_404_deep_scan' );
@@ -197,14 +197,14 @@ final class Admin {
 	public static function add_redirect(): void {
 		self::authorise();
 		check_admin_referer( 'uafree_404_add_redirect' );
-		$source_raw = isset( $_POST['source'] )
-			? sanitize_text_field( wp_unslash( Guard::scalar_string( $_POST['source'] ) ) )
+		$source_raw = isset( $_POST['source'] ) && is_string( $_POST['source'] )
+			? sanitize_text_field( wp_unslash( $_POST['source'] ) )
 			: '';
-		$target_raw = isset( $_POST['target'] )
-			? sanitize_text_field( wp_unslash( Guard::scalar_string( $_POST['target'] ) ) )
+		$target_raw = isset( $_POST['target'] ) && is_string( $_POST['target'] )
+			? sanitize_text_field( wp_unslash( $_POST['target'] ) )
 			: '';
-		$status = isset( $_POST['status'] )
-			? absint( wp_unslash( Guard::scalar_string( $_POST['status'] ) ) )
+		$status = isset( $_POST['status'] ) && is_scalar( $_POST['status'] )
+			? absint( wp_unslash( $_POST['status'] ) )
 			: 301;
 		$source = Guard::normalise_path( $source_raw );
 		$target = Guard::normalise_same_site_url( $target_raw );
@@ -225,8 +225,9 @@ final class Admin {
 
 	public static function delete_redirect(): void {
 		self::authorise();
-		$id = isset( $_GET['id'] )
-			? sanitize_text_field( wp_unslash( Guard::scalar_string( $_GET['id'] ) ) )
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- The nonce action contains this record ID and is checked immediately below.
+		$id = isset( $_GET['id'] ) && is_string( $_GET['id'] )
+			? sanitize_text_field( wp_unslash( $_GET['id'] ) )
 			: '';
 		check_admin_referer( 'uafree_404_delete_redirect_' . $id );
 		$rules = array_values( array_filter( Guard::redirects(), static fn( array $rule ): bool => (string) $rule['id'] !== $id ) );
@@ -237,11 +238,11 @@ final class Admin {
 	public static function add_gone(): void {
 		self::authorise();
 		check_admin_referer( 'uafree_404_add_gone' );
-		$type = isset( $_POST['type'] )
-			? sanitize_key( wp_unslash( Guard::scalar_string( $_POST['type'] ) ) )
+		$type = isset( $_POST['type'] ) && is_string( $_POST['type'] )
+			? sanitize_key( wp_unslash( $_POST['type'] ) )
 			: '';
-		$value_raw = isset( $_POST['value'] )
-			? sanitize_text_field( wp_unslash( Guard::scalar_string( $_POST['value'] ) ) )
+		$value_raw = isset( $_POST['value'] ) && is_string( $_POST['value'] )
+			? sanitize_text_field( wp_unslash( $_POST['value'] ) )
 			: '';
 		$value = Guard::normalise_gone_value( $type, $value_raw );
 		if ( '' === $value ) {
@@ -255,8 +256,9 @@ final class Admin {
 
 	public static function delete_gone(): void {
 		self::authorise();
-		$id = isset( $_GET['id'] )
-			? sanitize_text_field( wp_unslash( Guard::scalar_string( $_GET['id'] ) ) )
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- The nonce action contains this record ID and is checked immediately below.
+		$id = isset( $_GET['id'] ) && is_string( $_GET['id'] )
+			? sanitize_text_field( wp_unslash( $_GET['id'] ) )
 			: '';
 		check_admin_referer( 'uafree_404_delete_gone_' . $id );
 		$rules = array_values( array_filter( Guard::gone_rules(), static fn( array $rule ): bool => (string) $rule['id'] !== $id ) );
@@ -333,11 +335,8 @@ final class Admin {
 	}
 
 	private static function render_notice(): void {
-		$code = '';
-		if ( isset( $_GET['uafree_notice'] ) ) {
-			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin notice; no state is changed.
-			$code = sanitize_key( wp_unslash( Guard::scalar_string( $_GET['uafree_notice'] ) ) );
-		}
+		$code = filter_input( INPUT_GET, 'uafree_notice', FILTER_SANITIZE_SPECIAL_CHARS );
+		$code = is_string( $code ) ? sanitize_key( $code ) : '';
 		$messages = array(
 			'redirect_added'    => array( 'success', __( 'Redirect rule added.', 'ua-free-404-guard' ) ),
 			'redirect_deleted'  => array( 'success', __( 'Redirect rule deleted.', 'ua-free-404-guard' ) ),
