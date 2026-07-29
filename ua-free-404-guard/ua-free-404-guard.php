@@ -42,7 +42,6 @@ register_deactivation_hook( __FILE__, array( 'UAFree\\Guard404\\Guard', 'deactiv
 add_action(
 	'plugins_loaded',
 	static function (): void {
-		load_plugin_textdomain( 'ua-free-404-guard', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
 		\UAFree\Guard404\Guard::init();
 		\UAFree\Guard404\Admin::init();
 	}
