@@ -3,7 +3,7 @@ Contributors: uafree
 Donate link: https://uafree.org/plugins/support-development/
 Tags: 404, redirects, broken links, 410, privacy
 Requires at least: 6.2
-Tested up to: 7.0.2
+Tested up to: 7.0
 Stable tag: 2.0.6
 Requires PHP: 8.0
 License: GPLv2 or later
