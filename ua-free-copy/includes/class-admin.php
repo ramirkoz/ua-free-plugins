@@ -145,7 +145,14 @@ final class Admin {
 
 			<div class="uafree-card">
 				<h2><?php esc_html_e( 'Diagnostics', 'ua-free-copy' ); ?></h2>
-				<p><?php echo esc_html( sprintf( __( 'Configured selectors: %d', 'ua-free-copy' ), count( Plugin::selectors() ) ) ); ?></p>
+				<?php
+				/* translators: %d: number of configured CSS selectors. */
+				$configured_selectors = sprintf(
+					__( 'Configured selectors: %d', 'ua-free-copy' ),
+					count( Plugin::selectors() )
+				);
+				?>
+				<p><?php echo esc_html( $configured_selectors ); ?></p>
 				<p><?php esc_html_e( 'Copied values stored by this plugin: no. External requests: no. Cookies: no. Telemetry: no.', 'ua-free-copy' ); ?></p>
 				<?php if ( empty( $conflicts ) ) : ?><p><?php esc_html_e( 'No other installed clipboard plugins were detected from their public plugin headers.', 'ua-free-copy' ); ?></p><?php else : ?>
 					<table class="widefat striped"><thead><tr><th><?php esc_html_e( 'Detected plugin', 'ua-free-copy' ); ?></th><th><?php esc_html_e( 'Version', 'ua-free-copy' ); ?></th><th><?php esc_html_e( 'Status', 'ua-free-copy' ); ?></th></tr></thead><tbody><?php foreach ( $conflicts as $plugin ) : ?><tr><td><?php echo esc_html( (string) $plugin['name'] ); ?></td><td><?php echo esc_html( (string) $plugin['version'] ); ?></td><td><?php echo esc_html( ! empty( $plugin['active'] ) ? __( 'Active', 'ua-free-copy' ) : __( 'Installed', 'ua-free-copy' ) ); ?></td></tr><?php endforeach; ?></tbody></table>
