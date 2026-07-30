@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.6
+
+- Fixed the final Plugin Check warnings in admin screen detection and prefetch header handling.
+
 ## 1.2.5
 
 - Prepared dynamic database identifiers with `%i` and documented legitimate plugin-table queries.

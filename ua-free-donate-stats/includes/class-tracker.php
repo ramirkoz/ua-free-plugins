@@ -449,11 +449,15 @@ final class Tracker {
 	}
 
 	private static function is_prefetch_request(): bool {
-		$purpose_header = $_SERVER['HTTP_PURPOSE']
-			?? $_SERVER['HTTP_SEC_PURPOSE']
-			?? $_SERVER['HTTP_X_PURPOSE']
-			?? '';
-		$purpose = strtolower( sanitize_text_field( wp_unslash( (string) $purpose_header ) ) );
+		$purpose = '';
+		if ( isset( $_SERVER['HTTP_PURPOSE'] ) ) {
+			$purpose = strtolower( sanitize_text_field( wp_unslash( (string) $_SERVER['HTTP_PURPOSE'] ) ) );
+		} elseif ( isset( $_SERVER['HTTP_SEC_PURPOSE'] ) ) {
+			$purpose = strtolower( sanitize_text_field( wp_unslash( (string) $_SERVER['HTTP_SEC_PURPOSE'] ) ) );
+		} elseif ( isset( $_SERVER['HTTP_X_PURPOSE'] ) ) {
+			$purpose = strtolower( sanitize_text_field( wp_unslash( (string) $_SERVER['HTTP_X_PURPOSE'] ) ) );
+		}
+
 		return str_contains( $purpose, 'prefetch' ) || str_contains( $purpose, 'prerender' );
 	}
 
