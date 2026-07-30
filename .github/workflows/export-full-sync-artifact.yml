@@ -1,0 +1,44 @@
+name: Export synchronized UA FREE releases
+
+on:
+  push:
+    paths:
+      - '.github/workflows/export-full-sync-artifact.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Record workflow run
+        shell: bash
+        run: |
+          printf '%s\n' "$GITHUB_RUN_ID" > releases/UA_FREE_LAST_SYNC_RUN_ID.txt
+
+      - name: Upload canonical synchronized releases
+        uses: actions/upload-artifact@v4
+        with:
+          name: ua-free-full-sync-2026-07-30
+          path: |
+            releases/*.zip
+            releases/*.sha256
+            releases/*.json
+            releases/UA_FREE_SYNC_REPORT_2026-07-30.md
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Save run id and remove temporary workflow
+        shell: bash
+        run: |
+          rm -f .github/workflows/export-full-sync-artifact.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add releases/UA_FREE_LAST_SYNC_RUN_ID.txt .github/workflows/export-full-sync-artifact.yml
+          git commit -m 'Record UA FREE synchronization artifact'
+          git push
