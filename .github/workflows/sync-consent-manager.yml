@@ -1,0 +1,131 @@
+name: Sync UA FREE Consent Manager
+
+on:
+  push:
+    paths:
+      - '.github/workflows/sync-consent-manager.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Apply final Plugin Check fixes
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+
+          runtime = Path('ua-free-consent-manager/includes/class-uafree-consent-manager.php')
+          footer = Path('ua-free-consent-manager/includes/class-uafree-admin-support-footer.php')
+          readme = Path('ua-free-consent-manager/readme.txt')
+          extra = Path('ua-free-consent-manager/README_UK.md')
+
+          def replace_once(text: str, old: str, new: str, label: str) -> str:
+              if text.count(old) != 1:
+                  raise SystemExit(f'{label}: expected one match, found {text.count(old)}')
+              return text.replace(old, new, 1)
+
+          text = runtime.read_text(encoding='utf-8')
+          text = replace_once(
+              text,
+              "\t\tadd_action( 'plugins_loaded', array( __CLASS__, 'load_textdomain' ) );\n",
+              '',
+              'textdomain action',
+          )
+          text = replace_once(
+              text,
+              "\tpublic static function load_textdomain(): void {\n\t\tload_plugin_textdomain(\n\t\t\t'ua-free-consent-manager',\n\t\t\tfalse,\n\t\t\tdirname( plugin_basename( UAFREE_CONSENT_MANAGER_FILE ) ) . '/languages'\n\t\t);\n\t}\n\n",
+              '',
+              'textdomain method',
+          )
+          text = replace_once(
+              text,
+              "\t\t$raw   = isset( $_POST['settings'] ) && is_array( $_POST['settings'] ) ? wp_unslash( $_POST['settings'] ) : array();\n\t\t$clean = self::sanitize_settings( $raw );",
+              "\t\t$raw = filter_input( INPUT_POST, 'settings', FILTER_DEFAULT, FILTER_REQUIRE_ARRAY );\n\t\t$raw = is_array( $raw ) ? map_deep( $raw, 'sanitize_text_field' ) : array();\n\t\t$clean = self::sanitize_settings( $raw );",
+              'settings input',
+          )
+          text = replace_once(
+              text,
+              "\t\t$settings     = self::settings();\n\t\t$integrations = self::public_integrations();\n\t\t?>\n\t\t<div class=\"wrap\">\n\t\t\t<h1><?php echo esc_html__( 'UA FREE Consent Manager', 'ua-free-consent-manager' ); ?> <code><?php echo esc_html( UAFREE_CONSENT_MANAGER_VERSION ); ?></code></h1>\n\t\t\t<?php if ( isset( $_GET['updated'] ) ) : ?>",
+              "\t\t$settings     = self::settings();\n\t\t$integrations = self::public_integrations();\n\t\t$updated = filter_input( INPUT_GET, 'updated', FILTER_SANITIZE_SPECIAL_CHARS );\n\t\t?>\n\t\t<div class=\"wrap\">\n\t\t\t<h1><?php echo esc_html__( 'UA FREE Consent Manager', 'ua-free-consent-manager' ); ?> <code><?php echo esc_html( UAFREE_CONSENT_MANAGER_VERSION ); ?></code></h1>\n\t\t\t<?php if ( '1' === $updated ) : ?>",
+              'admin notice',
+          )
+          text = replace_once(
+              text,
+              "\t\tif ( ! isset( $_COOKIE[ self::COOKIE_NAME ] ) ) {\n\t\t\tself::$status_cache = $default;\n\t\t\treturn $default;\n\t\t}\n\n\t\t$raw = rawurldecode( (string) wp_unslash( $_COOKIE[ self::COOKIE_NAME ] ) );",
+              "\t\t$cookie_value = filter_input( INPUT_COOKIE, self::COOKIE_NAME, FILTER_UNSAFE_RAW );\n\t\tif ( ! is_string( $cookie_value ) ) {\n\t\t\tself::$status_cache = $default;\n\t\t\treturn $default;\n\t\t}\n\n\t\t$raw = rawurldecode( sanitize_text_field( $cookie_value ) );",
+              'cookie input',
+          )
+          runtime.write_text(text, encoding='utf-8')
+
+          text = footer.read_text(encoding='utf-8')
+          old_footer = """\t\tprivate static function is_uafree_screen(): bool {
+\t\t\t$page = isset( $_GET['page'] )
+\t\t\t\t? strtolower( sanitize_text_field( wp_unslash( (string) $_GET['page'] ) ) )
+\t\t\t\t: '';
+\t\t\t$screen_id = '';
+\t\t\tif ( function_exists( 'get_current_screen' ) ) {
+\t\t\t\t$screen = get_current_screen();
+\t\t\t\t$screen_id = is_object( $screen ) ? strtolower( (string) $screen->id ) : '';
+\t\t\t}
+
+\t\t\tforeach ( array( $page, $screen_id ) as $value ) {
+\t\t\t\tif ( str_contains( $value, 'uafree' ) || str_contains( $value, 'ua-free' ) ) {
+\t\t\t\t\treturn true;
+\t\t\t\t}
+\t\t\t}
+\t\t\treturn false;
+\t\t}"""
+          new_footer = """\t\tprivate static function is_uafree_screen(): bool {
+\t\t\tif ( ! function_exists( 'get_current_screen' ) ) {
+\t\t\t\treturn false;
+\t\t\t}
+
+\t\t\t$screen = get_current_screen();
+\t\t\tif ( ! is_object( $screen ) ) {
+\t\t\t\treturn false;
+\t\t\t}
+
+\t\t\tforeach ( array( (string) $screen->id, (string) $screen->base ) as $value ) {
+\t\t\t\t$value = strtolower( $value );
+\t\t\t\tif ( str_contains( $value, 'uafree' ) || str_contains( $value, 'ua-free' ) ) {
+\t\t\t\t\treturn true;
+\t\t\t\t}
+\t\t\t}
+
+\t\t\treturn false;
+\t\t}"""
+          text = replace_once(text, old_footer, new_footer, 'support footer')
+          footer.write_text(text, encoding='utf-8')
+
+          text = readme.read_text(encoding='utf-8')
+          text, count = re.subn(r'(?mi)^Tested up to:\s*.*$', 'Tested up to: 7.0', text)
+          if count != 1:
+              raise SystemExit(f'readme tested-up-to: expected one match, found {count}')
+          readme.write_text(text, encoding='utf-8')
+
+          if extra.exists():
+              extra.unlink()
+
+          workflow = Path('.github/workflows/sync-consent-manager.yml')
+          if workflow.exists():
+              workflow.unlink()
+
+      - name: Validate PHP
+        run: find ua-free-consent-manager -name '*.php' -print0 | xargs -0 -n1 php -l
+
+      - name: Commit synchronized files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Finalize UA FREE Consent Manager Plugin Check cleanup"
+          git push
