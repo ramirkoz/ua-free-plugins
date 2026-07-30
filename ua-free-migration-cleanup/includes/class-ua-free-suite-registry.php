@@ -66,7 +66,7 @@ final class Registry {
 			'ua-free-donate-stats' => array( 'name' => 'UA FREE Donate Stats & Conversions', 'uk' => 'Privacy-safe статистика та конверсії.', 'en' => 'Privacy-safe statistics and conversions.' ),
 			'ua-free-copy' => array( 'name' => 'UA FREE Copy', 'uk' => 'Легке копіювання визначених значень.', 'en' => 'Lightweight copying of configured values.' ),
 			'ua-free-url-only-comment-spam' => array( 'name' => 'UA FREE URL-Only Comment Spam', 'uk' => 'Фільтр коментарів, що складаються лише з URL.', 'en' => 'Filter for comments containing only URLs.' ),
-			'ua-free-analytics-dashboard' => array( 'name' => 'UA FREE Analytics Dashboard', 'uk' => 'Єдина аналітична панель екосистеми.', 'en' => 'Unified analytics dashboard for the suite.' ),
+			'ua-free-analytics-dashboard' => array( 'name' => 'UA FREE Suite Control Center', 'uk' => 'Стан усієї збірки та наступні дії.', 'en' => 'Suite status and next actions.' ),
 			'ua-free-consent-manager' => array( 'name' => 'UA FREE Consent Manager', 'uk' => 'Керування згодою та зовнішніми скриптами.', 'en' => 'Consent management and controlled external scripts.' ),
 		);
 	}

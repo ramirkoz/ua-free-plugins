@@ -1,6 +1,6 @@
 {
   "format": "UA FREE Hub Release Library",
-  "version": "2.2.1",
+  "version": "2.3",
   "created": "2026-07-30",
   "status": "FINAL",
   "packages": [
@@ -8,10 +8,10 @@
       "slug": "ua-free-migration-cleanup",
       "wporg_slug": "ua-free-migration-cleanup",
       "name": "UA FREE Migration & Cleanup",
-      "version": "0.8.8",
-      "file": "packages/ua-free-migration-cleanup-v0.8.8.zip",
-      "sha256": "4f64936fa33504cdf2d3f41f7b75a64e104f7bf0c3205fd27fc6b5337fadedb4",
-      "size": 30406
+      "version": "0.8.9",
+      "file": "packages/ua-free-migration-cleanup-v0.8.9.zip",
+      "sha256": "48f93b542e063fc603fb3e99e7a1e0b3bf179f4e76d8aa75b28cceacea842621",
+      "size": 30840
     },
     {
       "slug": "ua-free-static-translate",

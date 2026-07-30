@@ -20,8 +20,9 @@ final class UAFree_MC_Snapshot_Manager {
 
 	public static function export_plugin(): void {
 		self::guard( 'uafree_mc_export_plugin' );
-		$plugin_file = isset( $_GET['plugin_file'] )
-			? sanitize_text_field( wp_unslash( $_GET['plugin_file'] ) )
+		$plugin_file_input = filter_input( INPUT_GET, 'plugin_file', FILTER_UNSAFE_RAW );
+		$plugin_file = is_string( $plugin_file_input )
+			? sanitize_text_field( $plugin_file_input )
 			: '';
 		$report = UAFree_MC_Environment_Scanner::inspect_plugin( $plugin_file );
 		if ( is_wp_error( $report ) ) {
@@ -43,7 +44,7 @@ final class UAFree_MC_Snapshot_Manager {
 
 	private static function guard( string $action ): void {
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( esc_html__( 'You do not have permission to perform this action.', UAFREE_MC_TEXT_DOMAIN ) );
+			wp_die( esc_html__( 'You do not have permission to perform this action.', 'ua-free-migration-cleanup' ) );
 		}
 		check_admin_referer( $action );
 	}

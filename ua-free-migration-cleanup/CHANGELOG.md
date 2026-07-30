@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.8.9
+
+- Replaced variable translation domains with the literal plugin text domain.
+- Added nonce validation or explicit read-only request annotations.
+- Clarified direct read-only database queries for Plugin Check.
+- Removed discouraged manual translation loading.
+- Redesigned the shared UA FREE support block.
+- Normalized WordPress.org compatibility metadata.
+
 ## 0.8.8
 
 - Final repository and WordPress.org packaging release.

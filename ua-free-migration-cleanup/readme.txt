@@ -3,8 +3,8 @@ Contributors: uafree
 Donate link: https://uafree.org/plugins/support-development/
 Tags: migration, cleanup, diagnostics, database, snapshot
 Requires at least: 6.0
-Tested up to: 7.0.2
-Stable tag: 0.8.8
+Tested up to: 7.0
+Stable tag: 0.8.9
 Requires PHP: 8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -47,6 +47,14 @@ Development support is separate from charitable donations.
 
 == Changelog ==
 
+= 0.8.9 =
+* Replaced variable translation domains with the literal plugin text domain required by Plugin Check.
+* Added nonce validation or documented read-only request handling.
+* Clarified direct read-only database queries for automated code analysis.
+* Removed discouraged manual translation loading.
+* Redesigned the shared UA FREE support block for desktop and mobile layouts.
+* Normalized Tested up to metadata for WordPress.org.
+
 = 0.8.8 =
 * Final stable packaging for repository publication and WordPress.org submission.
 * Updated plugin metadata and WordPress compatibility information.
@@ -54,5 +62,5 @@ Development support is separate from charitable donations.
 
 == Upgrade Notice ==
 
-= 0.8.8 =
-Final stable release prepared for repository and WordPress.org distribution.
+= 0.8.9 =
+Plugin Check compatibility and shared support-block layout update.
