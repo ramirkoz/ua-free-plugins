@@ -3,7 +3,7 @@ Contributors: uafree
 Donate link: https://uafree.org/plugins/support-development/
 Tags: consent, privacy, cookies, analytics, advertising
 Requires at least: 6.2
-Tested up to: 7.0.2
+Tested up to: 7.0
 Stable tag: 0.1.5
 Requires PHP: 8.0
 License: GPLv2 or later
