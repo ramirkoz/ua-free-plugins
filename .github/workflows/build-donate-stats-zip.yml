@@ -1,0 +1,30 @@
+name: Build Donate Stats ZIP
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/build-donate-stats-zip.yml
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build installable plugin ZIP
+        run: |
+          mkdir -p releases
+          rm -f releases/ua-free-donate-stats-1.2.4.zip
+          zip -r releases/ua-free-donate-stats-1.2.4.zip ua-free-donate-stats
+      - name: Commit package and remove temporary workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add releases/ua-free-donate-stats-1.2.4.zip
+          git rm .github/workflows/build-donate-stats-zip.yml
+          git commit -m "Add UA FREE Donate Stats 1.2.4 installable ZIP"
+          git push
