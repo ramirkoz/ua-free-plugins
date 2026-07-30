@@ -5,7 +5,7 @@
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Author URI: https://uafree.org/
  * Plugin URI: https://uafree.org/ua-free-plugins/#plugin-ua-free-google-ads-campaign-builder
- * Version: 1.3.4
+ * Version: 1.3.6
  * Author: UA FREE
  * Text Domain: ua-free-google-ads-campaign-builder
  * Domain Path: /languages
@@ -22,20 +22,15 @@ require_once __DIR__ . '/includes/class-ua-free-suite-registry.php';
 \UAFree\Suite\Registry::register( array(
 	'slug' => 'ua-free-google-ads-campaign-builder',
 	'name' => 'UA FREE Google Ads Campaign Builder',
-	'version' => '1.3.4',
+	'version' => '1.3.6',
 	'settings_page' => 'ua-free-google-ads-campaign-builder',
 ) );
 
-define( 'UAFREE_GACB_VERSION', '1.3.4' );
+define( 'UAFREE_GACB_VERSION', '1.3.6' );
 define( 'UAFREE_GACB_FILE', __FILE__ );
 define( 'UAFREE_GACB_DIR', plugin_dir_path( __FILE__ ) );
 
 require_once UAFREE_GACB_DIR . 'includes/class-uafree-google-ads-campaign-builder.php';
-
-add_action( 'plugins_loaded', static function (): void {
-	load_plugin_textdomain( 'ua-free-google-ads-campaign-builder', false, dirname( plugin_basename( UAFREE_GACB_FILE ) ) . '/languages' );
-} );
-
 
 if ( ! function_exists( 'uafree_google_ads_campaign_builder_deactivate_legacy' ) ) {
 	/**

@@ -19,7 +19,6 @@ final class Plugin {
 	private const ACTION_GENERATE = 'uafree_agb_generate';
 	private const ACTION_DOWNLOAD = 'uafree_agb_download';
 	private const ACTION_DELETE   = 'uafree_agb_delete';
-	private const TEXT_DOMAIN     = 'ua-free-google-ads-campaign-builder';
 
 	/** @var array<string,array{name:string,ads_code:string,azure_code:string}> */
 	private static array $languages = array(
@@ -56,8 +55,8 @@ final class Plugin {
 		}
 		add_submenu_page(
 			'uafree-suite',
-			__( 'UA FREE Google Ads Campaign Builder', self::TEXT_DOMAIN ),
-			__( 'Google Ads Builder', self::TEXT_DOMAIN ),
+			__( 'UA FREE Google Ads Campaign Builder', 'ua-free-google-ads-campaign-builder' ),
+			__( 'Google Ads Builder', 'ua-free-google-ads-campaign-builder' ),
 			'manage_options',
 			self::PAGE_SLUG,
 			array( __CLASS__, 'admin_page' )
@@ -81,7 +80,7 @@ final class Plugin {
 		array_unshift(
 			$links,
 			'<a href="' . esc_url( admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ) . '">' .
-			esc_html__( 'Open', self::TEXT_DOMAIN ) . '</a>'
+			esc_html__( 'Open', 'ua-free-google-ads-campaign-builder' ) . '</a>'
 		);
 		return $links;
 	}
@@ -127,11 +126,11 @@ final class Plugin {
 		return array(
 			'ad_grants' => array(
 				'label'       => 'Google Ad Grants',
-				'description' => __( 'For approved nonprofit organisations. The package uses stricter keyword checks and treats confirmed meaningful conversion tracking as a launch requirement.', self::TEXT_DOMAIN ),
+				'description' => __( 'For approved nonprofit organisations. The package uses stricter keyword checks and treats confirmed meaningful conversion tracking as a launch requirement.', 'ua-free-google-ads-campaign-builder' ),
 			),
 			'standard_ads' => array(
 				'label'       => 'Standard Google Ads',
-				'description' => __( 'For a standard paid Google Ads account. Conversion tracking is recommended but does not block package generation.', self::TEXT_DOMAIN ),
+				'description' => __( 'For a standard paid Google Ads account. Conversion tracking is recommended but does not block package generation.', 'ua-free-google-ads-campaign-builder' ),
 			),
 		);
 	}
@@ -553,10 +552,13 @@ final class Plugin {
 		if ( ! isset( self::account_modes()[ $mode ] ) ) {
 			$mode = 'ad_grants';
 		}
+		$selected_languages = isset( $_POST['selected_languages'] )
+			? array_map( 'sanitize_key', (array) wp_unslash( $_POST['selected_languages'] ) )
+			: array();
 		$languages = array_values(
 			array_unique(
 				array_filter(
-					array_map( 'sanitize_key', (array) ( $_POST['selected_languages'] ?? array() ) ),
+					$selected_languages,
 					static fn( string $slug ): bool => isset( self::$languages[ $slug ] )
 				)
 			)
@@ -572,26 +574,34 @@ final class Plugin {
 
 		$language_mode = 'manual' === sanitize_key( (string) wp_unslash( $_POST['language_mode'] ?? 'automatic' ) ) ? 'manual' : 'automatic';
 		$location_mode = 'manual' === sanitize_key( (string) wp_unslash( $_POST['location_mode'] ?? 'automatic' ) ) ? 'manual' : 'automatic';
+		$monthly_grant = sanitize_text_field( (string) wp_unslash( $_POST['monthly_grant'] ?? '10000' ) );
+		$target_countries = isset( $_POST['target_countries'] )
+			? array_map( 'sanitize_key', (array) wp_unslash( $_POST['target_countries'] ) )
+			: array();
+		$translated_url_pattern = sanitize_text_field( (string) wp_unslash( $_POST['translated_url_pattern'] ?? '/{language}{path}' ) );
+		$final_url_suffix = sanitize_text_field( (string) wp_unslash( $_POST['final_url_suffix'] ?? '' ) );
+		$negative_keywords = sanitize_textarea_field( (string) wp_unslash( $_POST['negative_keywords'] ?? '' ) );
+		$callouts = sanitize_textarea_field( (string) wp_unslash( $_POST['callouts'] ?? '' ) );
 
 		$settings = array(
 			'account_mode'                  => $mode,
 			'language_mode'                 => $language_mode,
 			'organisation_name'             => sanitize_text_field( (string) wp_unslash( $_POST['organisation_name'] ?? get_bloginfo( 'name' ) ) ),
-			'monthly_grant'                 => max( 1, (float) wp_unslash( $_POST['monthly_grant'] ?? 10000 ) ),
+			'monthly_grant'                 => max( 1, (float) $monthly_grant ),
 			'currency'                      => strtoupper( substr( sanitize_text_field( (string) wp_unslash( $_POST['currency'] ?? 'USD' ) ), 0, 6 ) ),
 			'selected_languages'            => array_slice( $languages, 0, 10 ),
 			'location_mode'                 => $location_mode,
-			'target_locations'              => self::locations_from_country_codes( wp_unslash( $_POST['target_countries'] ?? array() ) ),
-			'translated_url_pattern'        => self::sanitize_url_pattern( (string) wp_unslash( $_POST['translated_url_pattern'] ?? '/{language}{path}' ) ),
-			'final_url_suffix'              => self::sanitize_suffix( (string) wp_unslash( $_POST['final_url_suffix'] ?? '' ) ),
+			'target_locations'              => self::locations_from_country_codes( $target_countries ),
+			'translated_url_pattern'        => self::sanitize_url_pattern( $translated_url_pattern ),
+			'final_url_suffix'              => self::sanitize_suffix( $final_url_suffix ),
 			'include_search_partners'       => ! empty( $_POST['include_search_partners'] ) ? 1 : 0,
 			'conversion_tracking_confirmed' => ! empty( $_POST['conversion_tracking_confirmed'] ) ? 1 : 0,
 			'primary_conversion_name'       => sanitize_key( (string) wp_unslash( $_POST['primary_conversion_name'] ?? 'primary_conversion' ) ),
 			'allow_azure_copy_translation'  => ! empty( $_POST['allow_azure_copy_translation'] ) ? 1 : 0,
 			'max_campaigns'                 => min( 10, max( 1, absint( $_POST['max_campaigns'] ?? 4 ) ) ),
 			'bid_strategy'                  => $bid,
-			'negative_keywords'             => self::sanitize_lines( wp_unslash( $_POST['negative_keywords'] ?? '' ), 100, 80 ),
-			'callouts'                      => self::sanitize_lines( wp_unslash( $_POST['callouts'] ?? '' ), 20, 25 ),
+			'negative_keywords'             => self::sanitize_lines( $negative_keywords, 100, 80 ),
+			'callouts'                      => self::sanitize_lines( $callouts, 20, 25 ),
 			'delete_data_on_uninstall'      => ! empty( $_POST['delete_data_on_uninstall'] ) ? 1 : 0,
 		);
 		if ( '' === $settings['primary_conversion_name'] ) {
@@ -603,7 +613,7 @@ final class Plugin {
 
 	private static function require_admin(): void {
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( esc_html__( 'You are not allowed to manage this plugin.', self::TEXT_DOMAIN ) );
+			wp_die( esc_html__( 'You are not allowed to manage this plugin.', 'ua-free-google-ads-campaign-builder' ) );
 		}
 	}
 
@@ -1007,7 +1017,7 @@ final class Plugin {
 			return array_values( array_map( 'strval', $strings ) );
 		}
 		if ( empty( $credentials['configured'] ) ) {
-			return new \WP_Error( 'azure_not_configured', __( 'Azure Translator is not configured.', self::TEXT_DOMAIN ) );
+			return new \WP_Error( 'azure_not_configured', __( 'Azure Translator is not configured.', 'ua-free-google-ads-campaign-builder' ) );
 		}
 		$from = self::$languages[ $source ]['azure_code'] ?? $source;
 		$to   = self::$languages[ $target ]['azure_code'] ?? $target;
@@ -1045,7 +1055,8 @@ final class Plugin {
 		$status = (int) wp_remote_retrieve_response_code( $response );
 		$data   = json_decode( (string) wp_remote_retrieve_body( $response ), true );
 		if ( $status < 200 || $status >= 300 || ! is_array( $data ) || count( $data ) !== count( $strings ) ) {
-			return new \WP_Error( 'azure_error', sprintf( __( 'Azure Translator returned an invalid response (HTTP %d).', self::TEXT_DOMAIN ), $status ) );
+			/* translators: %d: HTTP response status code returned by Azure Translator. */
+			return new \WP_Error( 'azure_error', sprintf( __( 'Azure Translator returned an invalid response (HTTP %d).', 'ua-free-google-ads-campaign-builder' ), $status ) );
 		}
 		$out = array();
 		foreach ( $strings as $index => $original ) {
@@ -1062,7 +1073,7 @@ final class Plugin {
 			return $pack;
 		}
 		if ( empty( $settings['allow_azure_copy_translation'] ) ) {
-			return new \WP_Error( 'translation_disabled', __( 'Automatic ad-copy translation is disabled.', self::TEXT_DOMAIN ) );
+			return new \WP_Error( 'translation_disabled', __( 'Automatic ad-copy translation is disabled.', 'ua-free-google-ads-campaign-builder' ) );
 		}
 		$flat = array();
 		$map  = array();
@@ -1141,7 +1152,7 @@ final class Plugin {
 	private static function build_plan( array $settings, string $generation_id ) {
 		$landings = self::selected_landing_pages( $settings );
 		if ( empty( $landings ) ) {
-			return new \WP_Error( 'no_landings', __( 'No suitable published landing pages were found.', self::TEXT_DOMAIN ) );
+			return new \WP_Error( 'no_landings', __( 'No suitable published landing pages were found.', 'ua-free-google-ads-campaign-builder' ) );
 		}
 		$source      = (string) self::detected_site_language()['slug'];
 		$credentials = self::azure_credentials();
@@ -1151,7 +1162,8 @@ final class Plugin {
 		foreach ( self::campaign_languages( $settings ) as $language ) {
 			$locations = self::geo_targets_for_language( $language, $settings );
 			if ( empty( $locations ) ) {
-				$warnings[] = sprintf( __( '%s: no target locations are configured.', self::TEXT_DOMAIN ), $language );
+				/* translators: %s: campaign language code. */
+				$warnings[] = sprintf( __( '%s: no target locations are configured.', 'ua-free-google-ads-campaign-builder' ), $language );
 				continue;
 			}
 			$copy = self::translated_copy_pack( $base, $source, $language, $settings, $credentials );
@@ -1192,7 +1204,8 @@ final class Plugin {
 				$headlines = array_slice( array_values( array_unique( array_filter( array_map( static fn( string $value ): string => self::clip( self::normalise_text( $value ), 30 ), (array) $group['headlines'] ) ) ) ), 0, 15 );
 				$descriptions = array_slice( array_values( array_unique( array_filter( array_map( static fn( string $value ): string => self::clip( self::normalise_text( $value ), 90 ), (array) $group['descriptions'] ) ) ) ), 0, 4 );
 				if ( empty( $keywords ) || count( $headlines ) < 3 || empty( $descriptions ) ) {
-					$warnings[] = sprintf( __( '%1$s / %2$s was skipped because it did not contain enough valid ad copy.', self::TEXT_DOMAIN ), $language, (string) $group['name'] );
+					/* translators: 1: campaign language code, 2: ad group name. */
+					$warnings[] = sprintf( __( '%1$s / %2$s was skipped because it did not contain enough valid ad copy.', 'ua-free-google-ads-campaign-builder' ), $language, (string) $group['name'] );
 					continue;
 				}
 				$campaign['ad_groups'][] = array(
@@ -1229,13 +1242,14 @@ final class Plugin {
 			$campaign['callouts'] = $campaign_assets['callouts'];
 			$campaign['negative_keywords'] = $campaign_assets['negative_keywords'];
 			if ( empty( $campaign['ad_groups'] ) ) {
-				$warnings[] = sprintf( __( '%s: no complete ad groups were generated.', self::TEXT_DOMAIN ), $language );
+				/* translators: %s: campaign language code. */
+				$warnings[] = sprintf( __( '%s: no complete ad groups were generated.', 'ua-free-google-ads-campaign-builder' ), $language );
 				continue;
 			}
 			$campaigns[] = $campaign;
 		}
 		if ( empty( $campaigns ) ) {
-			return new \WP_Error( 'no_campaigns', __( 'No campaign could be generated. Check the selected languages, target locations and translation settings.', self::TEXT_DOMAIN ), array( 'warnings' => $warnings ) );
+			return new \WP_Error( 'no_campaigns', __( 'No campaign could be generated. Check the selected languages, target locations and translation settings.', 'ua-free-google-ads-campaign-builder' ), array( 'warnings' => $warnings ) );
 		}
 		$daily_budget = round( ( (float) $settings['monthly_grant'] / 30.4 ) / count( $campaigns ), 2 );
 		foreach ( $campaigns as &$campaign ) {
@@ -1409,28 +1423,32 @@ final class Plugin {
 		$issues   = array();
 		$warnings = (array) $plan['warnings'];
 		if ( 'ad_grants' === self::account_mode( $settings ) && empty( $settings['conversion_tracking_confirmed'] ) ) {
-			$issues[] = __( 'Meaningful conversion tracking has not been confirmed for the Ad Grants mode.', self::TEXT_DOMAIN );
+			$issues[] = __( 'Meaningful conversion tracking has not been confirmed for the Ad Grants mode.', 'ua-free-google-ads-campaign-builder' );
 		} elseif ( empty( $settings['conversion_tracking_confirmed'] ) ) {
-			$warnings[] = __( 'Conversion tracking has not been confirmed.', self::TEXT_DOMAIN );
+			$warnings[] = __( 'Conversion tracking has not been confirmed.', 'ua-free-google-ads-campaign-builder' );
 		}
 		foreach ( $plan['campaigns'] as $campaign ) {
 			if ( empty( $campaign['negative_keywords'] ) ) {
 				$warnings[] = sprintf(
-					__( '%s: automatic campaign negative keyword generation returned no rows.', self::TEXT_DOMAIN ),
+					/* translators: %s: campaign name. */
+					__( '%s: automatic campaign negative keyword generation returned no rows.', 'ua-free-google-ads-campaign-builder' ),
 					(string) $campaign['name']
 				);
 			}
 			if ( empty( $campaign['callouts'] ) ) {
 				$warnings[] = sprintf(
-					__( '%s: automatic callout generation returned no rows.', self::TEXT_DOMAIN ),
+					/* translators: %s: campaign name. */
+					__( '%s: automatic callout generation returned no rows.', 'ua-free-google-ads-campaign-builder' ),
 					(string) $campaign['name']
 				);
 			}
 			if ( 'Paused' !== (string) $campaign['status'] ) {
-				$issues[] = sprintf( __( 'Campaign %s is not paused.', self::TEXT_DOMAIN ), (string) $campaign['name'] );
+				/* translators: %s: campaign name. */
+				$issues[] = sprintf( __( 'Campaign %s is not paused.', 'ua-free-google-ads-campaign-builder' ), (string) $campaign['name'] );
 			}
 			if ( empty( $campaign['locations'] ) ) {
-				$issues[] = sprintf( __( 'Campaign %s has no target location.', self::TEXT_DOMAIN ), (string) $campaign['name'] );
+				/* translators: %s: campaign name. */
+				$issues[] = sprintf( __( 'Campaign %s has no target location.', 'ua-free-google-ads-campaign-builder' ), (string) $campaign['name'] );
 			}
 		}
 		return array(
@@ -1439,7 +1457,7 @@ final class Plugin {
 			'warnings'     => array_values( array_unique( $warnings ) ),
 			'mode'         => self::account_mode( $settings ),
 			'checked_at'   => gmdate( 'c' ),
-			'note'         => __( 'This is a technical preflight report, not a guarantee of Google policy approval or campaign performance.', self::TEXT_DOMAIN ),
+			'note'         => __( 'This is a technical preflight report, not a guarantee of Google policy approval or campaign performance.', 'ua-free-google-ads-campaign-builder' ),
 		);
 	}
 
@@ -1447,7 +1465,7 @@ final class Plugin {
 		self::require_admin();
 		check_admin_referer( self::ACTION_GENERATE );
 		if ( ! class_exists( 'ZipArchive' ) ) {
-			self::redirect_notice( 'error', __( 'The PHP ZipArchive extension is unavailable.', self::TEXT_DOMAIN ) );
+			self::redirect_notice( 'error', __( 'The PHP ZipArchive extension is unavailable.', 'ua-free-google-ads-campaign-builder' ) );
 		}
 		$settings      = self::settings();
 		$generation_id = self::generation_id();
@@ -1467,7 +1485,7 @@ final class Plugin {
 		$path     = trailingslashit( $dir ) . $filename;
 		$zip      = new \ZipArchive();
 		if ( true !== $zip->open( $path, \ZipArchive::CREATE | \ZipArchive::OVERWRITE ) ) {
-			self::redirect_notice( 'error', __( 'The ZIP package could not be created.', self::TEXT_DOMAIN ) );
+			self::redirect_notice( 'error', __( 'The ZIP package could not be created.', 'ua-free-google-ads-campaign-builder' ) );
 		}
 		foreach ( $files as $name => $file ) {
 			$zip->addFromString( $name, self::csv_content( $file['headers'], $file['rows'] ) );
@@ -1506,27 +1524,28 @@ final class Plugin {
 			'confirmed' => ! empty( $settings['conversion_tracking_confirmed'] ),
 			'counting' => 'One',
 			'include_in_conversions' => true,
-			'note' => __( 'Configure the actual conversion source in Google Ads or the connected analytics/tagging system. This package does not create tracking tags.', self::TEXT_DOMAIN ),
+			'note' => __( 'Configure the actual conversion source in Google Ads or the connected analytics/tagging system. This package does not create tracking tags.', 'ua-free-google-ads-campaign-builder' ),
 		);
 		$instructions = implode(
 			"\n",
 			array(
-				__( 'GOOGLE ADS EDITOR IMPORT PACKAGE', self::TEXT_DOMAIN ),
+				__( 'GOOGLE ADS EDITOR IMPORT PACKAGE', 'ua-free-google-ads-campaign-builder' ),
 				'',
-				sprintf( __( 'Mode: %s', self::TEXT_DOMAIN ), self::mode_label( $settings ) ),
-				__( 'All campaigns are generated as Paused.', self::TEXT_DOMAIN ),
+				/* translators: %s: selected Google Ads account mode label. */
+				sprintf( __( 'Mode: %s', 'ua-free-google-ads-campaign-builder' ), self::mode_label( $settings ) ),
+				__( 'All campaigns are generated as Paused.', 'ua-free-google-ads-campaign-builder' ),
 				'',
-				__( 'Manager workflow:', self::TEXT_DOMAIN ),
+				__( 'Manager workflow:', 'ua-free-google-ads-campaign-builder' ),
 				'1. Import only 00-IMPORT-ALL.csv.',
 				'2. Review the proposed campaigns and keep the imported changes.',
 				'3. Do not publish the campaigns during acceptance testing.',
 				'',
-				__( 'The numbered CSV files contain the same data split by entity and are only for diagnostics.', self::TEXT_DOMAIN ),
-				__( 'Campaign negatives, locations and direct campaign-level callout assets are included in the single master import.', self::TEXT_DOMAIN ),
-				__( 'Open package-manifest.json before import and compare its campaign_negative_keywords and callouts counts with the Editor result.', self::TEXT_DOMAIN ),
+				__( 'The numbered CSV files contain the same data split by entity and are only for diagnostics.', 'ua-free-google-ads-campaign-builder' ),
+				__( 'Campaign negatives, locations and direct campaign-level callout assets are included in the single master import.', 'ua-free-google-ads-campaign-builder' ),
+				__( 'Open package-manifest.json before import and compare its campaign_negative_keywords and callouts counts with the Editor result.', 'ua-free-google-ads-campaign-builder' ),
 				'',
-				__( 'Review imported changes, target locations, budgets, language targeting, landing URLs, ad copy and conversion tracking before posting anything.', self::TEXT_DOMAIN ),
-				__( 'Google Ads Editor formats can change. Treat these CSV files as a reviewable starting point, not an automatic launch instruction.', self::TEXT_DOMAIN ),
+				__( 'Review imported changes, target locations, budgets, language targeting, landing URLs, ad copy and conversion tracking before posting anything.', 'ua-free-google-ads-campaign-builder' ),
+				__( 'Google Ads Editor formats can change. Treat these CSV files as a reviewable starting point, not an automatic launch instruction.', 'ua-free-google-ads-campaign-builder' ),
 			)
 		);
 		$zip->addFromString( 'campaign-plan.json', wp_json_encode( $plan, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ) );
@@ -1556,6 +1575,26 @@ final class Plugin {
 		self::redirect_notice( 'package_ready' );
 	}
 
+	/**
+	 * Return an initialized WordPress filesystem instance.
+	 *
+	 * @return \WP_Filesystem_Base|\WP_Error
+	 */
+	private static function filesystem() {
+		global $wp_filesystem;
+
+		if ( ! function_exists( 'WP_Filesystem' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/file.php';
+		}
+		if ( ! WP_Filesystem() || ! is_object( $wp_filesystem ) ) {
+			return new \WP_Error(
+				'filesystem_unavailable',
+				__( 'The private package directory could not be created.', 'ua-free-google-ads-campaign-builder' )
+			);
+		}
+		return $wp_filesystem;
+	}
+
 	/** @return string|\WP_Error */
 	private static function package_dir() {
 		$upload = wp_upload_dir();
@@ -1564,13 +1603,19 @@ final class Plugin {
 		}
 		$dir = trailingslashit( (string) $upload['basedir'] ) . 'ua-free-google-ads-packages';
 		if ( ! wp_mkdir_p( $dir ) ) {
-			return new \WP_Error( 'directory_error', __( 'The private package directory could not be created.', self::TEXT_DOMAIN ) );
+			return new \WP_Error( 'directory_error', __( 'The private package directory could not be created.', 'ua-free-google-ads-campaign-builder' ) );
 		}
-		if ( ! is_file( trailingslashit( $dir ) . 'index.php' ) ) {
-			file_put_contents( trailingslashit( $dir ) . 'index.php', "<?php\n// Silence is golden.\n" );
+		$filesystem = self::filesystem();
+		if ( is_wp_error( $filesystem ) ) {
+			return $filesystem;
 		}
-		if ( ! is_file( trailingslashit( $dir ) . '.htaccess' ) ) {
-			file_put_contents( trailingslashit( $dir ) . '.htaccess', "Deny from all\n" );
+		$index_path = trailingslashit( $dir ) . 'index.php';
+		if ( ! $filesystem->exists( $index_path ) ) {
+			$filesystem->put_contents( $index_path, "<?php\n// Silence is golden.\n", FS_CHMOD_FILE );
+		}
+		$htaccess_path = trailingslashit( $dir ) . '.htaccess';
+		if ( ! $filesystem->exists( $htaccess_path ) ) {
+			$filesystem->put_contents( $htaccess_path, "Deny from all\n", FS_CHMOD_FILE );
 		}
 		return $dir;
 	}
@@ -1595,13 +1640,21 @@ final class Plugin {
 		$path    = is_array( $package ) ? (string) ( $package['path'] ?? '' ) : '';
 		$dir     = self::package_dir();
 		if ( is_wp_error( $dir ) || ! self::path_is_inside( $path, (string) $dir ) || ! is_file( $path ) ) {
-			wp_die( esc_html__( 'The generated package is unavailable.', self::TEXT_DOMAIN ) );
+			wp_die( esc_html__( 'The generated package is unavailable.', 'ua-free-google-ads-campaign-builder' ) );
+		}
+		$filesystem = self::filesystem();
+		if ( is_wp_error( $filesystem ) ) {
+			wp_die( esc_html( $filesystem->get_error_message() ) );
+		}
+		$content = $filesystem->get_contents( $path );
+		if ( false === $content ) {
+			wp_die( esc_html__( 'The generated package is unavailable.', 'ua-free-google-ads-campaign-builder' ) );
 		}
 		nocache_headers();
 		header( 'Content-Type: application/zip' );
 		header( 'Content-Disposition: attachment; filename="' . sanitize_file_name( basename( $path ) ) . '"' );
-		header( 'Content-Length: ' . (string) filesize( $path ) );
-		readfile( $path );
+		header( 'Content-Length: ' . (string) strlen( $content ) );
+		echo $content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Validated ZIP download bytes.
 		exit;
 	}
 
@@ -1625,23 +1678,44 @@ final class Plugin {
 	}
 
 	private static function csv_content( array $headers, array $rows ): string {
-		$stream = fopen( 'php://temp', 'r+' );
-		if ( false === $stream ) {
-			return '';
-		}
-		fwrite( $stream, "\xEF\xBB\xBF" );
-		fputcsv( $stream, $headers );
+		$lines = array( self::csv_row( $headers ) );
 		foreach ( $rows as $row ) {
 			$values = array();
 			foreach ( $headers as $header ) {
 				$values[] = $row[ $header ] ?? '';
 			}
-			fputcsv( $stream, $values );
+			$lines[] = self::csv_row( $values );
 		}
-		rewind( $stream );
-		$content = stream_get_contents( $stream );
-		fclose( $stream );
-		return is_string( $content ) ? str_replace( "\n", "\r\n", $content ) : '';
+		$content = "\xEF\xBB\xBF" . implode( "\n", $lines ) . "\n";
+		return str_replace( "\n", "\r\n", $content );
+	}
+
+	private static function csv_row( array $values ): string {
+		return implode(
+			',',
+			array_map(
+				static function ( $value ): string {
+					$value = (string) $value;
+					if ( false !== strpbrk( $value, ",\"\\\r\n\t " ) ) {
+						$escaped  = '';
+						$previous = '';
+						$length   = strlen( $value );
+						for ( $index = 0; $index < $length; $index++ ) {
+							$character = $value[ $index ];
+							if ( '"' === $character && '\\' !== $previous ) {
+								$escaped .= '""';
+							} else {
+								$escaped .= $character;
+							}
+							$previous = $character;
+						}
+						return '"' . $escaped . '"';
+					}
+					return $value;
+				},
+				$values
+			)
+		);
 	}
 
 	private static function normalise_text( string $text ): string {
@@ -2007,9 +2081,9 @@ final class Plugin {
 			<form method="post" action="<?php echo esc_url( self::admin_action_url( self::ACTION_SAVE ) ); ?>">
 				<?php wp_nonce_field( self::ACTION_SAVE ); ?>
 				<table class="form-table" role="presentation">
-					<tr><th><label for="uafree-agb-mode"><?php esc_html_e( 'Advertising account type', self::TEXT_DOMAIN ); ?></label></th><td><select id="uafree-agb-mode" name="account_mode"><?php foreach ( self::account_modes() as $key => $mode ) : ?><option value="<?php echo esc_attr( $key ); ?>" <?php selected( self::account_mode( $settings ), $key ); ?>><?php echo esc_html( $mode['label'] ); ?></option><?php endforeach; ?></select><p class="description"><?php echo esc_html( self::account_modes()[ self::account_mode( $settings ) ]['description'] ); ?></p></td></tr>
-					<tr><th><label for="uafree-agb-org"><?php esc_html_e( 'Organisation name', self::TEXT_DOMAIN ); ?></label></th><td><input id="uafree-agb-org" class="regular-text" name="organisation_name" value="<?php echo esc_attr( (string) $settings['organisation_name'] ); ?>"></td></tr>
-					<tr><th><?php esc_html_e( 'Monthly budget', self::TEXT_DOMAIN ); ?></th><td><input type="number" min="1" step="0.01" name="monthly_grant" value="<?php echo esc_attr( (string) $settings['monthly_grant'] ); ?>"> <input name="currency" size="6" value="<?php echo esc_attr( (string) $settings['currency'] ); ?>"></td></tr>
+					<tr><th><label for="uafree-agb-mode"><?php esc_html_e( 'Advertising account type', 'ua-free-google-ads-campaign-builder' ); ?></label></th><td><select id="uafree-agb-mode" name="account_mode"><?php foreach ( self::account_modes() as $key => $mode ) : ?><option value="<?php echo esc_attr( $key ); ?>" <?php selected( self::account_mode( $settings ), $key ); ?>><?php echo esc_html( $mode['label'] ); ?></option><?php endforeach; ?></select><p class="description"><?php echo esc_html( self::account_modes()[ self::account_mode( $settings ) ]['description'] ); ?></p></td></tr>
+					<tr><th><label for="uafree-agb-org"><?php esc_html_e( 'Organisation name', 'ua-free-google-ads-campaign-builder' ); ?></label></th><td><input id="uafree-agb-org" class="regular-text" name="organisation_name" value="<?php echo esc_attr( (string) $settings['organisation_name'] ); ?>"></td></tr>
+					<tr><th><?php esc_html_e( 'Monthly budget', 'ua-free-google-ads-campaign-builder' ); ?></th><td><input type="number" min="1" step="0.01" name="monthly_grant" value="<?php echo esc_attr( (string) $settings['monthly_grant'] ); ?>"> <input name="currency" size="6" value="<?php echo esc_attr( (string) $settings['currency'] ); ?>"></td></tr>
 					<tr>
 						<th><?php echo esc_html( self::ui( 'Мови кампаній', 'Campaign languages' ) ); ?></th>
 						<td>
@@ -2017,7 +2091,7 @@ final class Plugin {
 							<p class="description"><?php echo esc_html( sprintf( self::ui( 'Визначено: %s. English додається як універсальна кампанія.', 'Detected: %s. English is added as the universal campaign.' ), implode( ', ', self::campaign_languages( array_merge( $settings, array( 'language_mode' => 'automatic' ) ) ) ) ) ); ?></p>
 							<label style="display:block;margin:12px 0 8px"><input type="radio" name="language_mode" value="manual" <?php checked( 'manual', (string) $settings['language_mode'] ); ?>> <?php echo esc_html( self::ui( 'Ручна корекція мов', 'Manual language override' ) ); ?></label>
 							<fieldset style="columns:3;max-width:900px"><?php foreach ( self::$languages as $slug => $language ) : ?><label style="display:block"><input type="checkbox" name="selected_languages[]" value="<?php echo esc_attr( $slug ); ?>" <?php checked( in_array( $slug, (array) $settings['selected_languages'], true ) ); ?>> <?php echo esc_html( $language['name'] . ' (' . $slug . ')' ); ?></label><?php endforeach; ?></fieldset>
-							<p class="description"><?php esc_html_e( 'A non-source language requires Azure translation unless you generate that language separately.', self::TEXT_DOMAIN ); ?></p>
+							<p class="description"><?php esc_html_e( 'A non-source language requires Azure translation unless you generate that language separately.', 'ua-free-google-ads-campaign-builder' ); ?></p>
 						</td>
 					</tr>
 					<?php
@@ -2048,21 +2122,21 @@ final class Plugin {
 							<p class="description"><?php echo esc_html( self::ui( 'Checkbox-и використовуються лише в режимі ручної корекції.', 'Checkboxes are used only in manual override mode.' ) ); ?></p>
 						</td>
 					</tr>
-					<tr><th><label for="uafree-agb-pattern"><?php esc_html_e( 'Translated URL pattern', self::TEXT_DOMAIN ); ?></label></th><td><input id="uafree-agb-pattern" class="regular-text code" name="translated_url_pattern" value="<?php echo esc_attr( (string) $settings['translated_url_pattern'] ); ?>"><p class="description"><?php esc_html_e( 'Use {language} and {path}. Leave empty to reuse source URLs. Verify every generated landing URL before import.', self::TEXT_DOMAIN ); ?></p></td></tr>
-					<tr><th><label for="uafree-agb-max"><?php esc_html_e( 'Maximum landing pages per campaign', self::TEXT_DOMAIN ); ?></label></th><td><input id="uafree-agb-max" type="number" min="1" max="10" name="max_campaigns" value="<?php echo esc_attr( (string) $settings['max_campaigns'] ); ?>"></td></tr>
-					<tr><th><label for="uafree-agb-bid"><?php esc_html_e( 'Bid strategy', self::TEXT_DOMAIN ); ?></label></th><td><select id="uafree-agb-bid" name="bid_strategy"><?php foreach ( array( 'Maximize conversions', 'Maximize clicks', 'Manual CPC' ) as $strategy ) : ?><option value="<?php echo esc_attr( $strategy ); ?>" <?php selected( (string) $settings['bid_strategy'], $strategy ); ?>><?php echo esc_html( $strategy ); ?></option><?php endforeach; ?></select></td></tr>
-					<tr><th><label for="uafree-agb-conversion"><?php esc_html_e( 'Primary conversion key', self::TEXT_DOMAIN ); ?></label></th><td><input id="uafree-agb-conversion" class="regular-text code" name="primary_conversion_name" value="<?php echo esc_attr( (string) $settings['primary_conversion_name'] ); ?>"><p class="description"><?php esc_html_e( 'A neutral internal key for the review checklist. The plugin does not create a Google Ads conversion action.', self::TEXT_DOMAIN ); ?></p></td></tr>
-					<tr><th><label for="uafree-agb-negatives"><?php esc_html_e( 'Negative keywords', self::TEXT_DOMAIN ); ?></label></th><td><textarea id="uafree-agb-negatives" class="large-text" rows="5" name="negative_keywords"><?php echo esc_textarea( implode( "\n", (array) $settings['negative_keywords'] ) ); ?></textarea><p class="description"><?php esc_html_e( 'Optional additions, one phrase per line. A safe automatic baseline is always generated.', self::TEXT_DOMAIN ); ?></p></td></tr>
-					<tr><th><label for="uafree-agb-callouts"><?php esc_html_e( 'Callouts', self::TEXT_DOMAIN ); ?></label></th><td><textarea id="uafree-agb-callouts" class="large-text" rows="4" name="callouts"><?php echo esc_textarea( implode( "\n", (array) $settings['callouts'] ) ); ?></textarea><p class="description"><?php esc_html_e( 'Optional additions, one callout per line. Automatic callouts are always generated.', self::TEXT_DOMAIN ); ?></p></td></tr>
-					<tr><th><?php esc_html_e( 'Options', self::TEXT_DOMAIN ); ?></th><td>
-						<label><input type="checkbox" name="include_search_partners" value="1" <?php checked( ! empty( $settings['include_search_partners'] ) ); ?>> <?php esc_html_e( 'Include Search Partners', self::TEXT_DOMAIN ); ?></label><br>
-						<label><input type="checkbox" name="conversion_tracking_confirmed" value="1" <?php checked( ! empty( $settings['conversion_tracking_confirmed'] ) ); ?>> <?php esc_html_e( 'Meaningful conversion tracking is configured', self::TEXT_DOMAIN ); ?></label><br>
-						<label><input type="checkbox" name="allow_azure_copy_translation" value="1" <?php checked( ! empty( $settings['allow_azure_copy_translation'] ) ); ?>> <?php esc_html_e( 'Allow Azure to translate generated ad copy during package generation', self::TEXT_DOMAIN ); ?></label><br>
-						<label><input type="checkbox" name="delete_data_on_uninstall" value="1" <?php checked( ! empty( $settings['delete_data_on_uninstall'] ) ); ?>> <?php esc_html_e( 'Delete settings and the last package when the plugin is uninstalled', self::TEXT_DOMAIN ); ?></label>
+					<tr><th><label for="uafree-agb-pattern"><?php esc_html_e( 'Translated URL pattern', 'ua-free-google-ads-campaign-builder' ); ?></label></th><td><input id="uafree-agb-pattern" class="regular-text code" name="translated_url_pattern" value="<?php echo esc_attr( (string) $settings['translated_url_pattern'] ); ?>"><p class="description"><?php esc_html_e( 'Use {language} and {path}. Leave empty to reuse source URLs. Verify every generated landing URL before import.', 'ua-free-google-ads-campaign-builder' ); ?></p></td></tr>
+					<tr><th><label for="uafree-agb-max"><?php esc_html_e( 'Maximum landing pages per campaign', 'ua-free-google-ads-campaign-builder' ); ?></label></th><td><input id="uafree-agb-max" type="number" min="1" max="10" name="max_campaigns" value="<?php echo esc_attr( (string) $settings['max_campaigns'] ); ?>"></td></tr>
+					<tr><th><label for="uafree-agb-bid"><?php esc_html_e( 'Bid strategy', 'ua-free-google-ads-campaign-builder' ); ?></label></th><td><select id="uafree-agb-bid" name="bid_strategy"><?php foreach ( array( 'Maximize conversions', 'Maximize clicks', 'Manual CPC' ) as $strategy ) : ?><option value="<?php echo esc_attr( $strategy ); ?>" <?php selected( (string) $settings['bid_strategy'], $strategy ); ?>><?php echo esc_html( $strategy ); ?></option><?php endforeach; ?></select></td></tr>
+					<tr><th><label for="uafree-agb-conversion"><?php esc_html_e( 'Primary conversion key', 'ua-free-google-ads-campaign-builder' ); ?></label></th><td><input id="uafree-agb-conversion" class="regular-text code" name="primary_conversion_name" value="<?php echo esc_attr( (string) $settings['primary_conversion_name'] ); ?>"><p class="description"><?php esc_html_e( 'A neutral internal key for the review checklist. The plugin does not create a Google Ads conversion action.', 'ua-free-google-ads-campaign-builder' ); ?></p></td></tr>
+					<tr><th><label for="uafree-agb-negatives"><?php esc_html_e( 'Negative keywords', 'ua-free-google-ads-campaign-builder' ); ?></label></th><td><textarea id="uafree-agb-negatives" class="large-text" rows="5" name="negative_keywords"><?php echo esc_textarea( implode( "\n", (array) $settings['negative_keywords'] ) ); ?></textarea><p class="description"><?php esc_html_e( 'Optional additions, one phrase per line. A safe automatic baseline is always generated.', 'ua-free-google-ads-campaign-builder' ); ?></p></td></tr>
+					<tr><th><label for="uafree-agb-callouts"><?php esc_html_e( 'Callouts', 'ua-free-google-ads-campaign-builder' ); ?></label></th><td><textarea id="uafree-agb-callouts" class="large-text" rows="4" name="callouts"><?php echo esc_textarea( implode( "\n", (array) $settings['callouts'] ) ); ?></textarea><p class="description"><?php esc_html_e( 'Optional additions, one callout per line. Automatic callouts are always generated.', 'ua-free-google-ads-campaign-builder' ); ?></p></td></tr>
+					<tr><th><?php esc_html_e( 'Options', 'ua-free-google-ads-campaign-builder' ); ?></th><td>
+						<label><input type="checkbox" name="include_search_partners" value="1" <?php checked( ! empty( $settings['include_search_partners'] ) ); ?>> <?php esc_html_e( 'Include Search Partners', 'ua-free-google-ads-campaign-builder' ); ?></label><br>
+						<label><input type="checkbox" name="conversion_tracking_confirmed" value="1" <?php checked( ! empty( $settings['conversion_tracking_confirmed'] ) ); ?>> <?php esc_html_e( 'Meaningful conversion tracking is configured', 'ua-free-google-ads-campaign-builder' ); ?></label><br>
+						<label><input type="checkbox" name="allow_azure_copy_translation" value="1" <?php checked( ! empty( $settings['allow_azure_copy_translation'] ) ); ?>> <?php esc_html_e( 'Allow Azure to translate generated ad copy during package generation', 'ua-free-google-ads-campaign-builder' ); ?></label><br>
+						<label><input type="checkbox" name="delete_data_on_uninstall" value="1" <?php checked( ! empty( $settings['delete_data_on_uninstall'] ) ); ?>> <?php esc_html_e( 'Delete settings and the last package when the plugin is uninstalled', 'ua-free-google-ads-campaign-builder' ); ?></label>
 					</td></tr>
-					<tr><th><label for="uafree-agb-suffix"><?php esc_html_e( 'Final URL suffix', self::TEXT_DOMAIN ); ?></label></th><td><input id="uafree-agb-suffix" class="large-text code" name="final_url_suffix" value="<?php echo esc_attr( (string) $settings['final_url_suffix'] ); ?>"><p class="description"><?php esc_html_e( 'Do not include the initial question mark.', self::TEXT_DOMAIN ); ?></p></td></tr>
+					<tr><th><label for="uafree-agb-suffix"><?php esc_html_e( 'Final URL suffix', 'ua-free-google-ads-campaign-builder' ); ?></label></th><td><input id="uafree-agb-suffix" class="large-text code" name="final_url_suffix" value="<?php echo esc_attr( (string) $settings['final_url_suffix'] ); ?>"><p class="description"><?php esc_html_e( 'Do not include the initial question mark.', 'ua-free-google-ads-campaign-builder' ); ?></p></td></tr>
 				</table>
-				<?php submit_button( __( 'Save settings', self::TEXT_DOMAIN ) ); ?>
+				<?php submit_button( __( 'Save settings', 'ua-free-google-ads-campaign-builder' ) ); ?>
 			</form>
 		<?php
 	}
@@ -2076,16 +2150,16 @@ final class Plugin {
 		$azure    = self::azure_credentials();
 		$package  = get_option( self::PACKAGE_OPTION, array() );
 		$package  = is_array( $package ) ? $package : array();
-		$tab      = sanitize_key( (string) ( $_GET['tab'] ?? 'overview' ) );
+		$tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( (string) $_GET['tab'] ) ) : 'overview'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin tab selection.
 		if ( ! in_array( $tab, array( 'overview', 'settings' ), true ) ) {
 			$tab = 'overview';
 		}
-		$notice   = sanitize_key( (string) ( $_GET['uafree_agb_notice'] ?? '' ) );
-		$message  = sanitize_text_field( (string) rawurldecode( (string) ( $_GET['message'] ?? '' ) ) );
+		$notice = isset( $_GET['uafree_agb_notice'] ) ? sanitize_key( wp_unslash( (string) $_GET['uafree_agb_notice'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only redirect notice code.
+		$message = isset( $_GET['message'] ) ? sanitize_text_field( wp_unslash( (string) $_GET['message'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only redirect notice message.
 		self::render_notice( $notice, $message );
 		?>
 		<div class="wrap uafree-agb">
-			<h1><?php esc_html_e( 'UA FREE Google Ads Campaign Builder', self::TEXT_DOMAIN ); ?></h1>
+			<h1><?php esc_html_e( 'UA FREE Google Ads Campaign Builder', 'ua-free-google-ads-campaign-builder' ); ?></h1>
 			<p><?php echo esc_html( self::ui( 'Готує перевірювані пакети для Google Ad Grants або Standard Google Ads. Нічого не запускає автоматично.', 'Builds reviewable packages for Google Ad Grants or Standard Google Ads. Nothing is launched automatically.' ) ); ?></p>
 			<nav class="nav-tab-wrapper">
 				<a class="nav-tab <?php echo 'overview' === $tab ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url( add_query_arg( array( 'page' => self::PAGE_SLUG, 'tab' => 'overview' ), admin_url( 'admin.php' ) ) ); ?>"><?php echo esc_html( self::ui( 'Огляд', 'Overview' ) ); ?></a>
@@ -2104,10 +2178,10 @@ final class Plugin {
 
 	private static function render_notice( string $notice, string $message ): void {
 		$map = array(
-			'settings_saved'  => array( 'success', __( 'Settings saved.', self::TEXT_DOMAIN ) ),
-			'package_ready'   => array( 'success', __( 'Google Ads package generated.', self::TEXT_DOMAIN ) ),
-			'package_deleted' => array( 'success', __( 'Package deleted from the server.', self::TEXT_DOMAIN ) ),
-			'error'           => array( 'error', '' !== $message ? $message : __( 'An error occurred.', self::TEXT_DOMAIN ) ),
+			'settings_saved'  => array( 'success', __( 'Settings saved.', 'ua-free-google-ads-campaign-builder' ) ),
+			'package_ready'   => array( 'success', __( 'Google Ads package generated.', 'ua-free-google-ads-campaign-builder' ) ),
+			'package_deleted' => array( 'success', __( 'Package deleted from the server.', 'ua-free-google-ads-campaign-builder' ) ),
+			'error'           => array( 'error', '' !== $message ? $message : __( 'An error occurred.', 'ua-free-google-ads-campaign-builder' ) ),
 		);
 		if ( ! isset( $map[ $notice ] ) ) {
 			return;

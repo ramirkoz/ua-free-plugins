@@ -1,4 +1,4 @@
-# UA FREE Google Ads Campaign Builder 1.3.1
+# UA FREE Google Ads Campaign Builder 1.3.6
 
 ## Automatic proposal
 

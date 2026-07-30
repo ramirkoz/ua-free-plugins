@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.3.6
+
+- Removed redundant URL decoding from the admin notice message and completed Plugin Check sanitization.
+
+## 1.3.5
+
+- Replaced dynamic translation domains with the required literal text domain.
+- Added translators comments for placeholder strings.
+- Sanitized form and notice inputs before processing.
+- Replaced direct download and CSV stream operations with WordPress-compatible handling.
+- Removed discouraged manual textdomain loading and prefixed uninstall globals.
+- Updated WordPress compatibility metadata.
+
 ## 1.3.4
 
 - Final repository and WordPress.org packaging release.
