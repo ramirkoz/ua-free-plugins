@@ -132,7 +132,9 @@ final class Tracker {
 	}
 
 	private static function request_path(): string {
-		$uri = isset( $_SERVER['REQUEST_URI'] ) ? wp_unslash( (string) $_SERVER['REQUEST_URI'] ) : '/';
+		$uri = isset( $_SERVER['REQUEST_URI'] )
+			? sanitize_text_field( wp_unslash( (string) $_SERVER['REQUEST_URI'] ) )
+			: '/';
 		$path = (string) wp_parse_url( $uri, PHP_URL_PATH );
 		$path = '/' . ltrim( $path, '/' );
 		return '/' === $path ? '/' : untrailingslashit( $path ) . '/';
@@ -432,7 +434,7 @@ final class Tracker {
 
 	private static function server_abuse_bucket( string $context_key ): string {
 		$remote_address = isset( $_SERVER['REMOTE_ADDR'] )
-			? wp_unslash( (string) $_SERVER['REMOTE_ADDR'] )
+			? sanitize_text_field( wp_unslash( (string) $_SERVER['REMOTE_ADDR'] ) )
 			: 'unknown';
 
 		return substr(
@@ -447,19 +449,18 @@ final class Tracker {
 	}
 
 	private static function is_prefetch_request(): bool {
-		$purpose = strtolower(
-			(string) (
-				$_SERVER['HTTP_PURPOSE']
-				?? $_SERVER['HTTP_SEC_PURPOSE']
-				?? $_SERVER['HTTP_X_PURPOSE']
-				?? ''
-			)
-		);
+		$purpose_header = $_SERVER['HTTP_PURPOSE']
+			?? $_SERVER['HTTP_SEC_PURPOSE']
+			?? $_SERVER['HTTP_X_PURPOSE']
+			?? '';
+		$purpose = strtolower( sanitize_text_field( wp_unslash( (string) $purpose_header ) ) );
 		return str_contains( $purpose, 'prefetch' ) || str_contains( $purpose, 'prerender' );
 	}
 
 	private static function is_probable_bot(): bool {
-		$user_agent = strtolower( (string) ( $_SERVER['HTTP_USER_AGENT'] ?? '' ) );
+		$user_agent = isset( $_SERVER['HTTP_USER_AGENT'] )
+			? strtolower( sanitize_text_field( wp_unslash( (string) $_SERVER['HTTP_USER_AGENT'] ) ) )
+			: '';
 		if ( '' === $user_agent ) {
 			return true;
 		}

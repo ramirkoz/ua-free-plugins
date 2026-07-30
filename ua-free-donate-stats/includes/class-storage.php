@@ -5,6 +5,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+/**
+ * Plugin-owned aggregate tables require direct queries for atomic counters and reports.
+ */
+// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange
+
 final class Storage {
 	public const DB_VERSION = '1.1.0';
 	public const DAILY_SUFFIX = 'uafree_donate_daily';
@@ -102,12 +107,12 @@ final class Storage {
 
 		$daily_indexes = self::index_names( self::$daily_table );
 		if ( in_array( 'event_bucket', $daily_indexes, true ) ) {
-			$wpdb->query( "ALTER TABLE `" . self::$daily_table . "` DROP INDEX `event_bucket`" );
+			$wpdb->query( $wpdb->prepare( 'ALTER TABLE %i DROP INDEX `event_bucket`', self::$daily_table ) );
 		}
 
 		$session_indexes = self::index_names( self::$sessions_table );
 		if ( in_array( 'daily_language_session', $session_indexes, true ) ) {
-			$wpdb->query( "ALTER TABLE `" . self::$sessions_table . "` DROP INDEX `daily_language_session`" );
+			$wpdb->query( $wpdb->prepare( 'ALTER TABLE %i DROP INDEX `daily_language_session`', self::$sessions_table ) );
 		}
 	}
 
@@ -117,18 +122,20 @@ final class Storage {
 		$daily_indexes = self::index_names( self::$daily_table );
 		if ( ! in_array( 'event_bucket_v2', $daily_indexes, true ) ) {
 			$wpdb->query(
-				"ALTER TABLE `" . self::$daily_table . "`
-				ADD UNIQUE KEY `event_bucket_v2`
-				(`stat_date`,`language`,`context_key`,`event_type`,`target_key`)"
+				$wpdb->prepare(
+					'ALTER TABLE %i ADD UNIQUE KEY `event_bucket_v2` (`stat_date`,`language`,`context_key`,`event_type`,`target_key`)',
+					self::$daily_table
+				)
 			);
 		}
 
 		$session_indexes = self::index_names( self::$sessions_table );
 		if ( ! in_array( 'daily_language_context_session', $session_indexes, true ) ) {
 			$wpdb->query(
-				"ALTER TABLE `" . self::$sessions_table . "`
-				ADD UNIQUE KEY `daily_language_context_session`
-				(`stat_date`,`language`,`context_key`,`session_hash`)"
+				$wpdb->prepare(
+					'ALTER TABLE %i ADD UNIQUE KEY `daily_language_context_session` (`stat_date`,`language`,`context_key`,`session_hash`)',
+					self::$sessions_table
+				)
 			);
 		}
 	}
@@ -138,7 +145,7 @@ final class Storage {
 	 */
 	private static function index_names( string $table ): array {
 		global $wpdb;
-		$rows = $wpdb->get_results( "SHOW INDEX FROM `" . $table . "`", ARRAY_A );
+		$rows = $wpdb->get_results( $wpdb->prepare( 'SHOW INDEX FROM %i', $table ), ARRAY_A );
 		$names = array();
 
 		foreach ( (array) $rows as $row ) {
@@ -162,12 +169,13 @@ final class Storage {
 		$now = current_time( 'mysql', true );
 		$result = $wpdb->query(
 			$wpdb->prepare(
-				"INSERT INTO " . self::$daily_table . "
+				"INSERT INTO %i
 				(stat_date, language, context_key, event_type, target_key, event_count, created_at, updated_at)
 				VALUES (%s, %s, %s, %s, %s, 1, %s, %s)
 				ON DUPLICATE KEY UPDATE
 					event_count = event_count + 1,
 					updated_at = VALUES(updated_at)",
+				self::$daily_table,
 				current_time( 'Y-m-d' ),
 				$language,
 				$context_key,
@@ -191,9 +199,10 @@ final class Storage {
 
 		$result = $wpdb->query(
 			$wpdb->prepare(
-				"INSERT IGNORE INTO " . self::$sessions_table . "
+				"INSERT IGNORE INTO %i
 				(stat_date, language, context_key, session_hash, created_at)
 				VALUES (%s, %s, %s, %s, %s)",
+				self::$sessions_table,
 				current_time( 'Y-m-d' ),
 				$language,
 				$context_key,
@@ -229,9 +238,10 @@ final class Storage {
 
 		$result = $wpdb->query(
 			$wpdb->prepare(
-				"INSERT IGNORE INTO " . self::$confirmations_table . "
+				"INSERT IGNORE INTO %i
 				(reference_hash, provider, language, context_key, created_at)
 				VALUES (%s, %s, %s, %s, %s)",
+				self::$confirmations_table,
 				$reference_hash,
 				$provider,
 				$language,
@@ -279,19 +289,22 @@ final class Storage {
 
 		$wpdb->query(
 			$wpdb->prepare(
-				"DELETE FROM " . self::$daily_table . " WHERE stat_date < %s",
+				'DELETE FROM %i WHERE stat_date < %s',
+				self::$daily_table,
 				$cutoff
 			)
 		);
 		$wpdb->query(
 			$wpdb->prepare(
-				"DELETE FROM " . self::$sessions_table . " WHERE stat_date < %s",
+				'DELETE FROM %i WHERE stat_date < %s',
+				self::$sessions_table,
 				$cutoff
 			)
 		);
 		$wpdb->query(
 			$wpdb->prepare(
-				"DELETE FROM " . self::$confirmations_table . " WHERE created_at < %s",
+				'DELETE FROM %i WHERE created_at < %s',
+				self::$confirmations_table,
 				$cutoff . ' 00:00:00'
 			)
 		);
@@ -300,9 +313,9 @@ final class Storage {
 	public static function reset(): void {
 		global $wpdb;
 		self::ensure_initialized();
-		$wpdb->query( 'TRUNCATE TABLE ' . self::$daily_table );
-		$wpdb->query( 'TRUNCATE TABLE ' . self::$sessions_table );
-		$wpdb->query( 'TRUNCATE TABLE ' . self::$confirmations_table );
+		$wpdb->query( $wpdb->prepare( 'TRUNCATE TABLE %i', self::$daily_table ) );
+		$wpdb->query( $wpdb->prepare( 'TRUNCATE TABLE %i', self::$sessions_table ) );
+		$wpdb->query( $wpdb->prepare( 'TRUNCATE TABLE %i', self::$confirmations_table ) );
 		delete_option( Plugin::LAST_CONFIRMATION_OPTION );
 	}
 
@@ -322,9 +335,10 @@ final class Storage {
 		$events = $wpdb->get_results(
 			$wpdb->prepare(
 				"SELECT event_type, SUM(event_count) AS total
-				FROM " . self::$daily_table . "
+				FROM %i
 				WHERE stat_date >= %s
 				GROUP BY event_type",
+				self::$daily_table,
 				$cutoff
 			),
 			ARRAY_A
@@ -338,8 +352,9 @@ final class Storage {
 		$sessions = (int) $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT COUNT(DISTINCT CONCAT(stat_date, ':', context_key, ':', session_hash))
-				FROM " . self::$sessions_table . "
+				FROM %i
 				WHERE stat_date >= %s",
+				self::$sessions_table,
 				$cutoff
 			)
 		);
@@ -383,10 +398,11 @@ final class Storage {
 					SUM(CASE WHEN event_type IN ('payment_open','external_click') THEN event_count ELSE 0 END) AS payment_opens,
 					SUM(CASE WHEN event_type = 'copy_click' THEN event_count ELSE 0 END) AS copy_clicks,
 					SUM(CASE WHEN event_type = 'donation_success' THEN event_count ELSE 0 END) AS successes
-				FROM " . self::$daily_table . "
+				FROM %i
 				WHERE stat_date >= %s
 				GROUP BY stat_date
 				ORDER BY stat_date DESC",
+				self::$daily_table,
 				$cutoff
 			),
 			ARRAY_A
@@ -395,9 +411,10 @@ final class Storage {
 		$sessions = $wpdb->get_results(
 			$wpdb->prepare(
 				"SELECT stat_date, COUNT(DISTINCT CONCAT(context_key, ':', session_hash)) AS sessions
-				FROM " . self::$sessions_table . "
+				FROM %i
 				WHERE stat_date >= %s
 				GROUP BY stat_date",
+				self::$sessions_table,
 				$cutoff
 			),
 			OBJECT_K
@@ -429,12 +446,13 @@ final class Storage {
 		return (array) $wpdb->get_results(
 			$wpdb->prepare(
 				"SELECT event_type, target_key, SUM(event_count) AS event_count
-				FROM " . self::$daily_table . "
+				FROM %i
 				WHERE stat_date >= %s
 					AND event_type IN ('donate_click','payment_open','external_click','copy_click','donation_success')
 				GROUP BY event_type, target_key
 				ORDER BY event_count DESC
 				LIMIT 50",
+				self::$daily_table,
 				self::date_cutoff( $days )
 			),
 			ARRAY_A
@@ -456,9 +474,10 @@ final class Storage {
 					SUM(CASE WHEN event_type = 'page_view' THEN event_count ELSE 0 END) AS views,
 					SUM(CASE WHEN event_type IN ('donate_click','payment_open','external_click','copy_click') THEN event_count ELSE 0 END) AS engagements,
 					SUM(CASE WHEN event_type = 'donation_success' THEN event_count ELSE 0 END) AS successes
-				FROM " . self::$daily_table . "
+				FROM %i
 				WHERE stat_date >= %s
 				GROUP BY context_key",
+				self::$daily_table,
 				$cutoff
 			),
 			OBJECT_K
@@ -467,9 +486,10 @@ final class Storage {
 		$sessions = $wpdb->get_results(
 			$wpdb->prepare(
 				"SELECT context_key, COUNT(DISTINCT CONCAT(stat_date, ':', session_hash)) AS sessions
-				FROM " . self::$sessions_table . "
+				FROM %i
 				WHERE stat_date >= %s
 				GROUP BY context_key",
+				self::$sessions_table,
 				$cutoff
 			),
 			OBJECT_K
@@ -512,9 +532,10 @@ final class Storage {
 					SUM(CASE WHEN event_type = 'page_view' THEN event_count ELSE 0 END) AS views,
 					SUM(CASE WHEN event_type IN ('donate_click','payment_open','external_click','copy_click') THEN event_count ELSE 0 END) AS engagements,
 					SUM(CASE WHEN event_type = 'donation_success' THEN event_count ELSE 0 END) AS successes
-				FROM " . self::$daily_table . "
+				FROM %i
 				WHERE stat_date >= %s
 				GROUP BY language",
+				self::$daily_table,
 				$cutoff
 			),
 			OBJECT_K
@@ -523,9 +544,10 @@ final class Storage {
 		$sessions = $wpdb->get_results(
 			$wpdb->prepare(
 				"SELECT language, COUNT(DISTINCT CONCAT(stat_date, ':', context_key, ':', session_hash)) AS sessions
-				FROM " . self::$sessions_table . "
+				FROM %i
 				WHERE stat_date >= %s
 				GROUP BY language",
+				self::$sessions_table,
 				$cutoff
 			),
 			OBJECT_K
@@ -576,11 +598,13 @@ final class Storage {
 		global $wpdb;
 		self::ensure_initialized();
 		return array(
-			'daily_rows'        => (int) $wpdb->get_var( "SELECT COUNT(*) FROM " . self::$daily_table ),
-			'session_rows'      => (int) $wpdb->get_var( "SELECT COUNT(*) FROM " . self::$sessions_table ),
-			'confirmation_rows' => (int) $wpdb->get_var( "SELECT COUNT(*) FROM " . self::$confirmations_table ),
+			'daily_rows'        => (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM %i', self::$daily_table ) ),
+			'session_rows'      => (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM %i', self::$sessions_table ) ),
+			'confirmation_rows' => (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM %i', self::$confirmations_table ) ),
 		);
 	}
 }
+
+// phpcs:enable
 
 Storage::init();

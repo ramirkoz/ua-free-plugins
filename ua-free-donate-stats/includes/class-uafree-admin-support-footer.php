@@ -25,6 +25,7 @@ if ( ! class_exists( 'UAFree_Admin_Support_Footer', false ) ) {
 		}
 
 		private static function is_uafree_screen(): bool {
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin screen detection.
 			$page = isset( $_GET['page'] )
 				? strtolower( sanitize_text_field( wp_unslash( (string) $_GET['page'] ) ) )
 				: '';

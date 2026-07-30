@@ -5,11 +5,11 @@
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Author URI: https://uafree.org/
  * Plugin URI: https://uafree.org/ua-free-plugins/#plugin-ua-free-donate-stats
- * Version: 1.2.4
+ * Version: 1.2.5
  * Author: UA FREE
  * Text Domain: ua-free-donate-stats
  * Domain Path: /languages
- * Requires at least: 6.0
+ * Requires at least: 6.2
  * Requires PHP: 8.0
  * License: GPL-2.0-or-later
  */
@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'UAFREE_DONATE_STATS_VERSION', '1.2.4' );
+define( 'UAFREE_DONATE_STATS_VERSION', '1.2.5' );
 define( 'UAFREE_DONATE_STATS_FILE', __FILE__ );
 define( 'UAFREE_DONATE_STATS_DIR', plugin_dir_path( __FILE__ ) );
 define( 'UAFREE_DONATE_STATS_URL', plugin_dir_url( __FILE__ ) );

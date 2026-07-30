@@ -103,10 +103,12 @@ final class Admin {
 			return;
 		}
 
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only tab selection.
 		$tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : 'overview';
 		if ( ! in_array( $tab, array( 'overview', 'settings' ), true ) ) {
 			$tab = 'overview';
 		}
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only report range.
 		$days = isset( $_GET['days'] ) ? absint( $_GET['days'] ) : 30;
 		if ( ! in_array( $days, array( 7, 30, 90 ), true ) ) {
 			$days = 30;
@@ -354,7 +356,10 @@ final class Admin {
 			<p><strong><?php esc_html_e( 'Підтверджений донат', 'ua-free-donate-stats' ); ?>:</strong> <?php esc_html_e( 'платіжний сервіс або ваш server connector повідомив, що оплата справді успішна. Клік чи відкриття платіжної сторінки не вважається донатом.', 'ua-free-donate-stats' ); ?></p>
 			<p><strong><?php esc_html_e( 'Конверсія', 'ua-free-donate-stats' ); ?>:</strong> <?php esc_html_e( 'підтверджені донати, поділені на унікальні денні сесії сторінки донатів.', 'ua-free-donate-stats' ); ?></p>
 			<?php if ( ! empty( $manager['last_confirmation_at'] ) ) : ?>
-				<p><?php echo esc_html( sprintf( __( 'Останнє підтвердження: %s', 'ua-free-donate-stats' ), (string) $manager['last_confirmation_at'] ) ); ?></p>
+				<p><?php
+					/* translators: %s: date and time of the latest confirmed donation. */
+					echo esc_html( sprintf( __( 'Останнє підтвердження: %s', 'ua-free-donate-stats' ), (string) $manager['last_confirmation_at'] ) );
+				?></p>
 			<?php endif; ?>
 		</section>
 
@@ -373,7 +378,10 @@ final class Admin {
 			<div>
 				<?php foreach ( array( 7, 30, 90 ) as $range ) : ?>
 					<a class="button <?php echo $days === $range ? 'button-primary' : ''; ?>" href="<?php echo esc_url( self::tab_url( 'overview', $range ) ); ?>">
-						<?php echo esc_html( sprintf( __( '%d days', 'ua-free-donate-stats' ), $range ) ); ?>
+						<?php
+							/* translators: %d: report period in days. */
+							echo esc_html( sprintf( __( '%d days', 'ua-free-donate-stats' ), $range ) );
+						?>
 					</a>
 				<?php endforeach; ?>
 			</div>
@@ -647,7 +655,10 @@ final class Admin {
 				<input type="hidden" name="action" value="<?php echo esc_attr( Plugin::RESET_ACTION ); ?>">
 				<?php wp_nonce_field( Plugin::RESET_ACTION ); ?>
 				<label class="uafree-ds-field">
-					<span><?php echo esc_html( sprintf( __( 'Type %s to confirm', 'ua-free-donate-stats' ), Plugin::RESET_PHRASE ) ); ?></span>
+					<span><?php
+						/* translators: %s: confirmation phrase required before deleting statistics. */
+						echo esc_html( sprintf( __( 'Type %s to confirm', 'ua-free-donate-stats' ), Plugin::RESET_PHRASE ) );
+					?></span>
 					<input type="text" name="confirm_phrase" class="regular-text" autocomplete="off">
 				</label>
 				<button class="button" type="submit"><?php esc_html_e( 'Delete all statistics', 'ua-free-donate-stats' ); ?></button>
@@ -816,7 +827,7 @@ final class Admin {
 		if ( false === $output ) {
 			wp_die( esc_html__( 'Could not open export stream.', 'ua-free-donate-stats' ) );
 		}
-		fwrite( $output, "\xEF\xBB\xBF" );
+		echo "\xEF\xBB\xBF";
 		fputcsv( $output, array( 'section', 'dimension', 'metric', 'target', 'value' ), ';' );
 
 		foreach ( $payload['daily'] as $row ) {
@@ -837,7 +848,6 @@ final class Admin {
 		foreach ( $payload['targets'] as $row ) {
 			fputcsv( $output, array( 'target', '', $row['event_type'], $row['target_key'], $row['event_count'] ), ';' );
 		}
-		fclose( $output );
 		exit;
 	}
 
@@ -849,6 +859,7 @@ final class Admin {
 	}
 
 	private static function requested_days(): int {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only report range.
 		$days = isset( $_GET['days'] ) ? absint( $_GET['days'] ) : 30;
 		return in_array( $days, array( 7, 30, 90 ), true ) ? $days : 30;
 	}

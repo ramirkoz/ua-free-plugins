@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.5
+
+- Prepared dynamic database identifiers with `%i` and documented legitimate plugin-table queries.
+- Sanitized request metadata and clarified nonce handling for read-only admin filters.
+- Fixed CSV streaming, translator comments, WordPress metadata and package contents.
+
 ## 1.2.4
 
 - Final repository and WordPress.org packaging release.

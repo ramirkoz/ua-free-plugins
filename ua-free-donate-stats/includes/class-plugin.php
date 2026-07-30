@@ -18,21 +18,12 @@ final class Plugin {
 	public const SETTINGS_VERSION = 3;
 
 	public static function init(): void {
-		add_action( 'plugins_loaded', array( __CLASS__, 'load_textdomain' ) );
 		add_action( 'admin_init', array( __CLASS__, 'maybe_upgrade' ) );
 		add_action( self::CLEANUP_HOOK, array( __CLASS__, 'cleanup_old_data' ) );
 		add_filter( 'uafree_donate_stats_public_status', array( Tracker::class, 'public_status' ) );
 
 		Tracker::init();
 		Admin::init();
-	}
-
-	public static function load_textdomain(): void {
-		load_plugin_textdomain(
-			'ua-free-donate-stats',
-			false,
-			dirname( plugin_basename( UAFREE_DONATE_STATS_FILE ) ) . '/languages'
-		);
 	}
 
 	/**
