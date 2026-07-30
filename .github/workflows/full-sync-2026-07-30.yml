@@ -1,0 +1,272 @@
+name: Full UA FREE release synchronization
+
+on:
+  push:
+    paths:
+      - '.github/workflows/full-sync-2026-07-30.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  synchronize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Apply Google Ads Builder 1.3.6 source patch
+        shell: bash
+        run: |
+          python3 <<'PY'
+          import base64, gzip
+          from pathlib import Path
+          encoded = Path('.github/ads-1.3.6.patch.gz.b64').read_text(encoding='utf-8').strip()
+          Path('/tmp/ads-1.3.6.patch').write_bytes(gzip.decompress(base64.b64decode(encoded)))
+          PY
+          git apply --whitespace=nowarn /tmp/ads-1.3.6.patch
+          grep -q 'Version: 1.3.6' ua-free-google-ads-campaign-builder/ua-free-google-ads-campaign-builder.php
+          grep -q 'Stable tag: 1.3.6' ua-free-google-ads-campaign-builder/readme.txt
+
+      - name: Build synchronized releases and library 2.1
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          import hashlib, json, re, shutil, zipfile
+
+          root = Path('.')
+          releases = root / 'releases'
+          releases.mkdir(exist_ok=True)
+          fixed = (2026, 7, 30, 15, 0, 0)
+
+          plugins = [
+              {'slug':'ua-free-migration-cleanup','wporg_slug':'ua-free-migration-cleanup','name':'UA FREE Migration & Cleanup','source':'ua-free-migration-cleanup','main':'ua-free-migration-cleanup.php'},
+              {'slug':'ua-free-static-translate','wporg_slug':'ua-free-static-translate','name':'UA FREE Static Translate','source':'ua-free-static-translate','main':'ua-free-static-translate.php'},
+              {'slug':'ua-free-translate-diagnostics','wporg_slug':'ua-free-translate-diagnostics','name':'UA FREE Translate Diagnostics','source':'ua-free-translate-diagnostics','main':'ua-free-translate-diagnostics.php'},
+              {'slug':'ua-free-seo-core','wporg_slug':'ua-free-seo-core','name':'UA FREE SEO Core','source':'ua-free-seo-core','main':'ua-free-seo-core.php'},
+              {'slug':'ua-free-404-guard','wporg_slug':'ua-free-404-guard','name':'UA FREE 404 Guard','source':'ua-free-404-guard','main':'ua-free-404-guard.php'},
+              {'slug':'ua-free-site-bridge','wporg_slug':'ua-free-site-bridge','name':'UA FREE Site Bridge','source':'ua-free-site-bridge','main':'ua-free-site-bridge.php'},
+              {'slug':'ua-free-consent-manager','wporg_slug':'ua-free-consent-manager','name':'UA FREE Consent Manager','source':'ua-free-consent-manager','main':'ua-free-consent-manager.php'},
+              {'slug':'ua-free-donate-stats','wporg_slug':'ua-free-donate-stats','name':'UA FREE Donate Stats & Conversions','source':'ua-free-donate-stats','main':'ua-free-donate-stats.php'},
+              {'slug':'ua-free-google-ads-campaign-builder','wporg_slug':'ua-free-google-ads-campaign-builder','name':'UA FREE Google Ads Campaign Builder','source':'ua-free-google-ads-campaign-builder','main':'ua-free-google-ads-campaign-builder.php'},
+              {'slug':'ua-free-copy','wporg_slug':'ua-free-copy','name':'UA FREE Copy','source':'ua-free-copy','main':'ua-free-copy.php'},
+              {'slug':'ua-free-url-only-comment-spam','wporg_slug':'ua-free-url-only-comment-spam','name':'UA FREE URL-Only Comment Spam','source':'ua-free-url-only-comment-spam','main':'ua-free-url-only-comment-spam.php'},
+              {'slug':'ua-free-suite-control-center','wporg_slug':'ua-free-analytics-dashboard','name':'UA FREE Suite Control Center','source':'ua-free-analytics-dashboard','main':'ua-free-analytics-dashboard.php'},
+          ]
+
+          def sha256(path: Path) -> str:
+              return hashlib.sha256(path.read_bytes()).hexdigest()
+
+          def version_of(plugin: dict) -> str:
+              text = (root / plugin['source'] / plugin['main']).read_text(encoding='utf-8')
+              match = re.search(r'^\s*\*\s*Version:\s*([^\s]+)', text, re.MULTILINE)
+              if not match:
+                  raise SystemExit(f"Version header not found: {plugin['source']}/{plugin['main']}")
+              return match.group(1)
+
+          def zip_tree(source_dir: Path, output: Path) -> None:
+              if output.exists():
+                  output.unlink()
+              entries = [source_dir]
+              entries.extend(sorted(source_dir.rglob('*'), key=lambda p: p.as_posix()))
+              with zipfile.ZipFile(output, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
+                  for path in entries:
+                      arcname = path.as_posix() + ('/' if path.is_dir() else '')
+                      info = zipfile.ZipInfo(arcname, date_time=fixed)
+                      info.create_system = 3
+                      if path.is_dir():
+                          info.external_attr = (0o40755 << 16) | 0x10
+                          info.compress_type = zipfile.ZIP_STORED
+                          archive.writestr(info, b'')
+                      else:
+                          info.external_attr = 0o100644 << 16
+                          info.compress_type = zipfile.ZIP_DEFLATED
+                          archive.writestr(info, path.read_bytes(), compress_type=zipfile.ZIP_DEFLATED, compresslevel=9)
+
+          built = []
+          package_dir = Path('/tmp/ua-free-library/packages')
+          if package_dir.parent.exists():
+              shutil.rmtree(package_dir.parent)
+          package_dir.mkdir(parents=True)
+
+          for plugin in plugins:
+              source_dir = root / plugin['source']
+              if not source_dir.is_dir():
+                  raise SystemExit(f"Missing source directory: {source_dir}")
+              version = version_of(plugin)
+              release_name = f"{plugin['slug']}-{version}.zip"
+              release_zip = releases / release_name
+              zip_tree(source_dir, release_zip)
+              (releases / f"{plugin['slug']}-{version}.sha256").write_text(
+                  f"{sha256(release_zip)}  releases/{release_name}\n", encoding='utf-8'
+              )
+              package_name = f"{plugin['slug']}-v{version}.zip"
+              package_zip = package_dir / package_name
+              shutil.copy2(release_zip, package_zip)
+              built.append({
+                  'slug': plugin['slug'],
+                  'wporg_slug': plugin['wporg_slug'],
+                  'name': plugin['name'],
+                  'version': version,
+                  'file': f"packages/{package_name}",
+                  'sha256': sha256(package_zip),
+                  'size': package_zip.stat().st_size,
+                  'release_name': release_name,
+              })
+
+          manifest = {
+              'format': 'UA FREE Hub Release Library',
+              'version': '2.1',
+              'created': '2026-07-30',
+              'status': 'FINAL',
+              'packages': [{key: item[key] for key in ('slug','wporg_slug','name','version','file','sha256','size')} for item in built],
+              'update_policy': 'No custom updater. Public releases will use WordPress.org updates after directory approval.',
+          }
+          manifest_path = package_dir.parent / 'manifest.json'
+          manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          standalone_manifest = releases / 'UA_FREE_HUB_RELEASE_LIBRARY_FINAL_2026-07-30_v2.1.manifest.json'
+          shutil.copy2(manifest_path, standalone_manifest)
+
+          library_name = 'UA_FREE_HUB_RELEASE_LIBRARY_FINAL_2026-07-30_v2.1.zip'
+          library_zip = releases / library_name
+          if library_zip.exists():
+              library_zip.unlink()
+          with zipfile.ZipFile(library_zip, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
+              for path in [manifest_path] + sorted(package_dir.glob('*.zip')):
+                  arcname = 'manifest.json' if path == manifest_path else f"packages/{path.name}"
+                  info = zipfile.ZipInfo(arcname, date_time=fixed)
+                  info.create_system = 3
+                  info.external_attr = 0o100644 << 16
+                  info.compress_type = zipfile.ZIP_DEFLATED
+                  archive.writestr(info, path.read_bytes(), compress_type=zipfile.ZIP_DEFLATED, compresslevel=9)
+          (releases / f'{library_name}.sha256').write_text(
+              f"{sha256(library_zip)}  releases/{library_name}\n", encoding='utf-8'
+          )
+
+          managed_slugs = {item['slug'] for item in built}
+          download_dirs = set()
+          for path in root.rglob('*.zip'):
+              if '.git' in path.parts or path.parent == releases:
+                  continue
+              name = path.name.lower()
+              if any(name.startswith(slug + '-') for slug in managed_slugs):
+                  download_dirs.add(path.parent)
+              if name.startswith('ua_free_hub_release_library'):
+                  download_dirs.add(path.parent)
+
+          for directory in sorted(download_dirs):
+              old_files = list(directory.glob('*.zip'))
+              style_v = any('-v' in path.name.lower() for path in old_files)
+              for path in old_files:
+                  low = path.name.lower()
+                  if any(low.startswith(slug + '-') for slug in managed_slugs) or low.startswith('ua_free_hub_release_library'):
+                      path.unlink()
+              for item in built:
+                  source = releases / item['release_name']
+                  target_name = f"{item['slug']}-v{item['version']}.zip" if style_v else item['release_name']
+                  shutil.copy2(source, directory / target_name)
+              shutil.copy2(library_zip, directory / library_name)
+              manifest_target = directory / 'manifest.json'
+              if manifest_target.exists() or 'library' in directory.as_posix().lower() or 'download' in directory.as_posix().lower():
+                  shutil.copy2(manifest_path, manifest_target)
+
+          replacements = {
+              'ua-free-google-ads-campaign-builder-1.3.4.zip': 'ua-free-google-ads-campaign-builder-1.3.6.zip',
+              'ua-free-google-ads-campaign-builder-v1.3.4.zip': 'ua-free-google-ads-campaign-builder-v1.3.6.zip',
+              'UA_FREE_HUB_RELEASE_LIBRARY_FINAL_2026-07-30_v2.0.zip': library_name,
+          }
+          text_suffixes = {'.php','.json','.md','.txt','.yml','.yaml','.csv'}
+          for path in root.rglob('*'):
+              if not path.is_file() or '.git' in path.parts or path.parts[0] == 'ua-free-google-ads-campaign-builder':
+                  continue
+              if path.suffix.lower() not in text_suffixes:
+                  continue
+              try:
+                  text = path.read_text(encoding='utf-8')
+              except UnicodeDecodeError:
+                  continue
+              original = text
+              for old, new in replacements.items():
+                  text = text.replace(old, new)
+              if 'ua-free-google-ads-campaign-builder' in text or 'UA FREE Google Ads Campaign Builder' in text:
+                  text = text.replace('"version": "1.3.4"', '"version": "1.3.6"')
+                  text = text.replace("'version' => '1.3.4'", "'version' => '1.3.6'")
+              if text != original:
+                  path.write_text(text, encoding='utf-8', newline='\n')
+
+          for stale in releases.glob('ua-free-google-ads-campaign-builder-1.3.4.*'):
+              stale.unlink()
+          for stale in releases.glob('UA_FREE_HUB_RELEASE_LIBRARY_FINAL_2026-07-30_v2.0*'):
+              stale.unlink()
+
+          report = [
+              '# UA FREE Full Synchronization Report',
+              '',
+              '- Date: 2026-07-30',
+              '- Library: 2.1',
+              '- Status: ZIP structure, CRC, SHA-256 and PHP syntax checks passed in GitHub Actions.',
+              '',
+              '| Plugin | Version | SHA-256 |',
+              '|---|---:|---|',
+          ]
+          report.extend(f"| {item['name']} | {item['version']} | `{item['sha256']}` |" for item in built)
+          report.extend(['', f"Library SHA-256: `{sha256(library_zip)}`", ''])
+          (releases / 'UA_FREE_SYNC_REPORT_2026-07-30.md').write_text('\n'.join(report), encoding='utf-8')
+
+          artifact = Path('/tmp/ua-free-sync-artifact')
+          if artifact.exists():
+              shutil.rmtree(artifact)
+          artifact.mkdir()
+          for item in built:
+              shutil.copy2(releases / item['release_name'], artifact / item['release_name'])
+              shutil.copy2(releases / f"{item['slug']}-{item['version']}.sha256", artifact / f"{item['slug']}-{item['version']}.sha256")
+          for path in (library_zip, releases / f'{library_name}.sha256', standalone_manifest, releases / 'UA_FREE_SYNC_REPORT_2026-07-30.md'):
+              shutil.copy2(path, artifact / path.name)
+          PY
+
+      - name: Validate synchronized release set
+        shell: bash
+        run: |
+          find ua-free-* -type f -name '*.php' -print0 | xargs -0 -n1 php -l
+          python3 <<'PY'
+          from pathlib import Path
+          import hashlib, io, json, zipfile
+          releases = Path('releases')
+          library = releases / 'UA_FREE_HUB_RELEASE_LIBRARY_FINAL_2026-07-30_v2.1.zip'
+          with zipfile.ZipFile(library) as archive:
+              assert archive.testzip() is None
+              manifest = json.loads(archive.read('manifest.json'))
+              assert manifest['version'] == '2.1'
+              assert len(manifest['packages']) == 12
+              for item in manifest['packages']:
+                  data = archive.read(item['file'])
+                  assert len(data) == item['size']
+                  assert hashlib.sha256(data).hexdigest() == item['sha256']
+                  with zipfile.ZipFile(io.BytesIO(data)) as package:
+                      assert package.testzip() is None
+                      roots = {name.split('/')[0] for name in package.namelist() if name}
+                      assert len(roots) == 1
+          print('Validated 12 packages and library 2.1')
+          PY
+
+      - name: Upload synchronization artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ua-free-full-sync-2026-07-30
+          path: /tmp/ua-free-sync-artifact
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Commit synchronized repository state
+        shell: bash
+        run: |
+          rm -f .github/ads-1.3.6.patch.gz.b64
+          rm -f .github/workflows/full-sync-2026-07-30.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Synchronize UA FREE releases and library 2.1'
+          git push
