@@ -1,0 +1,135 @@
+name: Publish Donate Stats 1.2.6
+
+on:
+  push:
+    paths:
+      - '.github/workflows/release-donate-stats-1.2.6.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Apply final Plugin Check fixes
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+
+          root = Path('ua-free-donate-stats')
+
+          def edit(rel, replacements):
+              path = root / rel
+              text = path.read_text(encoding='utf-8')
+              for old, new in replacements:
+                  if old not in text:
+                      raise SystemExit(f'Missing expected fragment in {rel}: {old[:80]}')
+                  text = text.replace(old, new, 1)
+              path.write_text(text, encoding='utf-8', newline='\n')
+
+          edit('ua-free-donate-stats.php', [
+              (' * Version: 1.2.5', ' * Version: 1.2.6'),
+              ("define( 'UAFREE_DONATE_STATS_VERSION', '1.2.5' );", "define( 'UAFREE_DONATE_STATS_VERSION', '1.2.6' );"),
+          ])
+
+          edit('readme.txt', [
+              ('Stable tag: 1.2.5', 'Stable tag: 1.2.6'),
+              ('== Changelog ==\n\n= 1.2.5 =', '== Changelog ==\n\n= 1.2.6 =\n* Fixed the final Plugin Check warnings for read-only admin routing and prefetch request headers.\n\n= 1.2.5 ='),
+              ('== Upgrade Notice ==\n\n= 1.2.5 =', '== Upgrade Notice ==\n\n= 1.2.6 =\nFinal Plugin Check cleanup for request handling.\n\n= 1.2.5 ='),
+          ])
+
+          edit('CHANGELOG.md', [
+              ('# Changelog\n\n## 1.2.5', '# Changelog\n\n## 1.2.6\n\n- Fixed the final Plugin Check warnings in admin screen detection and prefetch header handling.\n\n## 1.2.5'),
+          ])
+
+          edit('includes/class-tracker.php', [
+              ("\t\t$purpose_header = $_SERVER['HTTP_PURPOSE']\n\t\t\t?? $_SERVER['HTTP_SEC_PURPOSE']\n\t\t\t?? $_SERVER['HTTP_X_PURPOSE']\n\t\t\t?? '';\n\t\t$purpose = strtolower( sanitize_text_field( wp_unslash( (string) $purpose_header ) ) );",
+               "\t\t$purpose = '';\n\t\tif ( isset( $_SERVER['HTTP_PURPOSE'] ) ) {\n\t\t\t$purpose = strtolower( sanitize_text_field( wp_unslash( (string) $_SERVER['HTTP_PURPOSE'] ) ) );\n\t\t} elseif ( isset( $_SERVER['HTTP_SEC_PURPOSE'] ) ) {\n\t\t\t$purpose = strtolower( sanitize_text_field( wp_unslash( (string) $_SERVER['HTTP_SEC_PURPOSE'] ) ) );\n\t\t} elseif ( isset( $_SERVER['HTTP_X_PURPOSE'] ) ) {\n\t\t\t$purpose = strtolower( sanitize_text_field( wp_unslash( (string) $_SERVER['HTTP_X_PURPOSE'] ) ) );\n\t\t}\n"),
+          ])
+
+          edit('includes/class-uafree-admin-support-footer.php', [
+              ("\t\t\t// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin screen detection.\n\t\t\t$page = isset( $_GET['page'] )\n\t\t\t\t? strtolower( sanitize_text_field( wp_unslash( (string) $_GET['page'] ) ) )\n\t\t\t\t: '';",
+               "\t\t\t$page = isset( $_GET['page'] ) ? strtolower( sanitize_text_field( wp_unslash( (string) $_GET['page'] ) ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin screen detection."),
+          ])
+          PY
+
+      - name: Build release and refresh landing library
+        shell: bash
+        run: |
+          rm -f releases/ua-free-donate-stats-1.2.6.zip
+          mkdir -p releases
+          zip -qr releases/ua-free-donate-stats-1.2.6.zip ua-free-donate-stats
+          sha256sum releases/ua-free-donate-stats-1.2.6.zip > releases/ua-free-donate-stats-1.2.6.sha256
+
+          python3 <<'PY'
+          from pathlib import Path
+          import shutil
+
+          root = Path('.')
+          release_zip = Path('releases/ua-free-donate-stats-1.2.6.zip')
+          old_name = 'ua-free-donate-stats-1.2.5.zip'
+          new_name = 'ua-free-donate-stats-1.2.6.zip'
+
+          library_dirs = set()
+          for zip_path in root.rglob('*.zip'):
+              if '.git' in zip_path.parts or zip_path.parent == Path('releases'):
+                  continue
+              low = '/'.join(zip_path.parts).lower()
+              if 'library' in low or 'download' in low or 'release' in low:
+                  library_dirs.add(zip_path.parent)
+              if zip_path.name.startswith('ua-free-donate-stats'):
+                  library_dirs.add(zip_path.parent)
+
+          for directory in sorted(library_dirs):
+              for old_zip in directory.glob('ua-free-donate-stats*.zip'):
+                  old_zip.unlink()
+              shutil.copy2(release_zip, directory / new_name)
+
+          suffixes = {'.php', '.json', '.md', '.txt', '.yml', '.yaml', '.csv'}
+          for path in root.rglob('*'):
+              if not path.is_file() or '.git' in path.parts or path.parts[0] == 'ua-free-donate-stats':
+                  continue
+              if path.suffix.lower() not in suffixes:
+                  continue
+              try:
+                  text = path.read_text(encoding='utf-8')
+              except UnicodeDecodeError:
+                  continue
+              original = text
+              text = text.replace(old_name, new_name)
+              text = text.replace('ua-free-donate-stats-1.2.5.sha256', 'ua-free-donate-stats-1.2.6.sha256')
+              if 'ua-free-donate-stats' in text or 'UA FREE Donate Stats & Conversions' in text:
+                  text = text.replace('"version": "1.2.5"', '"version": "1.2.6"')
+                  text = text.replace("'version' => '1.2.5'", "'version' => '1.2.6'")
+              if text != original:
+                  path.write_text(text, encoding='utf-8', newline='\n')
+
+          print(f'Landing library directories refreshed: {len(library_dirs)}')
+          for directory in sorted(library_dirs):
+              print(directory)
+          PY
+
+      - name: Validate and commit
+        shell: bash
+        run: |
+          find ua-free-donate-stats -name '*.php' -print0 | xargs -0 -n1 php -l
+          grep -q 'Version: 1.2.6' ua-free-donate-stats/ua-free-donate-stats.php
+          grep -q 'Stable tag: 1.2.6' ua-free-donate-stats/readme.txt
+          unzip -t releases/ua-free-donate-stats-1.2.6.zip
+
+          rm -f .github/workflows/release-donate-stats-1.2.6.yml
+          rm -f .github/workflows/export-donate-stats-artifact.yml
+          rm -f .github/workflows/export-donate-stats-artifact-pr.yml
+          rm -f .github/artifact-trigger.txt
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Release UA FREE Donate Stats 1.2.6 and refresh download library'
+          git push
