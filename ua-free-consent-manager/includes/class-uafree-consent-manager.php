@@ -28,7 +28,6 @@ final class Consent_Manager {
 		}
 		self::$booted = true;
 
-		add_action( 'plugins_loaded', array( __CLASS__, 'load_textdomain' ) );
 		add_action( 'admin_menu', array( __CLASS__, 'register_admin_page' ), 20 );
 		add_action( 'admin_post_uafree_consent_manager_save', array( __CLASS__, 'save_settings' ) );
 		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'enqueue_assets' ), 20 );
@@ -37,14 +36,6 @@ final class Consent_Manager {
 		add_action( 'wp_print_footer_scripts', array( __CLASS__, 'prepare_registered_scripts' ), 1 );
 		add_filter( 'script_loader_tag', array( __CLASS__, 'filter_script_tag' ), PHP_INT_MAX, 3 );
 		add_action( 'wp_footer', array( __CLASS__, 'render_frontend' ), 100 );
-	}
-
-	public static function load_textdomain(): void {
-		load_plugin_textdomain(
-			'ua-free-consent-manager',
-			false,
-			dirname( plugin_basename( UAFREE_CONSENT_MANAGER_FILE ) ) . '/languages'
-		);
 	}
 
 	public static function activate(): void {
@@ -123,7 +114,8 @@ final class Consent_Manager {
 
 		check_admin_referer( 'uafree_consent_manager_save', 'uafree_consent_manager_nonce' );
 
-		$raw   = isset( $_POST['settings'] ) && is_array( $_POST['settings'] ) ? wp_unslash( $_POST['settings'] ) : array();
+		$raw = filter_input( INPUT_POST, 'settings', FILTER_DEFAULT, FILTER_REQUIRE_ARRAY );
+		$raw = is_array( $raw ) ? map_deep( $raw, 'sanitize_text_field' ) : array();
 		$clean = self::sanitize_settings( $raw );
 		update_option( self::OPTION_NAME, $clean, false );
 		self::$status_cache = null;
@@ -158,10 +150,11 @@ final class Consent_Manager {
 
 		$settings     = self::settings();
 		$integrations = self::public_integrations();
+		$updated = filter_input( INPUT_GET, 'updated', FILTER_SANITIZE_SPECIAL_CHARS );
 		?>
 		<div class="wrap">
 			<h1><?php echo esc_html__( 'UA FREE Consent Manager', 'ua-free-consent-manager' ); ?> <code><?php echo esc_html( UAFREE_CONSENT_MANAGER_VERSION ); ?></code></h1>
-			<?php if ( isset( $_GET['updated'] ) ) : ?>
+			<?php if ( '1' === $updated ) : ?>
 				<div class="notice notice-success is-dismissible"><p><?php echo esc_html__( 'Settings saved.', 'ua-free-consent-manager' ); ?></p></div>
 			<?php endif; ?>
 			<p><?php echo esc_html__( 'Optional consent is disabled by default. The plugin stores no IP addresses, User-Agent values, emails or consent event logs.', 'ua-free-consent-manager' ); ?></p>
@@ -334,12 +327,13 @@ final class Consent_Manager {
 			'updated_at'     => null,
 		);
 
-		if ( ! isset( $_COOKIE[ self::COOKIE_NAME ] ) ) {
+		$cookie_value = filter_input( INPUT_COOKIE, self::COOKIE_NAME, FILTER_UNSAFE_RAW );
+		if ( ! is_string( $cookie_value ) ) {
 			self::$status_cache = $default;
 			return $default;
 		}
 
-		$raw = rawurldecode( (string) wp_unslash( $_COOKIE[ self::COOKIE_NAME ] ) );
+		$raw = rawurldecode( sanitize_text_field( $cookie_value ) );
 		if ( '' === $raw || strlen( $raw ) > 2048 ) {
 			self::$status_cache = $default;
 			return $default;
