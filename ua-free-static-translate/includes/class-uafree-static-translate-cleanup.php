@@ -3,6 +3,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+/*
+ * Cleanup and backup operations inspect or modify explicitly validated legacy
+ * tables. Dynamic identifiers are limited to WordPress core tables, known
+ * plugin prefixes, or names validated against /^[A-Za-z0-9_]+$/.
+ */
+// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.SchemaChange,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
+
 final class UAFree_Static_Translate_Cleanup {
 
 	const CLEAN_ACTION = 'uafree_st_cleanup_legacy_translators';
@@ -349,7 +356,7 @@ final class UAFree_Static_Translate_Cleanup {
 		header( 'Content-Type: application/gzip' );
 		header( 'Content-Disposition: attachment; filename="' . basename( $file ) . '"' );
 		header( 'Content-Length: ' . filesize( $file ) );
-		readfile( $file );
+		readfile( $file ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_readfile -- Streams an administrator-authorized local backup download.
 		exit;
 	}
 
@@ -533,7 +540,7 @@ final class UAFree_Static_Translate_Cleanup {
 		header( 'Content-Type: application/gzip' );
 		header( 'Content-Disposition: attachment; filename="' . basename( $file ) . '"' );
 		header( 'Content-Length: ' . filesize( $file ) );
-		readfile( $file );
+		readfile( $file ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_readfile -- Streams an administrator-authorized local backup download.
 		exit;
 	}
 

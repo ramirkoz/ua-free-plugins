@@ -1,5 +1,5 @@
 msgid ""
-msgstr "Project-Id-Version: UA FREE Static Translate 0.7.4-dev\\nMIME-Version: 1.0\\nContent-Type: text/plain; charset=UTF-8\\nContent-Transfer-Encoding: 8bit\\n"
+msgstr "Project-Id-Version: UA FREE Static Translate 0.8.6\\nMIME-Version: 1.0\\nContent-Type: text/plain; charset=UTF-8\\nContent-Transfer-Encoding: 8bit\\n"
 
 msgid "1. System status"
 msgstr ""

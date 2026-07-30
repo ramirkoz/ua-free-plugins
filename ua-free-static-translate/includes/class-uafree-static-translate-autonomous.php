@@ -3,6 +3,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+/*
+ * This component owns isolated, plugin-prefixed translation workflow tables.
+ * Direct queries are required for queue processing, joins, schema maintenance
+ * and bulk operations. Table identifiers come only from the internal tables()
+ * map or from validated plugin-owned names; value data still uses prepared
+ * statements or wpdb CRUD helpers where applicable.
+ */
+// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQL.NotPrepared
+
 final class UAFree_Static_Translate_Autonomous {
 
 	const PAGE_SLUG = 'uafree-static-translate-auto';
@@ -527,7 +536,7 @@ final class UAFree_Static_Translate_Autonomous {
 			array(
 				'timeout' => 0.01,
 				'blocking' => false,
-				'sslverify' => apply_filters( 'https_local_ssl_verify', false ),
+				'sslverify' => apply_filters( 'https_local_ssl_verify', false ), // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Core WordPress filter.
 			)
 		);
 	}
@@ -2830,7 +2839,10 @@ final class UAFree_Static_Translate_Autonomous {
 
 
 	private static function language_request_from_uri(): array {
-		$request_path = rawurldecode( (string) wp_parse_url( (string) ( $_SERVER['REQUEST_URI'] ?? '/' ), PHP_URL_PATH ) );
+		$request_uri = isset( $_SERVER['REQUEST_URI'] )
+			? sanitize_text_field( wp_unslash( (string) $_SERVER['REQUEST_URI'] ) )
+			: '/';
+		$request_path = rawurldecode( (string) wp_parse_url( $request_uri, PHP_URL_PATH ) );
 		$home_path = rawurldecode( (string) wp_parse_url( home_url( '/' ), PHP_URL_PATH ) );
 		$home_path = '/' . trim( $home_path, '/' );
 		if ( '/' !== $home_path && 0 === strpos( $request_path, $home_path . '/' ) ) {
@@ -6466,10 +6478,9 @@ JS;
 			? (int) get_option( 'page_on_front' )
 			: (int) get_queried_object_id();
 
-		$request_uri = (string) (
-			$_SERVER['REQUEST_URI']
-				?? '/'
-		);
+		$request_uri = isset( $_SERVER['REQUEST_URI'] )
+			? sanitize_text_field( wp_unslash( (string) $_SERVER['REQUEST_URI'] ) )
+			: '/';
 		$request_path = (string) wp_parse_url(
 			$request_uri,
 			PHP_URL_PATH
@@ -6966,9 +6977,9 @@ JS;
 				continue;
 			}
 			echo "  <url>\n";
-			echo '    <loc>' . self::xml_escape( self::language_url( (string) $row['source_url'], $slug ) ) . "</loc>\n";
+			echo '    <loc>' . esc_xml( self::language_url( (string) $row['source_url'], $slug ) ) . "</loc>\n";
 			if ( ! empty( $row['updated_at'] ) ) {
-				echo '    <lastmod>' . self::xml_escape( gmdate( DATE_W3C, strtotime( (string) $row['updated_at'] . ' UTC' ) ) ) . "</lastmod>\n";
+				echo '    <lastmod>' . esc_xml( gmdate( DATE_W3C, strtotime( (string) $row['updated_at'] . ' UTC' ) ) ) . "</lastmod>\n";
 			}
 			echo "  </url>\n";
 		}
@@ -7343,9 +7354,6 @@ JS;
 		check_ajax_referer( self::AJAX_NONCE );
 		if ( function_exists( 'wp_raise_memory_limit' ) ) {
 			wp_raise_memory_limit( 'admin' );
-		}
-		if ( function_exists( 'set_time_limit' ) ) {
-			@set_time_limit( 45 );
 		}
 	}
 

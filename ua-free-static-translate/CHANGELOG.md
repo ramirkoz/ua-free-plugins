@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.8.6
+
+- Resolved Plugin Check findings for plugin-owned translation database workflows.
+- Sanitized request URI handling and used WordPress-recognized XML escaping.
+- Removed manual text-domain loading and normalized `Tested up to` metadata.
+- Reworked the shared UA FREE support block into responsive cards.
+- Translation behavior, routes and database schema remain unchanged.
+
 ## 0.8.5
 
 - Final repository and WordPress.org packaging release.

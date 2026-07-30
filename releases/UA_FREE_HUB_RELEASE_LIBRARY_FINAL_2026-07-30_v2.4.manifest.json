@@ -1,6 +1,6 @@
 {
   "format": "UA FREE Hub Release Library",
-  "version": "2.3",
+  "version": "2.4",
   "created": "2026-07-30",
   "status": "FINAL",
   "packages": [
@@ -17,10 +17,10 @@
       "slug": "ua-free-static-translate",
       "wporg_slug": "ua-free-static-translate",
       "name": "UA FREE Static Translate",
-      "version": "0.8.5",
-      "file": "packages/ua-free-static-translate-v0.8.5.zip",
-      "sha256": "96ad492f7740d6846650bb2fec17559c387db77b82f21e7d5797ecb935f899ca",
-      "size": 76041
+      "version": "0.8.6",
+      "file": "packages/ua-free-static-translate-v0.8.6.zip",
+      "sha256": "eef9199e70a176fd22963b85be4b98dd1b86aa9e08e280aa9ec53d34537dea96",
+      "size": 77264
     },
     {
       "slug": "ua-free-translate-diagnostics",
