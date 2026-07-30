@@ -1,11 +1,11 @@
 <?php
 /**
- * Plugin Name: UA FREE 404 Guard
+ * Plugin Name: UA FREE 404 Guard & URL Intelligence
  * Description: Privacy-safe 404/410 logging, controlled same-site redirects and URL intelligence.
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Author URI: https://uafree.org/
  * Plugin URI: https://uafree.org/ua-free-plugins/#plugin-ua-free-404-guard
- * Version: 2.0.6
+ * Version: 2.0.7
  * Author: UA FREE
  * Text Domain: ua-free-404-guard
  * Domain Path: /languages
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'UAFREE_404_VERSION', '2.0.6' );
+define( 'UAFREE_404_VERSION', '2.0.7' );
 define( 'UAFREE_404_FILE', __FILE__ );
 define( 'UAFREE_404_DIR', plugin_dir_path( __FILE__ ) );
 
@@ -33,7 +33,7 @@ register_deactivation_hook( __FILE__, array( 'UAFree\\Guard404\\Guard', 'deactiv
 \UAFree\Suite\Registry::register(
 	array(
 		'slug'          => 'ua-free-404-guard',
-		'name'          => 'UA FREE 404 Guard',
+		'name'          => 'UA FREE 404 Guard & URL Intelligence',
 		'version'       => UAFREE_404_VERSION,
 		'settings_page' => 'uafree-404-guard',
 	)

@@ -4,7 +4,7 @@ Donate link: https://uafree.org/plugins/support-development/
 Tags: donations, analytics, conversions, fundraising, privacy
 Requires at least: 6.2
 Tested up to: 7.0
-Stable tag: 1.2.6
+Stable tag: 1.2.7
 Requires PHP: 8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -25,6 +25,10 @@ The plugin can be used independently or together with other UA FREE plugins.
 
 == Changelog ==
 
+= 1.2.7 =
+* Kept the canonical product name UA FREE Donate Stats & Conversions untranslated in the WordPress plugin list.
+* Ukrainian translations inside the plugin remain available.
+
 = 1.2.6 =
 * Fixed the final Plugin Check warnings for read-only admin routing and prefetch request headers.
 
@@ -40,6 +44,9 @@ The plugin can be used independently or together with other UA FREE plugins.
 * No custom update checker or UA FREE usage telemetry was added.
 
 == Upgrade Notice ==
+
+= 1.2.7 =
+Canonical product-name synchronization only; tracking behaviour and stored data are unchanged.
 
 = 1.2.6 =
 Final Plugin Check cleanup for request handling.

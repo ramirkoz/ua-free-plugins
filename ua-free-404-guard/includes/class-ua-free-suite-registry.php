@@ -60,7 +60,7 @@ final class Registry {
 			'ua-free-static-translate' => array( 'name' => 'UA FREE Static Translate', 'uk' => 'Автоматичний статичний переклад WordPress.', 'en' => 'Automatic static WordPress translation.' ),
 			'ua-free-translate-diagnostics' => array( 'name' => 'UA FREE Translate Diagnostics', 'uk' => 'Read-only діагностика системи перекладу.', 'en' => 'Read-only translation diagnostics.' ),
 			'ua-free-seo-core' => array( 'name' => 'UA FREE SEO Core', 'uk' => 'SEO, sitemap, schema, AI discovery та accessibility.', 'en' => 'SEO, sitemaps, schema, AI discovery and accessibility.' ),
-			'ua-free-404-guard' => array( 'name' => 'UA FREE 404 Guard & URL Intelligence', 'uk' => '404, 410, redirects та аналіз URL.', 'en' => '404, 410, redirects and URL intelligence.' ),
+			'ua-free-404-guard' => array( 'name' => 'UA FREE 404 Guard & URL Intelligence & URL Intelligence', 'uk' => '404, 410, redirects та аналіз URL.', 'en' => '404, 410, redirects and URL intelligence.' ),
 			'ua-free-site-bridge' => array( 'name' => 'UA FREE Site Bridge', 'uk' => 'Захищена read-only діагностика сайту.', 'en' => 'Secure read-only site diagnostics.' ),
 			'ua-free-google-ads-campaign-builder' => array( 'name' => 'UA FREE Google Ads Campaign Builder', 'uk' => 'Пакети Google Ad Grants і Standard Google Ads.', 'en' => 'Google Ad Grants and Standard Google Ads packages.' ),
 			'ua-free-donate-stats' => array( 'name' => 'UA FREE Donate Stats & Conversions', 'uk' => 'Privacy-safe статистика та конверсії.', 'en' => 'Privacy-safe statistics and conversions.' ),

@@ -1,12 +1,12 @@
-# Ukrainian translations for UA FREE 404 Guard.
+# Ukrainian translations for UA FREE 404 Guard & URL Intelligence.
 # Copyright (C) 2026 ORGANIZATION
-# This file is distributed under the same license as the UA FREE 404 Guard project.
+# This file is distributed under the same license as the UA FREE 404 Guard & URL Intelligence project.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: UA FREE 404 Guard 2.0.3\n"
+"Project-Id-Version: UA FREE 404 Guard & URL Intelligence 2.0.7\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-07-23 09:25+0000\n"
 "PO-Revision-Date: 2026-07-23 09:25+0000\n"
@@ -319,8 +319,8 @@ msgstr "Цей вміст більше недоступний."
 msgid "Type"
 msgstr "Тип"
 
-msgid "UA FREE 404 Guard"
-msgstr "UA FREE 404 Guard"
+msgid "UA FREE 404 Guard & URL Intelligence"
+msgstr "UA FREE 404 Guard & URL Intelligence"
 
 msgid "URL and redirect plugins"
 msgstr "Плагіни URL і переспрямувань"

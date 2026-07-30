@@ -1,6 +1,6 @@
 {
   "format": "UA FREE Hub Release Library",
-  "version": "2.1",
+  "version": "2.2",
   "created": "2026-07-30",
   "status": "FINAL",
   "packages": [
@@ -10,7 +10,7 @@
       "name": "UA FREE Migration & Cleanup",
       "version": "0.8.8",
       "file": "packages/ua-free-migration-cleanup-v0.8.8.zip",
-      "sha256": "4f64936fa33504cdf2d3f41f7b75a64e104f7bf0c3205fd27fc6b5337fadedb4",
+      "sha256": "db709783c741cd04ea4f90f664df061d27cd9be7f29e69d7820f14b3ab25add9",
       "size": 30406
     },
     {
@@ -19,7 +19,7 @@
       "name": "UA FREE Static Translate",
       "version": "0.8.5",
       "file": "packages/ua-free-static-translate-v0.8.5.zip",
-      "sha256": "96ad492f7740d6846650bb2fec17559c387db77b82f21e7d5797ecb935f899ca",
+      "sha256": "2d2fe4f2200357280c80b3071735f0a40aa4f1ee5cf564562119b7cb6be3fbe0",
       "size": 76041
     },
     {
@@ -28,26 +28,26 @@
       "name": "UA FREE Translate Diagnostics",
       "version": "0.2.12",
       "file": "packages/ua-free-translate-diagnostics-v0.2.12.zip",
-      "sha256": "de5e88b5061ed3b9f133df15af1d682a628cf9b2b7edcef0df5ce5f05c0482b7",
+      "sha256": "3befed599c63fb279b78043c3a2f81f497c9bc78945b994e3a27068748ac3654",
       "size": 31647
     },
     {
       "slug": "ua-free-seo-core",
       "wporg_slug": "ua-free-seo-core",
       "name": "UA FREE SEO Core",
-      "version": "2.0.6",
+      "version": "2.0.7",
       "file": "packages/ua-free-seo-core-v2.0.6.zip",
-      "sha256": "b17403ab1460c99a81c7585bb192df5b4858ad9bf298ece9db4947405264e825",
+      "sha256": "8798c13c0a85318f2df196b492b2ae354b6193332083a91b450e75f10389cc45",
       "size": 30752
     },
     {
       "slug": "ua-free-404-guard",
       "wporg_slug": "ua-free-404-guard",
-      "name": "UA FREE 404 Guard",
-      "version": "2.0.6",
-      "file": "packages/ua-free-404-guard-v2.0.6.zip",
-      "sha256": "d7398e0fb3b533c6cd9d71c3290db46edd1ae18d3aaec5c02d3da65c3144abb7",
-      "size": 38563
+      "name": "UA FREE 404 Guard & URL Intelligence",
+      "version": "2.0.7",
+      "file": "packages/ua-free-404-guard-v2.0.7.zip",
+      "sha256": "96c68769ddcba2aa207ef1ed281d5ea46c319d35b1fcb292a5736603112f467c",
+      "size": 39064
     },
     {
       "slug": "ua-free-site-bridge",
@@ -55,7 +55,7 @@
       "name": "UA FREE Site Bridge",
       "version": "0.4.8",
       "file": "packages/ua-free-site-bridge-v0.4.8.zip",
-      "sha256": "b07d7bf04cc48037d7a67ee081f86c340b19880d924fdbfeaf9338976ead1645",
+      "sha256": "e8ec7bda51362dee17ebb5095a5aed8ce9e8bcc424e7e850f8ce9291eda79bd9",
       "size": 22784
     },
     {
@@ -64,17 +64,17 @@
       "name": "UA FREE Consent Manager",
       "version": "0.1.5",
       "file": "packages/ua-free-consent-manager-v0.1.5.zip",
-      "sha256": "24557a64d3e3d794e6662d5c3aae7f7f2b8898c69edf4c4d528a99cb1039657b",
+      "sha256": "050fedd07f1a9f21f649b9d011ecb99a208e51a466adcbb4ab48ad252f753252",
       "size": 21437
     },
     {
       "slug": "ua-free-donate-stats",
       "wporg_slug": "ua-free-donate-stats",
       "name": "UA FREE Donate Stats & Conversions",
-      "version": "1.2.6",
-      "file": "packages/ua-free-donate-stats-v1.2.6.zip",
-      "sha256": "1bffcfcf81fbab1fb3cdf28f2e943655f540c8379fd407c6f94605f85772d33d",
-      "size": 50648
+      "version": "1.2.7",
+      "file": "packages/ua-free-donate-stats-v1.2.7.zip",
+      "sha256": "287fdb9c19a343a6ea76b48c61e367734564582303efbe62e226da5b47f6755b",
+      "size": 51198
     },
     {
       "slug": "ua-free-google-ads-campaign-builder",
@@ -82,7 +82,7 @@
       "name": "UA FREE Google Ads Campaign Builder",
       "version": "1.3.6",
       "file": "packages/ua-free-google-ads-campaign-builder-v1.3.6.zip",
-      "sha256": "08e53827be6f94751285bfd84f3bebb2f0513f2cc1cb19a02e94fa29694f8cf2",
+      "sha256": "83df3ee619e97029386504f20f6b5d8346be99b4f963a92bb1c1bac1b464bd81",
       "size": 47006
     },
     {
@@ -91,7 +91,7 @@
       "name": "UA FREE Copy",
       "version": "1.0.6",
       "file": "packages/ua-free-copy-v1.0.6.zip",
-      "sha256": "19be5fe035902501a07b7c30229bb27f20ab20a9834c083ec398d12b90d4e3ab",
+      "sha256": "032301e41c06130d1ea0dc310e3f50971cc1f7998ab0fe97278307bcfdd9c8b6",
       "size": 24667
     },
     {
@@ -100,7 +100,7 @@
       "name": "UA FREE URL-Only Comment Spam",
       "version": "1.0.5",
       "file": "packages/ua-free-url-only-comment-spam-v1.0.5.zip",
-      "sha256": "492457873d73e49ca00e5b0388b7b4e9241a7c0f56b4b2dc7d68198c429b965e",
+      "sha256": "c66f4f6b8d0d6ffbe0a6609979176178b86db9bf2ade479c9ae41b12bd5405ee",
       "size": 25617
     },
     {
@@ -109,7 +109,7 @@
       "name": "UA FREE Suite Control Center",
       "version": "0.3.11",
       "file": "packages/ua-free-suite-control-center-v0.3.11.zip",
-      "sha256": "cac33cd8f128734871f929ee56ccf8936434ff9556f36e5443d67bf1d0980f33",
+      "sha256": "e79dd4ff6e46e656737a8dffc48ac286d800d15c96bf0d8a6d463822a02e264c",
       "size": 24871
     }
   ],

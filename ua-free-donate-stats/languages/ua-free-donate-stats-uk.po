@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: UA FREE Donate Stats & Conversions 1.2.1\n"
+"Project-Id-Version: UA FREE Donate Stats & Conversions 1.2.7\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-07-21 00:00+0000\n"
 "PO-Revision-Date: 2026-07-21 00:00+0000\n"
@@ -305,7 +305,7 @@ msgid "Type %s to confirm"
 msgstr "Введіть %s для підтвердження"
 
 msgid "UA FREE Donate Stats & Conversions"
-msgstr "UA FREE Статистика донатів і конверсій"
+msgstr "UA FREE Donate Stats & Conversions"
 
 msgid "UA FREE Plugin Suite"
 msgstr "Комплекс плагінів UA FREE"

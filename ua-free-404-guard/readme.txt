@@ -1,10 +1,10 @@
-=== UA FREE 404 Guard ===
+=== UA FREE 404 Guard & URL Intelligence ===
 Contributors: uafree
 Donate link: https://uafree.org/plugins/support-development/
 Tags: 404, redirects, broken links, 410, privacy
 Requires at least: 6.2
 Tested up to: 7.0
-Stable tag: 2.0.6
+Stable tag: 2.0.7
 Requires PHP: 8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -13,7 +13,7 @@ Privacy-safe 404/410 diagnostics, controlled same-site redirects and URL intelli
 
 == Description ==
 
-UA FREE 404 Guard was originally created for a charitable foundation website and rebuilt as a universal WordPress tool.
+UA FREE 404 Guard & URL Intelligence was originally created for a charitable foundation website and rebuilt as a universal WordPress tool.
 
 Features:
 
@@ -40,12 +40,19 @@ No redirect or 410 rule is created automatically. Uninstalling the plugin does n
 
 == Changelog ==
 
+= 2.0.7 =
+* Standardized the canonical product name as UA FREE 404 Guard & URL Intelligence across WordPress, the Suite catalog and release metadata.
+* No logging, redirect or URL-analysis behaviour changed.
+
 = 2.0.6 =
 * Final stable packaging for repository publication and WordPress.org submission.
 * Updated plugin metadata and WordPress compatibility information.
 * No custom update checker or UA FREE usage telemetry was added.
 
 == Upgrade Notice ==
+
+= 2.0.7 =
+Canonical product-name synchronization only; functionality is unchanged.
 
 = 2.0.6 =
 Final stable release prepared for repository and WordPress.org distribution.

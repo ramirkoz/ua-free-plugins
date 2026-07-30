@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: UA FREE Donate Stats & Conversions 1.2.1\n"
+"Project-Id-Version: UA FREE Donate Stats & Conversions 1.2.7\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-07-21 00:00+0000\n"
 "PO-Revision-Date: 2026-07-21 00:00+0000\n"

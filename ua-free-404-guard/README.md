@@ -1,4 +1,4 @@
-# UA FREE 404 Guard 2.0.3
+# UA FREE 404 Guard & URL Intelligence 2.0.7
 
 Universal development candidate for privacy-safe 404/410 diagnostics, controlled redirects and URL intelligence.
 

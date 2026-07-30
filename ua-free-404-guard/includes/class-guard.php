@@ -234,7 +234,7 @@ final class Guard {
 		$redirect = self::matching_redirect();
 		if ( null !== $redirect ) {
 			self::log( (string) $redirect['status'], self::classify_request(), 'redirect', (string) $redirect['id'] );
-			wp_safe_redirect( (string) $redirect['target'], (int) $redirect['status'], 'UA FREE 404 Guard' );
+			wp_safe_redirect( (string) $redirect['target'], (int) $redirect['status'], 'UA FREE 404 Guard & URL Intelligence' );
 			exit;
 		}
 

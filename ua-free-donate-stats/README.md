@@ -1,4 +1,4 @@
-# UA FREE Donate Stats & Conversions 1.2.1
+# UA FREE Donate Stats & Conversions 1.2.7
 
 ## Для менеджера
 

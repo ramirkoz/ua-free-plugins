@@ -72,7 +72,7 @@ final class Admin {
 		usort( $logs, static fn( array $a, array $b ): int => ( absint( $b['count'] ) <=> absint( $a['count'] ) ) ?: strcmp( (string) $b['last_seen'], (string) $a['last_seen'] ) );
 		?>
 		<div class="wrap">
-			<h1><?php esc_html_e( 'UA FREE 404 Guard', 'ua-free-404-guard' ); ?> <small style="font-size:14px"><?php echo esc_html( UAFREE_404_VERSION ); ?></small></h1>
+			<h1><?php esc_html_e( 'UA FREE 404 Guard & URL Intelligence', 'ua-free-404-guard' ); ?> <small style="font-size:14px"><?php echo esc_html( UAFREE_404_VERSION ); ?></small></h1>
 			<div class="notice notice-info inline"><p><?php esc_html_e( 'No automatic redirect or 410 rules are created.', 'ua-free-404-guard' ); ?></p></div>
 
 			<h2><?php esc_html_e( 'General settings', 'ua-free-404-guard' ); ?></h2>
@@ -304,7 +304,7 @@ final class Admin {
 		$report     = array(
 			'generated_at'        => gmdate( 'c' ),
 			'component'           => array(
-				'name'             => 'UA FREE 404 Guard',
+				'name'             => 'UA FREE 404 Guard & URL Intelligence',
 				'version'          => UAFREE_404_VERSION,
 				'log_schema'       => 3,
 				'privacy_contract' => 3,

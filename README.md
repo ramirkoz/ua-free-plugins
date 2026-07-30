@@ -24,7 +24,7 @@ Provides read-only diagnostics for UA FREE Static Translate, including configura
 ### UA FREE SEO Core
 Adds lightweight SEO metadata, schema markup, sitemap integration, AI-discovery support and accessibility diagnostics without requiring a large SEO suite.
 
-### UA FREE 404 Guard
+### UA FREE 404 Guard & URL Intelligence
 Records privacy-safe 404 and 410 events, helps find broken links and supports controlled same-site redirects without turning every missing URL into an automatic redirect.
 
 ### UA FREE Site Bridge

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.7
+
+- Kept the canonical product name UA FREE Donate Stats & Conversions untranslated in WordPress plugin metadata.
+- Ukrainian interface translations remain available.
+- No tracking or storage behaviour changed.
+
 ## 1.2.6
 
 - Fixed the final Plugin Check warnings in admin screen detection and prefetch header handling.
