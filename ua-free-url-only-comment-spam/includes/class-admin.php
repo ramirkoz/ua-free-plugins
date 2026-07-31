@@ -139,7 +139,8 @@ final class Admin {
 		$total    = (int) get_option( Plugin::TOTAL_OPTION, 0 );
 		$last     = get_option( Plugin::LAST_OPTION, array() );
 		$last     = is_array( $last ) ? $last : array();
-		$test_result = $this->get_test_result( $settings );
+		$test_text   = $this->get_test_text();
+		$test_result = null !== $test_text ? Detector::analyze( $test_text, $settings ) : null;
 		?>
 		<div class="wrap uafree-url-spam-wrap">
 			<h1><?php esc_html_e( 'UA FREE URL-Only Comment Spam', 'ua-free-url-only-comment-spam' ); ?></h1>
@@ -210,7 +211,7 @@ final class Admin {
 					<p><?php esc_html_e( 'The sample is analyzed in this request only and is never saved.', 'ua-free-url-only-comment-spam' ); ?></p>
 					<form method="post">
 						<?php wp_nonce_field( 'uafree_url_spam_test', 'uafree_url_spam_test_nonce' ); ?>
-						<textarea class="large-text" rows="4" name="uafree_url_spam_test_text" placeholder="https://spam.example/"><?php echo isset( $_POST['uafree_url_spam_test_text'] ) ? esc_textarea( wp_unslash( (string) $_POST['uafree_url_spam_test_text'] ) ) : ''; ?></textarea>
+						<textarea class="large-text" rows="4" name="uafree_url_spam_test_text" placeholder="https://spam.example/"><?php echo esc_textarea( $test_text ?? '' ); ?></textarea>
 						<p><button type="submit" class="button button-secondary"><?php esc_html_e( 'Analyze sample', 'ua-free-url-only-comment-spam' ); ?></button></p>
 					</form>
 					<?php if ( null !== $test_result ) : ?>
@@ -275,19 +276,25 @@ final class Admin {
 	}
 
 	/**
-	 * @param array<string,mixed> $settings Current settings.
-	 * @return array<string,mixed>|null
+	 * Return the verified detector sample for this request.
 	 */
-	private function get_test_result( array $settings ): ?array {
-		if ( 'POST' !== strtoupper( (string) ( $_SERVER['REQUEST_METHOD'] ?? '' ) ) || ! isset( $_POST['uafree_url_spam_test_nonce'] ) ) {
+	private function get_test_text(): ?string {
+		if ( ! isset( $_POST['uafree_url_spam_test_nonce'] ) ) {
 			return null;
 		}
-		$nonce = sanitize_text_field( wp_unslash( (string) $_POST['uafree_url_spam_test_nonce'] ) );
+
+		$nonce = sanitize_text_field(
+			wp_unslash( (string) $_POST['uafree_url_spam_test_nonce'] )
+		);
 		if ( ! wp_verify_nonce( $nonce, 'uafree_url_spam_test' ) ) {
 			return null;
 		}
-		$text = isset( $_POST['uafree_url_spam_test_text'] ) ? wp_unslash( (string) $_POST['uafree_url_spam_test_text'] ) : '';
-		return Detector::analyze( $text, $settings );
+
+		return isset( $_POST['uafree_url_spam_test_text'] )
+			? sanitize_textarea_field(
+				wp_unslash( (string) $_POST['uafree_url_spam_test_text'] )
+			)
+			: '';
 	}
 
 	/**
