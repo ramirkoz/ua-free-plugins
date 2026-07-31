@@ -5,7 +5,7 @@
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Author URI: https://uafree.org/
  * Plugin URI: https://uafree.org/ua-free-plugins/#plugin-ua-free-url-only-comment-spam
- * Version: 1.0.5
+ * Version: 1.0.6
  * Author: UA FREE
  * Text Domain: ua-free-url-only-comment-spam
  * Domain Path: /languages
@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'UAFREE_URL_SPAM_VERSION', '1.0.5' );
+define( 'UAFREE_URL_SPAM_VERSION', '1.0.6' );
 define( 'UAFREE_URL_SPAM_FILE', __FILE__ );
 define( 'UAFREE_URL_SPAM_DIR', plugin_dir_path( __FILE__ ) );
 define( 'UAFREE_URL_SPAM_URL', plugin_dir_url( __FILE__ ) );
