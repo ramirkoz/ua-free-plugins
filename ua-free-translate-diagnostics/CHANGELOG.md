@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.13
+
+- Resolved Plugin Check findings for dynamic read-only database diagnostics.
+- Switched table and column identifiers to prepared `%i` placeholders.
+- Documented intentional live read-only database queries.
+- Added missing translator comments and WordPress-safe JSON export.
+- Removed manual translation loading and normalized compatibility metadata.
+- Reworked the shared UA FREE support block into responsive cards.
+
 ## 0.2.12
 
 - Final repository and WordPress.org packaging release.

@@ -2,9 +2,9 @@
 Contributors: uafree
 Donate link: https://uafree.org/plugins/support-development/
 Tags: translation, diagnostics, multilingual, azure, privacy
-Requires at least: 6.0
-Tested up to: 7.0.2
-Stable tag: 0.2.12
+Requires at least: 6.2
+Tested up to: 7.0
+Stable tag: 0.2.13
 Requires PHP: 8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -43,6 +43,13 @@ Features:
 
 == Changelog ==
 
+= 0.2.13 =
+* Resolved Plugin Check findings for read-only database diagnostics.
+* Added prepared identifier handling and documented intentional live read-only queries.
+* Added translator comments and WordPress-safe JSON export.
+* Removed manual translation loading and normalized compatibility metadata.
+* Redesigned the shared UA FREE support block.
+
 = 0.2.12 =
 * Final stable packaging for repository publication and WordPress.org submission.
 * Updated plugin metadata and WordPress compatibility information.
@@ -50,5 +57,5 @@ Features:
 
 == Upgrade Notice ==
 
-= 0.2.12 =
-Final stable release prepared for repository and WordPress.org distribution.
+= 0.2.13 =
+Plugin Check compatibility and shared support-block update.

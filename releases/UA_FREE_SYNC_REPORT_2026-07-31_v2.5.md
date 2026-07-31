@@ -1,15 +1,15 @@
 # UA FREE Synchronization Report
 
-- Date: 2026-07-30
-- Library: 2.4
-- Status: Static Translate 0.8.6 Plugin Check PASS; package, manifest, ZIP, CRC, SHA-256 and PHP checks PASS.
-- Scope: Static Translate updated; other 11 public packages and SHA-256 values preserved.
+- Date: 2026-07-31
+- Library: 2.5
+- Status: Translate Diagnostics 0.2.13 Plugin Check PASS; package, manifest, ZIP, CRC, SHA-256 and PHP precheck PASS.
+- Scope: Translate Diagnostics updated; other 11 public packages and SHA-256 values preserved.
 
 | Plugin | Version | SHA-256 |
 |---|---:|---|
 | UA FREE Migration & Cleanup | 0.8.9 | `48f93b542e063fc603fb3e99e7a1e0b3bf179f4e76d8aa75b28cceacea842621` |
 | UA FREE Static Translate | 0.8.6 | `eef9199e70a176fd22963b85be4b98dd1b86aa9e08e280aa9ec53d34537dea96` |
-| UA FREE Translate Diagnostics | 0.2.12 | `de5e88b5061ed3b9f133df15af1d682a628cf9b2b7edcef0df5ce5f05c0482b7` |
+| UA FREE Translate Diagnostics | 0.2.13 | `ee71bc0cf694bbb391b701672de3561f0969b17b2edeea0b15b202ecf576d5b6` |
 | UA FREE SEO Core | 2.0.6 | `b17403ab1460c99a81c7585bb192df5b4858ad9bf298ece9db4947405264e825` |
 | UA FREE 404 Guard & URL Intelligence | 2.0.7 | `a8fec3f1f682b2d807d7a107ff587f305c95312cd0d62ae57d4061aad4c6c89e` |
 | UA FREE Site Bridge | 0.4.8 | `b07d7bf04cc48037d7a67ee081f86c340b19880d924fdbfeaf9338976ead1645` |
@@ -20,6 +20,6 @@
 | UA FREE URL-Only Comment Spam | 1.0.5 | `492457873d73e49ca00e5b0388b7b4e9241a7c0f56b4b2dc7d68198c429b965e` |
 | UA FREE Suite Control Center | 0.3.11 | `cac33cd8f128734871f929ee56ccf8936434ff9556f36e5443d67bf1d0980f33` |
 
-Library SHA-256: `3ad65431d4bc1142cb97285715801c914407345637767b7c85f309560e6f7f75`
+Library SHA-256: `42e88ae13c054caadd74b7b3ffc33d9317b03064d9f4a5079574f0aa88fb1ae0`
 
-Plugin Check for Static Translate 0.8.6 was confirmed on the live WordPress site by the manager.
+Plugin Check for UA FREE Translate Diagnostics 0.2.13 was confirmed on the live WordPress site by the manager.

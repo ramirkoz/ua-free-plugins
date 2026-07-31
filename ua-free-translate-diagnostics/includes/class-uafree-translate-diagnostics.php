@@ -54,15 +54,21 @@ final class UAFree_Translate_Diagnostics {
 		);
 	}
 
+	private static function prepare_sql( string $query, array $args = array() ): string {
+		global $wpdb;
+		if ( empty( $args ) ) {
+			return $query;
+		}
+		return (string) $wpdb->prepare( $query, $args ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Query templates and identifier arguments are defined by this read-only diagnostics class.
+	}
+
 	private static function table_status( string $table ): array {
 		global $wpdb;
 		if ( array_key_exists( $table, self::$table_status_cache ) ) {
 			return self::$table_status_cache[ $table ];
 		}
-		$row = $wpdb->get_row(
-			$wpdb->prepare( 'SHOW TABLE STATUS LIKE %s', $wpdb->esc_like( $table ) ),
-			ARRAY_A
-		);
+		$query = self::prepare_sql( 'SHOW TABLE STATUS LIKE %s', array( $wpdb->esc_like( $table ) ) );
+		$row = $wpdb->get_row( $query, ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Prepared read-only metadata query; request-local cache is used above.
 		self::$table_status_cache[ $table ] = is_array( $row ) ? $row : array();
 		return self::$table_status_cache[ $table ];
 	}
@@ -84,7 +90,8 @@ final class UAFree_Translate_Diagnostics {
 			self::$table_columns_cache[ $table ] = array();
 			return array();
 		}
-		$rows = $wpdb->get_results( "SHOW COLUMNS FROM `{$table}`", ARRAY_A );
+		$query = self::prepare_sql( 'SHOW COLUMNS FROM %i', array( $table ) );
+		$rows = $wpdb->get_results( $query, ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Prepared read-only schema query; request-local cache is used above.
 		$result = array();
 		foreach ( is_array( $rows ) ? $rows : array() as $row ) {
 			$field = (string) ( $row['Field'] ?? '' );
@@ -103,7 +110,7 @@ final class UAFree_Translate_Diagnostics {
 
 	private static function database_version(): string {
 		global $wpdb;
-		return (string) $wpdb->get_var( 'SELECT VERSION()' );
+		return (string) $wpdb->get_var( 'SELECT VERSION()' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Read-only environment diagnostic.
 	}
 
 	private static function translator_plugin(): array {
@@ -403,7 +410,8 @@ final class UAFree_Translate_Diagnostics {
 			if ( ! self::table_exists( $table ) || ! in_array( 'language', self::table_columns( $table ), true ) ) {
 				continue;
 			}
-			$rows = $wpdb->get_col( "SELECT DISTINCT language FROM `{$table}` WHERE language <> '' ORDER BY language ASC LIMIT 200" );
+			$query = self::prepare_sql( "SELECT DISTINCT language FROM %i WHERE language <> '' ORDER BY language ASC LIMIT 200", array( $table ) );
+			$rows = $wpdb->get_col( $query ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Prepared read-only diagnostic query.
 			$languages = array_merge( $languages, is_array( $rows ) ? $rows : array() );
 		}
 		return self::normalize_languages( $languages );
@@ -434,7 +442,8 @@ final class UAFree_Translate_Diagnostics {
 
 			if ( $exists ) {
 				if ( $deep ) {
-					$rows = (int) $wpdb->get_var( "SELECT COUNT(*) FROM `{$table}`" );
+					$query = self::prepare_sql( 'SELECT COUNT(*) FROM %i', array( $table ) );
+					$rows = (int) $wpdb->get_var( $query ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Prepared read-only aggregate.
 					$columns = self::table_columns( $table );
 				} else {
 					$rows = (int) ( $status['Rows'] ?? 0 );
@@ -470,8 +479,13 @@ final class UAFree_Translate_Diagnostics {
 		}
 		$columns = self::table_columns( $table );
 		$status = self::table_status( $table );
+		$total = (int) ( $status['Rows'] ?? 0 );
+		if ( $deep ) {
+			$query = self::prepare_sql( 'SELECT COUNT(*) FROM %i', array( $table ) );
+			$total = (int) $wpdb->get_var( $query ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Prepared read-only aggregate.
+		}
 		$summary = array(
-			'total' => $deep ? (int) $wpdb->get_var( "SELECT COUNT(*) FROM `{$table}`" ) : (int) ( $status['Rows'] ?? 0 ),
+			'total' => $total,
 			'total_estimated' => ! $deep,
 			'aggregates_performed' => $deep,
 			'by_status' => array(),
@@ -480,13 +494,15 @@ final class UAFree_Translate_Diagnostics {
 		);
 
 		if ( $deep && in_array( 'scan_status', $columns, true ) ) {
-			$rows = $wpdb->get_results( "SELECT scan_status AS item, COUNT(*) AS total FROM `{$table}` GROUP BY scan_status ORDER BY total DESC", ARRAY_A );
+			$query = self::prepare_sql( 'SELECT scan_status AS item, COUNT(*) AS total FROM %i GROUP BY scan_status ORDER BY total DESC', array( $table ) );
+			$rows = $wpdb->get_results( $query, ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Prepared read-only aggregate.
 			foreach ( is_array( $rows ) ? $rows : array() as $row ) {
 				$summary['by_status'][ (string) $row['item'] ] = (int) $row['total'];
 			}
 		}
 		if ( $deep && in_array( 'post_type', $columns, true ) ) {
-			$rows = $wpdb->get_results( "SELECT post_type AS item, COUNT(*) AS total FROM `{$table}` GROUP BY post_type ORDER BY total DESC", ARRAY_A );
+			$query = self::prepare_sql( 'SELECT post_type AS item, COUNT(*) AS total FROM %i GROUP BY post_type ORDER BY total DESC', array( $table ) );
+			$rows = $wpdb->get_results( $query, ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Prepared read-only aggregate.
 			foreach ( is_array( $rows ) ? $rows : array() as $row ) {
 				$summary['by_post_type'][ (string) $row['item'] ] = (int) $row['total'];
 			}
@@ -497,8 +513,19 @@ final class UAFree_Translate_Diagnostics {
 			$columns
 		);
 		if ( ! empty( $selectable ) ) {
-			$order = in_array( 'updated_at', $columns, true ) ? 'updated_at DESC' : ( in_array( 'id', $columns, true ) ? 'id DESC' : '1' );
-			$rows = $wpdb->get_results( 'SELECT ' . implode( ',', array_map( static fn( string $column ): string => "`{$column}`", $selectable ) ) . " FROM `{$table}` ORDER BY {$order} LIMIT " . (int) ( $deep ? 50 : 10 ), ARRAY_A );
+			$order_column = in_array( 'updated_at', $columns, true ) ? 'updated_at' : ( in_array( 'id', $columns, true ) ? 'id' : '' );
+			$placeholders = implode( ', ', array_fill( 0, count( $selectable ), '%i' ) );
+			$query_template = 'SELECT ' . $placeholders . ' FROM %i';
+			$query_args = array_values( $selectable );
+			$query_args[] = $table;
+			if ( '' !== $order_column ) {
+				$query_template .= ' ORDER BY %i DESC';
+				$query_args[] = $order_column;
+			}
+			$query_template .= ' LIMIT %d';
+			$query_args[] = $deep ? 50 : 10;
+			$query = self::prepare_sql( $query_template, $query_args ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Identifier placeholders are generated from a fixed allowlist.
+			$rows = $wpdb->get_results( $query, ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Prepared read-only diagnostic query.
 			foreach ( is_array( $rows ) ? $rows : array() as $row ) {
 				if ( isset( $row['source_path'] ) ) {
 					$row['source_path_fingerprint'] = self::path_fingerprint( (string) $row['source_path'] );
@@ -533,13 +560,18 @@ final class UAFree_Translate_Diagnostics {
 			return array( '_meta' => array( 'aggregates_performed' => true ) );
 		}
 		$columns = self::table_columns( $table );
-		$error_expression = in_array( 'last_error', $columns, true )
-			? "SUM(CASE WHEN last_error <> '' THEN 1 ELSE 0 END)"
-			: '0';
-		$rows = $wpdb->get_results(
-			"SELECT language, status, COUNT(*) AS total, {$error_expression} AS errors FROM `{$table}` GROUP BY language, status ORDER BY language ASC, status ASC",
-			ARRAY_A
-		);
+		if ( in_array( 'last_error', $columns, true ) ) {
+			$query = self::prepare_sql(
+				"SELECT language, status, COUNT(*) AS total, SUM(CASE WHEN last_error <> '' THEN 1 ELSE 0 END) AS errors FROM %i GROUP BY language, status ORDER BY language ASC, status ASC",
+				array( $table )
+			);
+		} else {
+			$query = self::prepare_sql(
+				'SELECT language, status, COUNT(*) AS total, 0 AS errors FROM %i GROUP BY language, status ORDER BY language ASC, status ASC',
+				array( $table )
+			);
+		}
+		$rows = $wpdb->get_results( $query, ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Prepared read-only aggregate.
 		$result = array( '_meta' => array( 'aggregates_performed' => true ) );
 		foreach ( is_array( $rows ) ? $rows : array() as $row ) {
 			$language = strtolower( (string) $row['language'] );
@@ -581,10 +613,11 @@ final class UAFree_Translate_Diagnostics {
 		$protected = 0;
 
 		if ( self::table_exists( $tables['segments'] ) && self::has_columns( $tables['segments'], array( 'is_protected' ) ) ) {
-			$row = $wpdb->get_row(
-				"SELECT COUNT(*) AS total, SUM(CASE WHEN is_protected = 1 THEN 1 ELSE 0 END) AS protected FROM `{$tables['segments']}`",
-				ARRAY_A
+			$query = self::prepare_sql(
+				'SELECT COUNT(*) AS total, SUM(CASE WHEN is_protected = 1 THEN 1 ELSE 0 END) AS protected FROM %i',
+				array( $tables['segments'] )
 			);
+			$row = $wpdb->get_row( $query, ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Prepared read-only aggregate.
 			$expected = max( 0, (int) ( $row['total'] ?? 0 ) - (int) ( $row['protected'] ?? 0 ) );
 			$protected = (int) ( $row['protected'] ?? 0 );
 		}
@@ -598,38 +631,41 @@ final class UAFree_Translate_Diagnostics {
 				&& self::has_columns( $tables['segments'], array( 'source_id', 'segment_key', 'source_hash' ) )
 			) {
 				$hash_validation_performed = true;
-				$translation_rows = $wpdb->get_results(
+				$query = self::prepare_sql(
 					"SELECT t.language,
 						COUNT(*) AS total,
 						SUM(CASE WHEN t.status = 'ready' AND t.translated_text <> '' AND s.segment_key IS NOT NULL AND t.source_hash = s.source_hash THEN 1 ELSE 0 END) AS ready,
 						SUM(CASE WHEN t.status <> 'ready' THEN 1 ELSE 0 END) AS non_ready,
 						SUM(CASE WHEN t.translated_text = '' THEN 1 ELSE 0 END) AS empty_rows,
 						SUM(CASE WHEN s.segment_key IS NOT NULL AND t.source_hash <> s.source_hash THEN 1 ELSE 0 END) AS stale
-					FROM `{$tables['translations']}` t
-					LEFT JOIN `{$tables['segments']}` s
+					FROM %i t
+					LEFT JOIN %i s
 						ON s.source_id = t.source_id AND s.segment_key = t.segment_key
 					GROUP BY t.language
 					ORDER BY t.language ASC",
-					ARRAY_A
+					array( $tables['translations'], $tables['segments'] )
 				);
+				$translation_rows = $wpdb->get_results( $query, ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Prepared read-only aggregate.
 			} else {
-				$translation_rows = $wpdb->get_results(
+				$query = self::prepare_sql(
 					"SELECT language,
 						COUNT(*) AS total,
 						SUM(CASE WHEN status = 'ready' AND translated_text <> '' THEN 1 ELSE 0 END) AS ready,
 						SUM(CASE WHEN status <> 'ready' THEN 1 ELSE 0 END) AS non_ready,
 						SUM(CASE WHEN translated_text = '' THEN 1 ELSE 0 END) AS empty_rows
-					FROM `{$tables['translations']}`
+					FROM %i
 					GROUP BY language
 					ORDER BY language ASC",
-					ARRAY_A
+					array( $tables['translations'] )
 				);
+				$translation_rows = $wpdb->get_results( $query, ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Prepared read-only aggregate.
 			}
 		}
 
 		$memory = array();
 		if ( self::table_exists( $tables['memory'] ) && self::has_columns( $tables['memory'], array( 'language', 'translated_text' ) ) ) {
-			$rows = $wpdb->get_results( "SELECT language, COUNT(*) AS total, SUM(CASE WHEN translated_text <> '' THEN 1 ELSE 0 END) AS ready FROM `{$tables['memory']}` GROUP BY language", ARRAY_A );
+			$query = self::prepare_sql( "SELECT language, COUNT(*) AS total, SUM(CASE WHEN translated_text <> '' THEN 1 ELSE 0 END) AS ready FROM %i GROUP BY language", array( $tables['memory'] ) );
+			$rows = $wpdb->get_results( $query, ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Prepared read-only aggregate.
 			foreach ( is_array( $rows ) ? $rows : array() as $row ) {
 				$memory[ strtolower( (string) $row['language'] ) ] = array(
 					'total' => (int) $row['total'],
@@ -678,8 +714,18 @@ final class UAFree_Translate_Diagnostics {
 		if ( empty( $select ) ) {
 			return array( 'checked' => true, 'rows' => array() );
 		}
-		$order = in_array( 'cycle_key', $columns, true ) ? 'cycle_key DESC' : '1';
-		$rows = $wpdb->get_results( 'SELECT ' . implode( ',', array_map( static fn( string $column ): string => "`{$column}`", $select ) ) . " FROM `{$table}` ORDER BY {$order} LIMIT 200", ARRAY_A );
+		$order_column = in_array( 'cycle_key', $columns, true ) ? 'cycle_key' : '';
+		$placeholders = implode( ', ', array_fill( 0, count( $select ), '%i' ) );
+		$query_template = 'SELECT ' . $placeholders . ' FROM %i';
+		$query_args = array_values( $select );
+		$query_args[] = $table;
+		if ( '' !== $order_column ) {
+			$query_template .= ' ORDER BY %i DESC';
+			$query_args[] = $order_column;
+		}
+		$query_template .= ' LIMIT 200';
+		$query = self::prepare_sql( $query_template, $query_args ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Identifier placeholders are generated from a fixed allowlist.
+		$rows = $wpdb->get_results( $query, ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Prepared read-only diagnostic query.
 		return array( 'checked' => true, 'rows' => is_array( $rows ) ? $rows : array() );
 	}
 
@@ -694,9 +740,25 @@ final class UAFree_Translate_Diagnostics {
 		if ( empty( $select ) ) {
 			return array();
 		}
-		$where = in_array( 'level', $columns, true ) ? " WHERE level IN ('error','warning')" : '';
-		$order = in_array( 'id', $columns, true ) ? 'id DESC' : ( in_array( 'created_at', $columns, true ) ? 'created_at DESC' : '1' );
-		$rows = $wpdb->get_results( 'SELECT ' . implode( ',', array_map( static fn( string $column ): string => "`{$column}`", $select ) ) . " FROM `{$table}`{$where} ORDER BY {$order} LIMIT " . (int) ( $deep ? 50 : 10 ), ARRAY_A );
+		$filter_levels = in_array( 'level', $columns, true );
+		$order_column = in_array( 'id', $columns, true ) ? 'id' : ( in_array( 'created_at', $columns, true ) ? 'created_at' : '' );
+		$placeholders = implode( ', ', array_fill( 0, count( $select ), '%i' ) );
+		$query_template = 'SELECT ' . $placeholders . ' FROM %i';
+		$query_args = array_values( $select );
+		$query_args[] = $table;
+		if ( $filter_levels ) {
+			$query_template .= ' WHERE level IN (%s, %s)';
+			$query_args[] = 'error';
+			$query_args[] = 'warning';
+		}
+		if ( '' !== $order_column ) {
+			$query_template .= ' ORDER BY %i DESC';
+			$query_args[] = $order_column;
+		}
+		$query_template .= ' LIMIT %d';
+		$query_args[] = $deep ? 50 : 10;
+		$query = self::prepare_sql( $query_template, $query_args ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Identifier placeholders are generated from a fixed allowlist.
+		$rows = $wpdb->get_results( $query, ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Prepared read-only diagnostic query.
 		$result = array();
 		foreach ( is_array( $rows ) ? $rows : array() as $row ) {
 			if ( isset( $row['message'] ) ) {
@@ -734,10 +796,11 @@ final class UAFree_Translate_Diagnostics {
 		if ( ! $deep ) {
 			return array( 'checked' => false, 'fingerprints' => array() );
 		}
-		$rows = $wpdb->get_results(
-			"SELECT option_name FROM `{$wpdb->options}` WHERE option_name LIKE '_transient_uafree_st_%' OR option_name LIKE '_transient_timeout_uafree_st_%' ORDER BY option_name ASC LIMIT 500",
-			ARRAY_A
+		$query = self::prepare_sql(
+			"SELECT option_name FROM %i WHERE option_name LIKE '_transient_uafree_st_%' OR option_name LIKE '_transient_timeout_uafree_st_%' ORDER BY option_name ASC LIMIT 500",
+			array( $wpdb->options )
 		);
+		$rows = $wpdb->get_results( $query, ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Prepared read-only diagnostic query.
 		$fingerprints = array();
 		foreach ( is_array( $rows ) ? $rows : array() as $row ) {
 			$fingerprints[] = self::fingerprint( (string) ( $row['option_name'] ?? '' ), 16 );
@@ -769,7 +832,11 @@ final class UAFree_Translate_Diagnostics {
 			}
 		}
 		if ( ! empty( $missing_tables ) ) {
-			$hints[] = sprintf( __( 'Missing translator tables: %s.', 'ua-free-translate-diagnostics' ), implode( ', ', $missing_tables ) );
+			$hints[] = sprintf(
+				/* translators: %s: comma-separated list of missing translator database tables. */
+				__( 'Missing translator tables: %s.', 'ua-free-translate-diagnostics' ),
+				implode( ', ', $missing_tables )
+			);
 		}
 		if ( empty( $settings['azure_key_configured'] ) ) {
 			$hints[] = __( 'The Azure Translator key is not configured.', 'ua-free-translate-diagnostics' );
@@ -791,17 +858,32 @@ final class UAFree_Translate_Diagnostics {
 		}
 		foreach ( $languages as $language => $data ) {
 			if ( null !== ( $data['missing_estimate'] ?? null ) && $data['missing_estimate'] > 0 ) {
-				$hints[] = sprintf( __( '%1$s: approximately %2$d current translation rows are missing.', 'ua-free-translate-diagnostics' ), strtoupper( $language ), $data['missing_estimate'] );
+				$hints[] = sprintf(
+					/* translators: 1: language code, 2: approximate number of missing translation rows. */
+					__( '%1$s: approximately %2$d current translation rows are missing.', 'ua-free-translate-diagnostics' ),
+					strtoupper( $language ),
+					$data['missing_estimate']
+				);
 			}
 			if ( null !== $data['stale_rows'] && $data['stale_rows'] > 0 ) {
-				$hints[] = sprintf( __( '%1$s: %2$d translation rows have a stale source hash.', 'ua-free-translate-diagnostics' ), strtoupper( $language ), $data['stale_rows'] );
+				$hints[] = sprintf(
+					/* translators: 1: language code, 2: number of translation rows with a stale source hash. */
+					__( '%1$s: %2$d translation rows have a stale source hash.', 'ua-free-translate-diagnostics' ),
+					strtoupper( $language ),
+					$data['stale_rows']
+				);
 			}
 			$queue_errors = 0;
 			foreach ( (array) ( $queue[ $language ] ?? array() ) as $status ) {
 				$queue_errors += (int) ( $status['errors'] ?? 0 );
 			}
 			if ( $queue_errors > 0 ) {
-				$hints[] = sprintf( __( '%1$s: %2$d queue rows contain an error.', 'ua-free-translate-diagnostics' ), strtoupper( $language ), $queue_errors );
+				$hints[] = sprintf(
+					/* translators: 1: language code, 2: number of queue rows containing an error. */
+					__( '%1$s: %2$d queue rows contain an error.', 'ua-free-translate-diagnostics' ),
+					strtoupper( $language ),
+					$queue_errors
+				);
 			}
 		}
 		return array_values( array_unique( $hints ) );
@@ -986,13 +1068,14 @@ final class UAFree_Translate_Diagnostics {
 			wp_die( esc_html__( 'You do not have permission to export this report.', 'ua-free-translate-diagnostics' ) );
 		}
 		check_admin_referer( self::EXPORT_ACTION );
-		$json = wp_json_encode( self::report( true, true ), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES );
 		nocache_headers();
-		header( 'Content-Type: application/json; charset=utf-8' );
 		header( 'Content-Disposition: attachment; filename="ua-free-translate-diagnostics-' . gmdate( 'Ymd-His' ) . '.json"' );
 		header( 'X-Content-Type-Options: nosniff' );
-		echo (string) $json;
-		exit;
+		wp_send_json(
+			self::report( true, true ),
+			200,
+			JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
+		);
 	}
 
 	private static function export_url(): string {

@@ -1,7 +1,7 @@
 {
   "format": "UA FREE Hub Release Library",
-  "version": "2.4",
-  "created": "2026-07-30",
+  "version": "2.5",
+  "created": "2026-07-31",
   "status": "FINAL",
   "packages": [
     {
@@ -26,10 +26,10 @@
       "slug": "ua-free-translate-diagnostics",
       "wporg_slug": "ua-free-translate-diagnostics",
       "name": "UA FREE Translate Diagnostics",
-      "version": "0.2.12",
-      "file": "packages/ua-free-translate-diagnostics-v0.2.12.zip",
-      "sha256": "de5e88b5061ed3b9f133df15af1d682a628cf9b2b7edcef0df5ce5f05c0482b7",
-      "size": 31647
+      "version": "0.2.13",
+      "file": "packages/ua-free-translate-diagnostics-v0.2.13.zip",
+      "sha256": "ee71bc0cf694bbb391b701672de3561f0969b17b2edeea0b15b202ecf576d5b6",
+      "size": 32355
     },
     {
       "slug": "ua-free-seo-core",

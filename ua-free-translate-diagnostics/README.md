@@ -1,4 +1,4 @@
-# UA FREE Translate Diagnostics 0.2.9
+# UA FREE Translate Diagnostics 0.2.13
 
 Universal read-only diagnostics for **UA FREE Static Translate**.
 
@@ -50,3 +50,8 @@ The plugin originated from the operational needs of a charitable foundation webs
 
 - Foundation: https://uafree.org/
 - Development support: https://uafree.org/plugins/support-development/
+
+
+## Release 0.2.13
+
+Plugin Check compatibility update with prepared identifier queries and the shared responsive UA FREE support block.
