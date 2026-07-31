@@ -3,8 +3,8 @@ Contributors: uafree
 Donate link: https://uafree.org/plugins/support-development/
 Tags: comments, spam, moderation, url, privacy
 Requires at least: 6.0
-Tested up to: 7.0.2
-Stable tag: 1.0.5
+Tested up to: 7.0
+Stable tag: 1.0.6
 Requires PHP: 8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -39,6 +39,12 @@ The plugin was originally developed to solve a practical need of a charitable fo
 
 == Changelog ==
 
+= 1.0.6 =
+* Resolved Plugin Check findings for metadata, request handling and uninstall cleanup.
+* Removed the obsolete manual translation loader.
+* Reworked the shared UA FREE support block into responsive cards.
+* Preserved URL-only comment detection and moderation behavior.
+
 = 1.0.5 =
 * Final stable packaging for repository publication and WordPress.org submission.
 * Updated plugin metadata and WordPress compatibility information.
@@ -46,5 +52,5 @@ The plugin was originally developed to solve a practical need of a charitable fo
 
 == Upgrade Notice ==
 
-= 1.0.5 =
-Final stable release prepared for repository and WordPress.org distribution.
+= 1.0.6 =
+Plugin Check compatibility update with unchanged comment filtering behavior.
