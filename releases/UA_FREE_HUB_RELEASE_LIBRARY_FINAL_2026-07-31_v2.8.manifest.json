@@ -1,0 +1,117 @@
+{
+  "format": "UA FREE Hub Release Library",
+  "version": "2.8",
+  "created": "2026-07-31",
+  "status": "FINAL",
+  "packages": [
+    {
+      "slug": "ua-free-migration-cleanup",
+      "wporg_slug": "ua-free-migration-cleanup",
+      "name": "UA FREE Migration & Cleanup",
+      "version": "0.8.9",
+      "file": "packages/ua-free-migration-cleanup-v0.8.9.zip",
+      "sha256": "48f93b542e063fc603fb3e99e7a1e0b3bf179f4e76d8aa75b28cceacea842621",
+      "size": 30840
+    },
+    {
+      "slug": "ua-free-static-translate",
+      "wporg_slug": "ua-free-static-translate",
+      "name": "UA FREE Static Translate",
+      "version": "0.8.6",
+      "file": "packages/ua-free-static-translate-v0.8.6.zip",
+      "sha256": "eef9199e70a176fd22963b85be4b98dd1b86aa9e08e280aa9ec53d34537dea96",
+      "size": 77264
+    },
+    {
+      "slug": "ua-free-translate-diagnostics",
+      "wporg_slug": "ua-free-translate-diagnostics",
+      "name": "UA FREE Translate Diagnostics",
+      "version": "0.2.13",
+      "file": "packages/ua-free-translate-diagnostics-v0.2.13.zip",
+      "sha256": "ee71bc0cf694bbb391b701672de3561f0969b17b2edeea0b15b202ecf576d5b6",
+      "size": 32355
+    },
+    {
+      "slug": "ua-free-seo-core",
+      "wporg_slug": "ua-free-seo-core",
+      "name": "UA FREE SEO Core",
+      "version": "2.0.7",
+      "file": "packages/ua-free-seo-core-v2.0.7.zip",
+      "sha256": "fb7a974169f59bda8407cfdd05684c962f13c7b56b632f6fa2c0d89bb3a9f638",
+      "size": 31108
+    },
+    {
+      "slug": "ua-free-404-guard",
+      "wporg_slug": "ua-free-404-guard",
+      "name": "UA FREE 404 Guard & URL Intelligence",
+      "version": "2.0.7",
+      "file": "packages/ua-free-404-guard-v2.0.7.zip",
+      "sha256": "a8fec3f1f682b2d807d7a107ff587f305c95312cd0d62ae57d4061aad4c6c89e",
+      "size": 39064
+    },
+    {
+      "slug": "ua-free-site-bridge",
+      "wporg_slug": "ua-free-site-bridge",
+      "name": "UA FREE Site Bridge",
+      "version": "0.4.9",
+      "file": "packages/ua-free-site-bridge-v0.4.9.zip",
+      "sha256": "8b069a7a8c6a972d85d2e86d54b6ecd6c9712179b85732e085cab7b0ed5275ac",
+      "size": 21770
+    },
+    {
+      "slug": "ua-free-consent-manager",
+      "wporg_slug": "ua-free-consent-manager",
+      "name": "UA FREE Consent Manager",
+      "version": "0.1.5",
+      "file": "packages/ua-free-consent-manager-v0.1.5.zip",
+      "sha256": "24557a64d3e3d794e6662d5c3aae7f7f2b8898c69edf4c4d528a99cb1039657b",
+      "size": 21437
+    },
+    {
+      "slug": "ua-free-donate-stats",
+      "wporg_slug": "ua-free-donate-stats",
+      "name": "UA FREE Donate Stats & Conversions",
+      "version": "1.2.7",
+      "file": "packages/ua-free-donate-stats-v1.2.7.zip",
+      "sha256": "1b42c3e8862c9baba4d8e5154a1b85697e64c522dddfeadaddd5dcdb967cfd8a",
+      "size": 51198
+    },
+    {
+      "slug": "ua-free-google-ads-campaign-builder",
+      "wporg_slug": "ua-free-google-ads-campaign-builder",
+      "name": "UA FREE Google Ads Campaign Builder",
+      "version": "1.3.6",
+      "file": "packages/ua-free-google-ads-campaign-builder-v1.3.6.zip",
+      "sha256": "08e53827be6f94751285bfd84f3bebb2f0513f2cc1cb19a02e94fa29694f8cf2",
+      "size": 47006
+    },
+    {
+      "slug": "ua-free-copy",
+      "wporg_slug": "ua-free-copy",
+      "name": "UA FREE Copy",
+      "version": "1.0.6",
+      "file": "packages/ua-free-copy-v1.0.6.zip",
+      "sha256": "19be5fe035902501a07b7c30229bb27f20ab20a9834c083ec398d12b90d4e3ab",
+      "size": 24667
+    },
+    {
+      "slug": "ua-free-url-only-comment-spam",
+      "wporg_slug": "ua-free-url-only-comment-spam",
+      "name": "UA FREE URL-Only Comment Spam",
+      "version": "1.0.6",
+      "file": "packages/ua-free-url-only-comment-spam-v1.0.6.zip",
+      "sha256": "a6a8f896d389dbc0afd40a4997947953c22ffd639a21de815cd35d2cceced513",
+      "size": 25377
+    },
+    {
+      "slug": "ua-free-suite-control-center",
+      "wporg_slug": "ua-free-analytics-dashboard",
+      "name": "UA FREE Suite Control Center",
+      "version": "0.3.11",
+      "file": "packages/ua-free-suite-control-center-v0.3.11.zip",
+      "sha256": "cac33cd8f128734871f929ee56ccf8936434ff9556f36e5443d67bf1d0980f33",
+      "size": 24871
+    }
+  ],
+  "update_policy": "No custom updater. Public releases will use WordPress.org updates after directory approval."
+}
