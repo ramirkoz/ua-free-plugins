@@ -1,0 +1,171 @@
+name: Release URL Spam 1.0.6
+
+on:
+  push:
+    paths:
+      - '.github/workflows/release-url-spam-1.0.6.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.0'
+
+      - name: Validate PHP
+        run: find ua-free-url-only-comment-spam -name '*.php' -print0 | xargs -0 -n1 php -l
+
+      - name: Build canonical release
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          import hashlib
+          import json
+          import zipfile
+
+          root = Path('ua-free-url-only-comment-spam')
+          release_dir = Path('releases')
+          release_dir.mkdir(exist_ok=True)
+
+          expected_files = sorted([
+              'CHANGELOG.md',
+              'README.md',
+              'assets/admin.css',
+              'includes/class-admin.php',
+              'includes/class-detector.php',
+              'includes/class-plugin.php',
+              'includes/class-suite-registry.php',
+              'includes/class-uafree-admin-support-footer.php',
+              'languages/ua-free-url-only-comment-spam-uk.mo',
+              'languages/ua-free-url-only-comment-spam-uk.po',
+              'languages/ua-free-url-only-comment-spam.pot',
+              'readme.txt',
+              'ua-free-url-only-comment-spam.php',
+              'uninstall.php',
+          ])
+          for rel in expected_files:
+              if not (root / rel).is_file():
+                  raise SystemExit(f'Missing package file: {rel}')
+
+          plugin_name = 'ua-free-url-only-comment-spam-1.0.6.zip'
+          plugin_path = release_dir / plugin_name
+          plugin_time = (2026, 7, 31, 13, 58, 0)
+          with zipfile.ZipFile(plugin_path, 'w', zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
+              for rel in expected_files:
+                  path = root / rel
+                  info = zipfile.ZipInfo(f'ua-free-url-only-comment-spam/{rel}', plugin_time)
+                  info.compress_type = zipfile.ZIP_DEFLATED
+                  info.external_attr = 0o644 << 16
+                  archive.writestr(info, path.read_bytes())
+
+          with zipfile.ZipFile(plugin_path) as archive:
+              if archive.testzip() is not None:
+                  raise SystemExit('Plugin ZIP CRC failed')
+
+          plugin_sha = hashlib.sha256(plugin_path.read_bytes()).hexdigest()
+          expected_plugin_sha = 'a6a8f896d389dbc0afd40a4997947953c22ffd639a21de815cd35d2cceced513'
+          if plugin_sha != expected_plugin_sha:
+              raise SystemExit(f'Unexpected plugin SHA: {plugin_sha}')
+
+          (release_dir / 'ua-free-url-only-comment-spam-1.0.6.sha256').write_text(
+              f'{plugin_sha}  releases/{plugin_name}\n', encoding='utf-8'
+          )
+
+          old_library = release_dir / 'UA_FREE_HUB_RELEASE_LIBRARY_FINAL_2026-07-31_v2.7.zip'
+          with zipfile.ZipFile(old_library) as source:
+              if source.testzip() is not None:
+                  raise SystemExit('Source library CRC failed')
+              manifest = json.loads(source.read('manifest.json'))
+              packages = {
+                  name: source.read(name)
+                  for name in source.namelist()
+                  if name.startswith('packages/')
+              }
+
+          manifest['version'] = '2.8'
+          manifest['created'] = '2026-07-31'
+          manifest['status'] = 'FINAL'
+          packages.pop('packages/ua-free-url-only-comment-spam-v1.0.5.zip', None)
+          new_package_name = 'packages/ua-free-url-only-comment-spam-v1.0.6.zip'
+          packages[new_package_name] = plugin_path.read_bytes()
+
+          for package in manifest['packages']:
+              if package['slug'] == 'ua-free-url-only-comment-spam':
+                  package['version'] = '1.0.6'
+                  package['file'] = new_package_name
+                  package['sha256'] = plugin_sha
+                  package['size'] = plugin_path.stat().st_size
+                  break
+          else:
+              raise SystemExit('URL spam package missing from manifest')
+
+          for package in manifest['packages']:
+              data = packages[package['file']]
+              if hashlib.sha256(data).hexdigest() != package['sha256']:
+                  raise SystemExit(f"Package SHA mismatch: {package['slug']}")
+              if len(data) != package['size']:
+                  raise SystemExit(f"Package size mismatch: {package['slug']}")
+
+          manifest_text = json.dumps(manifest, ensure_ascii=False, indent=2) + '\n'
+          library_name = 'UA_FREE_HUB_RELEASE_LIBRARY_FINAL_2026-07-31_v2.8.zip'
+          library_path = release_dir / library_name
+          library_time = (2026, 7, 31, 14, 20, 0)
+          with zipfile.ZipFile(library_path, 'w', zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
+              info = zipfile.ZipInfo('manifest.json', library_time)
+              info.compress_type = zipfile.ZIP_DEFLATED
+              info.external_attr = 0o644 << 16
+              archive.writestr(info, manifest_text.encode('utf-8'))
+              for package in sorted(manifest['packages'], key=lambda item: item['file']):
+                  info = zipfile.ZipInfo(package['file'], library_time)
+                  info.compress_type = zipfile.ZIP_DEFLATED
+                  info.external_attr = 0o644 << 16
+                  archive.writestr(info, packages[package['file']])
+
+          with zipfile.ZipFile(library_path) as archive:
+              if archive.testzip() is not None:
+                  raise SystemExit('Library ZIP CRC failed')
+              embedded = json.loads(archive.read('manifest.json'))
+              if embedded != manifest or len(embedded['packages']) != 12:
+                  raise SystemExit('Library manifest mismatch')
+
+          library_sha = hashlib.sha256(library_path.read_bytes()).hexdigest()
+          expected_library_sha = '866c73f0c22f429d8e815dc47f2cb5e0b6ba8d7fefafdbf368d414b830cce26e'
+          if library_sha != expected_library_sha:
+              raise SystemExit(f'Unexpected library SHA: {library_sha}')
+
+          (release_dir / f'{library_name}.sha256').write_text(
+              f'{library_sha}  releases/{library_name}\n', encoding='utf-8'
+          )
+          (release_dir / 'UA_FREE_HUB_RELEASE_LIBRARY_FINAL_2026-07-31_v2.8.manifest.json').write_text(
+              manifest_text, encoding='utf-8'
+          )
+          (release_dir / 'UA_FREE_SYNC_REPORT_2026-07-31_v2.8.md').write_text(
+              '# UA FREE Synchronization Report\n\n'
+              '- Date: 2026-07-31\n'
+              '- Library: 2.8\n'
+              '- Status: URL-Only Comment Spam 1.0.6 Plugin Check PASS; package, manifest, ZIP, CRC, SHA-256 and PHP checks PASS.\n'
+              '- Scope: URL-Only Comment Spam updated; other 11 public packages and SHA-256 values preserved.\n'
+              '- Private Hub: manual package replacement required.\n\n'
+              f'URL-Only Comment Spam SHA-256: `{plugin_sha}`\n\n'
+              f'Library SHA-256: `{library_sha}`\n',
+              encoding='utf-8'
+          )
+          PY
+
+      - name: Commit release artifacts
+        run: |
+          rm -f .github/workflows/release-url-spam-1.0.6.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Release URL-Only Comment Spam 1.0.6 and library 2.8'
+          git push
