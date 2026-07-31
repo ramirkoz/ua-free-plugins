@@ -1,0 +1,39 @@
+name: Release Suite Control Center 0.3.12
+
+on:
+  push:
+    paths:
+      - '.github/workflows/release-control-center-0.3.12.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply verified patch
+        run: |
+          cat .github/release-parts/control-center-0.3.12-patch-*.txt > /tmp/control-center.patch
+          patch -p1 < /tmp/control-center.patch
+      - name: Validate and build
+        run: |
+          find ua-free-analytics-dashboard -name '*.php' -print0 | xargs -0 -n1 php -l
+          grep -q 'Version: 0.3.12' ua-free-analytics-dashboard/ua-free-analytics-dashboard.php
+          grep -q "UAFREE_ANALYTICS_DASHBOARD_VERSION', '0.3.12'" ua-free-analytics-dashboard/ua-free-analytics-dashboard.php
+          grep -q '^Stable tag: 0.3.12$' ua-free-analytics-dashboard/readme.txt
+          test ! -e ua-free-analytics-dashboard/README_UK.md
+          python .github/release-parts/build-control-center-0.3.12.py
+      - name: Commit canonical release
+        run: |
+          rm -f .github/workflows/release-control-center-0.3.12.yml
+          rm -f .github/release-parts/control-center-0.3.12-patch-*.txt
+          rm -f .github/release-parts/build-control-center-0.3.12.py
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Release Suite Control Center 0.3.12 and library 2.9'
+          git push
