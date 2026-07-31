@@ -357,6 +357,7 @@ final class Bridge {
 		$rate_key   = 'uafree_bridge_rl_' . $key_id;
 		$bucket     = gmdate( 'YmdH' );
 		$lock_name  = 'uafree_bridge_rate_' . substr( hash( 'sha256', $rate_key ), 0, 40 );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- MySQL advisory lock coordinates concurrent rate-limit updates.
 		$lock_value = $wpdb->get_var(
 			$wpdb->prepare( 'SELECT GET_LOCK(%s, %d)', $lock_name, self::RATE_LOCK_TTL )
 		);
@@ -403,6 +404,7 @@ final class Bridge {
 
 			return (int) $state['count'];
 		} finally {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Releases the advisory lock acquired above.
 			$wpdb->get_var( $wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', $lock_name ) );
 		}
 	}
@@ -413,11 +415,11 @@ final class Bridge {
 		$value_prefix   = $wpdb->esc_like( '_transient_uafree_bridge_rl_' ) . '%';
 		$timeout_prefix = $wpdb->esc_like( '_transient_timeout_uafree_bridge_rl_' ) . '%';
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Cleanup scans only plugin-specific transient names.
 		$rows = $wpdb->get_col(
 			$wpdb->prepare(
-				"SELECT option_name
-				FROM {$wpdb->options}
-				WHERE option_name LIKE %s OR option_name LIKE %s",
+				'SELECT option_name FROM %i WHERE option_name LIKE %s OR option_name LIKE %s',
+				$wpdb->options,
 				$value_prefix,
 				$timeout_prefix
 			)
@@ -543,7 +545,6 @@ final class Bridge {
 		$plugins      = get_plugins();
 		$active       = (array) get_option( 'active_plugins', array() );
 		$network      = is_multisite() ? array_keys( (array) get_site_option( 'active_sitewide_plugins', array() ) ) : array();
-		$auto_updates = (array) get_site_option( 'auto_update_plugins', array() );
 		$updates      = get_site_transient( 'update_plugins' );
 		$result       = array();
 
@@ -564,7 +565,6 @@ final class Bridge {
 				'name'             => sanitize_text_field( (string) ( $data['Name'] ?? '' ) ),
 				'version'          => sanitize_text_field( (string) ( $data['Version'] ?? '' ) ),
 				'status'           => $status,
-				'auto_update'      => in_array( $file, $auto_updates, true ),
 				'update_available' => $available,
 				'requires_wp'      => sanitize_text_field( (string) ( $data['RequiresWP'] ?? '' ) ),
 				'requires_php'     => sanitize_text_field( (string) ( $data['RequiresPHP'] ?? '' ) ),

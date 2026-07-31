@@ -1,6 +1,6 @@
 {
   "format": "UA FREE Hub Release Library",
-  "version": "2.6",
+  "version": "2.7",
   "created": "2026-07-31",
   "status": "FINAL",
   "packages": [
@@ -53,10 +53,10 @@
       "slug": "ua-free-site-bridge",
       "wporg_slug": "ua-free-site-bridge",
       "name": "UA FREE Site Bridge",
-      "version": "0.4.8",
-      "file": "packages/ua-free-site-bridge-v0.4.8.zip",
-      "sha256": "b07d7bf04cc48037d7a67ee081f86c340b19880d924fdbfeaf9338976ead1645",
-      "size": 22784
+      "version": "0.4.9",
+      "file": "packages/ua-free-site-bridge-v0.4.9.zip",
+      "sha256": "8b069a7a8c6a972d85d2e86d54b6ecd6c9712179b85732e085cab7b0ed5275ac",
+      "size": 21770
     },
     {
       "slug": "ua-free-consent-manager",

@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.9
+
+- Resolved Plugin Check findings for compatibility metadata and package contents.
+- Removed the plugin auto-update-status field to avoid custom-updater detection.
+- Documented intentional database calls used for advisory locking and cleanup.
+- Prefixed uninstall variables and modernized the options-table query.
+- Reworked the shared UA FREE support block into responsive cards.
+
 ## 0.4.8
 
 - Final repository and WordPress.org packaging release.
