@@ -11,21 +11,21 @@ foreach (
 		'uafree_suite_heartbeat_token_expiry',
 		'uafree_suite_control_center_migration_version',
 	)
-	as $option
+	as $uafree_control_option
 ) {
-	delete_option( $option );
+	delete_option( $uafree_control_option );
 }
 
 while (
 	false !== (
-		$timestamp = wp_next_scheduled(
+		$uafree_control_timestamp = wp_next_scheduled(
 			'uafree_suite_daily_heartbeat'
 		)
 	)
 ) {
 	if (
 		false === wp_unschedule_event(
-			$timestamp,
+			$uafree_control_timestamp,
 			'uafree_suite_daily_heartbeat'
 		)
 	) {

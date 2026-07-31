@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.12
+
+- Resolved Plugin Check findings for readme metadata and package contents.
+- Removed the obsolete manual translation loader.
+- Replaced raw admin page detection with the current screen API.
+- Added nonce protection to report-period links.
+- Added the missing translator comment.
+- Prefixed uninstall variables.
+- Reworked the shared UA FREE support block into responsive cards.
+
 ## 0.3.11
 
 - Final repository and WordPress.org packaging release.
