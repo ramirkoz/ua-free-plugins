@@ -1,6 +1,6 @@
 {
   "format": "UA FREE Hub Release Library",
-  "version": "2.5",
+  "version": "2.6",
   "created": "2026-07-31",
   "status": "FINAL",
   "packages": [
@@ -35,10 +35,10 @@
       "slug": "ua-free-seo-core",
       "wporg_slug": "ua-free-seo-core",
       "name": "UA FREE SEO Core",
-      "version": "2.0.6",
-      "file": "packages/ua-free-seo-core-v2.0.6.zip",
-      "sha256": "b17403ab1460c99a81c7585bb192df5b4858ad9bf298ece9db4947405264e825",
-      "size": 30752
+      "version": "2.0.7",
+      "file": "packages/ua-free-seo-core-v2.0.7.zip",
+      "sha256": "fb7a974169f59bda8407cfdd05684c962f13c7b56b632f6fa2c0d89bb3a9f638",
+      "size": 31108
     },
     {
       "slug": "ua-free-404-guard",

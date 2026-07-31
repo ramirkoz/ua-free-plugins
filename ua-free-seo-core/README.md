@@ -1,6 +1,14 @@
-# UA FREE SEO Core 2.0.3
+# UA FREE SEO Core 2.0.7
 
 Universal development build of the SEO plugin originally created for a charitable foundation website.
+
+## 2.0.7 changes
+
+- resolved Plugin Check findings for request sanitization, translator context and explicit deep-scan SQL;
+- removed manual translation loading;
+- updated WordPress.org compatibility metadata;
+- replaced the shared support footer with the responsive two-card layout;
+- preserved the existing SEO output, migration safety and privacy behavior.
 
 ## Safety status
 

@@ -3,8 +3,8 @@ Contributors: uafree
 Donate link: https://uafree.org/plugins/support-development/
 Tags: seo, schema, sitemap, metadata, accessibility
 Requires at least: 6.2
-Tested up to: 7.0.2
-Stable tag: 2.0.6
+Tested up to: 7.0
+Stable tag: 2.0.7
 Requires PHP: 8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -38,6 +38,11 @@ The plugin does not silently delete data from previous SEO plugins. Import and c
 
 == Changelog ==
 
+= 2.0.7 =
+* Fixed Plugin Check findings for request sanitization, translator context and the explicit deep SEO inventory query.
+* Removed manual translation loading and updated WordPress compatibility metadata.
+* Replaced the shared administration support footer with the responsive card layout.
+
 = 2.0.6 =
 * Final stable packaging for repository publication and WordPress.org submission.
 * Updated plugin metadata and WordPress compatibility information.
@@ -45,5 +50,5 @@ The plugin does not silently delete data from previous SEO plugins. Import and c
 
 == Upgrade Notice ==
 
-= 2.0.6 =
-Final stable release prepared for repository and WordPress.org distribution.
+= 2.0.7 =
+WordPress.org compliance and administration support layout update without changing public SEO behavior.

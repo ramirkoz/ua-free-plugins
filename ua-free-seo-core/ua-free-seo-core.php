@@ -5,7 +5,7 @@
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Author URI: https://uafree.org/
  * Plugin URI: https://uafree.org/ua-free-plugins/#plugin-ua-free-seo-core
- * Version: 2.0.6
+ * Version: 2.0.7
  * Author: UA FREE
  * Text Domain: ua-free-seo-core
  * Domain Path: /languages
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'UAFREE_SEO_VERSION', '2.0.6' );
+define( 'UAFREE_SEO_VERSION', '2.0.7' );
 define( 'UAFREE_SEO_FILE', __FILE__ );
 define( 'UAFREE_SEO_DIR', plugin_dir_path( __FILE__ ) );
 define( 'UAFREE_SEO_URL', plugin_dir_url( __FILE__ ) );
@@ -34,7 +34,6 @@ register_deactivation_hook( __FILE__, array( 'UAFree_SEO_Core', 'deactivate' ) )
 add_action(
 	'plugins_loaded',
 	static function (): void {
-		load_plugin_textdomain( 'ua-free-seo-core', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
 		\UAFree\Suite\Registry::register(
 			array(
 				'slug'          => 'ua-free-seo-core',

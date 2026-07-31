@@ -93,14 +93,15 @@ final class UAFree_SEO_Scanner {
 			}
 			$all_meta = array_values( array_unique( array_map( 'strval', $all_meta ) ) );
 			if ( $all_meta ) {
-				$placeholders = implode( ',', array_fill( 0, count( $all_meta ), '%s' ) );
-				$sql = $wpdb->prepare(
-					"SELECT meta_key, COUNT(*) AS row_count FROM {$wpdb->postmeta} WHERE meta_key IN ({$placeholders}) GROUP BY meta_key",
-					...$all_meta
-				);
-				$rows = $wpdb->get_results( $sql, ARRAY_A );
-				foreach ( is_array( $rows ) ? $rows : array() as $row ) {
-					$meta_counts[ (string) $row['meta_key'] ] = (int) $row['row_count'];
+				foreach ( $all_meta as $meta_key ) {
+					// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Explicit administrator-triggered deep inventory scan.
+					$meta_counts[ $meta_key ] = (int) $wpdb->get_var(
+						$wpdb->prepare(
+							'SELECT COUNT(*) FROM %i WHERE meta_key = %s',
+							$wpdb->postmeta,
+							$meta_key
+						)
+					);
 				}
 			}
 		}

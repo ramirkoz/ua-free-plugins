@@ -63,6 +63,13 @@ final class UAFree_SEO_Core {
 		return is_scalar( $value ) ? (string) $value : $fallback;
 	}
 
+	private static function request_uri(): string {
+		$raw = isset( $_SERVER['REQUEST_URI'] )
+			? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) )
+			: '/';
+		return is_string( $raw ) && '' !== $raw ? $raw : '/';
+	}
+
 	public static function sanitize_settings( $input ): array {
 		$input = is_array( $input ) ? $input : array();
 		$types = array_keys( get_post_types( array( 'public' => true ), 'names' ) );
@@ -227,7 +234,7 @@ final class UAFree_SEO_Core {
 	}
 
 	private static function context(): array {
-		$key = md5( (string) ( $_SERVER['REQUEST_URI'] ?? '' ) );
+		$key = md5( self::request_uri() );
 		if ( isset( self::$context_cache[ $key ] ) ) {
 			return self::$context_cache[ $key ];
 		}
@@ -264,7 +271,9 @@ final class UAFree_SEO_Core {
 				$og_type = 'post' === $post->post_type ? 'article' : 'website';
 			}
 		} elseif ( is_search() ) {
+			/* translators: %s: search query. */
 			$title = sprintf( __( 'Search results for “%s”', 'ua-free-seo-core' ), get_search_query() ) . $separator . $site_name;
+			/* translators: %s: website name. */
 			$description = sprintf( __( 'Search results on %s.', 'ua-free-seo-core' ), $site_name );
 			$canonical = get_search_link();
 			if ( ! empty( $settings['noindex_search'] ) ) {
@@ -478,8 +487,10 @@ final class UAFree_SEO_Core {
 	}
 
 	public static function save_meta_box( int $post_id, WP_Post $post ): void {
-		$nonce_raw = isset( $_POST['uafree_seo_meta_nonce'] ) ? wp_unslash( $_POST['uafree_seo_meta_nonce'] ) : '';
-		if ( ! is_string( $nonce_raw ) || ! wp_verify_nonce( sanitize_text_field( $nonce_raw ), 'uafree_seo_meta_save' ) ) {
+		$nonce = isset( $_POST['uafree_seo_meta_nonce'] )
+			? sanitize_text_field( wp_unslash( $_POST['uafree_seo_meta_nonce'] ) )
+			: '';
+		if ( ! wp_verify_nonce( $nonce, 'uafree_seo_meta_save' ) ) {
 			return;
 		}
 		if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
@@ -488,14 +499,19 @@ final class UAFree_SEO_Core {
 		if ( ! current_user_can( 'edit_post', $post_id ) ) {
 			return;
 		}
-		$map = array(
-			'uafree_seo_title'       => 'sanitize_text_field',
-			'uafree_seo_description' => 'sanitize_textarea_field',
-			'uafree_social_image_id' => 'absint',
+
+		$submitted = array(
+			'uafree_seo_title'       => isset( $_POST['uafree_seo_title'] )
+				? sanitize_text_field( wp_unslash( $_POST['uafree_seo_title'] ) )
+				: '',
+			'uafree_seo_description' => isset( $_POST['uafree_seo_description'] )
+				? sanitize_textarea_field( wp_unslash( $_POST['uafree_seo_description'] ) )
+				: '',
+			'uafree_social_image_id' => isset( $_POST['uafree_social_image_id'] )
+				? absint( wp_unslash( $_POST['uafree_social_image_id'] ) )
+				: 0,
 		);
-		foreach ( $map as $key => $callback ) {
-			$raw = isset( $_POST[ $key ] ) ? wp_unslash( $_POST[ $key ] ) : '';
-			$value = is_scalar( $raw ) ? call_user_func( $callback, $raw ) : '';
+		foreach ( $submitted as $key => $value ) {
 			if ( '' === $value || 0 === $value ) {
 				delete_post_meta( $post_id, $key );
 			} else {
@@ -503,14 +519,20 @@ final class UAFree_SEO_Core {
 			}
 		}
 
-		$canonical_raw = isset( $_POST['uafree_seo_canonical'] ) ? wp_unslash( $_POST['uafree_seo_canonical'] ) : '';
-		$canonical     = self::normalize_http_url_candidate( $canonical_raw );
+		$canonical_raw = isset( $_POST['uafree_seo_canonical'] )
+			? sanitize_text_field( wp_unslash( $_POST['uafree_seo_canonical'] ) )
+			: '';
+		$canonical = self::normalize_http_url_candidate( $canonical_raw );
 		if ( '' === $canonical ) {
 			delete_post_meta( $post_id, 'uafree_seo_canonical' );
 		} else {
 			update_post_meta( $post_id, 'uafree_seo_canonical', $canonical );
 		}
-		update_post_meta( $post_id, 'uafree_seo_noindex', empty( $_POST['uafree_seo_noindex'] ) ? 0 : 1 );
+
+		$noindex = isset( $_POST['uafree_seo_noindex'] )
+			? absint( wp_unslash( $_POST['uafree_seo_noindex'] ) )
+			: 0;
+		update_post_meta( $post_id, 'uafree_seo_noindex', $noindex ? 1 : 0 );
 	}
 
 	public static function filter_sitemap_post_types( array $post_types ): array {
@@ -663,7 +685,7 @@ final class UAFree_SEO_Core {
 	}
 
 	private static function current_url(): string {
-		$uri = wp_unslash( self::input_string( $_SERVER['REQUEST_URI'] ?? '/', '/' ) );
+		$uri = self::request_uri();
 		$uri = preg_replace( '/[\r\n].*/', '', $uri );
 		$parts = wp_parse_url( $uri );
 		$path = '/' . ltrim( (string) ( $parts['path'] ?? '/' ), '/' );
