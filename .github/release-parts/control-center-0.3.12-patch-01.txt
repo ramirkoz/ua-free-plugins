@@ -1,0 +1,82 @@
+diff -ruN cc-old/ua-free-analytics-dashboard/CHANGELOG.md cc-new/ua-free-analytics-dashboard/CHANGELOG.md
+--- cc-old/ua-free-analytics-dashboard/CHANGELOG.md	2026-07-31 14:46:58.387151296 +0000
++++ cc-new/ua-free-analytics-dashboard/CHANGELOG.md	2026-07-31 14:46:58.387151296 +0000
+@@ -1,5 +1,15 @@
+ # Changelog
+ 
++## 0.3.12
++
++- Resolved Plugin Check findings for readme metadata and package contents.
++- Removed the obsolete manual translation loader.
++- Replaced raw admin page detection with the current screen API.
++- Added nonce protection to report-period links.
++- Added the missing translator comment.
++- Prefixed uninstall variables.
++- Reworked the shared UA FREE support block into responsive cards.
++
+ ## 0.3.11
+ 
+ - Final repository and WordPress.org packaging release.
+diff -ruN cc-old/ua-free-analytics-dashboard/README_UK.md cc-new/ua-free-analytics-dashboard/README_UK.md
+--- cc-old/ua-free-analytics-dashboard/README_UK.md	2026-07-31 14:46:58.387151296 +0000
++++ cc-new/ua-free-analytics-dashboard/README_UK.md	1970-01-01 00:00:00.000000000 +0000
+@@ -1,11 +0,0 @@
+-# UA FREE Suite Control Center 0.3.10
+-
+-Центр стану та навігації UA FREE Suite.
+-
+-Плагін не надсилає статистику встановлень, видалень або використання і не
+-виконує зовнішніх telemetry-запитів. Після оновлення він лише одноразово
+-видаляє локальні параметри та розклад, які могли залишитися від відхилених
+-тестових кандидатів.
+-
+-Технічна папка та text domain залишаються
+-`ua-free-analytics-dashboard` для безпечної заміни попередньої версії.
+diff -ruN cc-old/ua-free-analytics-dashboard/includes/class-uafree-admin-support-footer.php cc-new/ua-free-analytics-dashboard/includes/class-uafree-admin-support-footer.php
+--- cc-old/ua-free-analytics-dashboard/includes/class-uafree-admin-support-footer.php	2026-07-31 14:46:58.387151296 +0000
++++ cc-new/ua-free-analytics-dashboard/includes/class-uafree-admin-support-footer.php	2026-07-31 14:46:58.387151296 +0000
+@@ -25,21 +25,17 @@
+ 		}
+ 
+ 		private static function is_uafree_screen(): bool {
+-			$page = isset( $_GET['page'] )
+-				? strtolower( sanitize_text_field( wp_unslash( (string) $_GET['page'] ) ) )
+-				: '';
+-			$screen_id = '';
+-			if ( function_exists( 'get_current_screen' ) ) {
+-				$screen = get_current_screen();
+-				$screen_id = is_object( $screen ) ? strtolower( (string) $screen->id ) : '';
++			if ( ! function_exists( 'get_current_screen' ) ) {
++				return false;
+ 			}
+ 
+-			foreach ( array( $page, $screen_id ) as $value ) {
+-				if ( str_contains( $value, 'uafree' ) || str_contains( $value, 'ua-free' ) ) {
+-					return true;
+-				}
++			$screen = get_current_screen();
++			if ( ! is_object( $screen ) ) {
++				return false;
+ 			}
+-			return false;
++
++			$screen_id = strtolower( (string) $screen->id );
++			return str_contains( $screen_id, 'uafree' ) || str_contains( $screen_id, 'ua-free' );
+ 		}
+ 
+ 		public static function render(): void {
+@@ -49,27 +45,44 @@
+ 			self::$rendered = true;
+ 			?>
+ 			<section class="uafree-admin-support-footer" aria-label="Support UA FREE">
+-				<div class="uafree-admin-support-main">
+-					<strong>Support UA FREE</strong>
+-					<span>These plugins grew out of real work for a Ukrainian charitable foundation.</span>
+-					<a href="https://uafree.org/donate/" target="_blank" rel="noopener noreferrer">Donate to the foundation</a>
+-					<a href="https://uafree.org/" target="_blank" rel="noopener noreferrer">Tell others about UA FREE</a>
++				<div class="uafree-admin-support-card uafree-admin-support-foundation">
++					<div class="uafree-admin-support-heading">
++						<span class="dashicons dashicons-heart" aria-hidden="true"></span>
++						<strong>Support UA FREE</strong>
++					</div>
++					<p>These plugins grew out of real work for a Ukrainian charitable foundation.</p>
