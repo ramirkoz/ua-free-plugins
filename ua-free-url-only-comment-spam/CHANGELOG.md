@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.6
+
+- Resolved Plugin Check findings for readme metadata and request handling.
+- Removed the obsolete manual translation loader.
+- Sanitized the detector sample after nonce verification.
+- Prefixed the uninstall settings variable.
+- Reworked the shared UA FREE support block into responsive cards.
+- Preserved URL-only comment detection and moderation behavior.
+
 ## 1.0.5
 
 - Final repository and WordPress.org packaging release.
