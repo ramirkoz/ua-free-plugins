@@ -1,0 +1,114 @@
+name: Publish Translate Diagnostics 0.2.13
+
+on:
+  push:
+    paths:
+      - '.github/workflows/translate-diagnostics-0.2.13-sync.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download verified synchronization payload
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -L --fail --retry 3 --retry-delay 2 \
+            -o /tmp/translate-diagnostics-sync-payload.tar.gz \
+            'https://drive.usercontent.google.com/download?id=1amxDhIdETCTEnl6Pu6ZJ9kr_sXowPo_d&export=download&confirm=t'
+          echo '9c3307745bd083f7c325b8aba3b9c8c62e60edac80a5617b6cf6cd2afcde7987  /tmp/translate-diagnostics-sync-payload.tar.gz' | sha256sum -c -
+
+      - name: Apply canonical package state
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf ua-free-translate-diagnostics
+          rm -f releases/ua-free-translate-diagnostics-0.2.12.zip
+          rm -f releases/ua-free-translate-diagnostics-0.2.12.sha256
+          rm -f releases/UA_FREE_HUB_RELEASE_LIBRARY_FINAL_2026-07-30_v2.4.zip
+          rm -f releases/UA_FREE_HUB_RELEASE_LIBRARY_FINAL_2026-07-30_v2.4.zip.sha256
+          rm -f releases/UA_FREE_HUB_RELEASE_LIBRARY_FINAL_2026-07-30_v2.4.manifest.json
+          rm -f releases/UA_FREE_SYNC_REPORT_2026-07-30_v2.4.md
+          tar -xzf /tmp/translate-diagnostics-sync-payload.tar.gz -C .
+
+      - name: Validate plugin and library
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q '^ \* Version: 0.2.13$' ua-free-translate-diagnostics/ua-free-translate-diagnostics.php
+          grep -q '^Stable tag: 0.2.13$' ua-free-translate-diagnostics/readme.txt
+          grep -q '^Tested up to: 7.0$' ua-free-translate-diagnostics/readme.txt
+          grep -q '^Requires at least: 6.2$' ua-free-translate-diagnostics/readme.txt
+          ! grep -R --include='*.php' -n 'load_plugin_textdomain' ua-free-translate-diagnostics
+          find ua-free-translate-diagnostics -name '*.php' -print0 | xargs -0 -n1 php -l
+          python3 - <<'PY'
+          import hashlib, json, pathlib, re, zipfile
+          root = pathlib.Path('.')
+          release = root / 'releases/ua-free-translate-diagnostics-0.2.13.zip'
+          release_sha = hashlib.sha256(release.read_bytes()).hexdigest()
+          assert release_sha == 'ee71bc0cf694bbb391b701672de3561f0969b17b2edeea0b15b202ecf576d5b6'
+          with zipfile.ZipFile(release) as zf:
+              assert zf.testzip() is None
+              names = zf.namelist()
+              assert names and all(n.startswith('ua-free-translate-diagnostics/') for n in names)
+              main = zf.read('ua-free-translate-diagnostics/ua-free-translate-diagnostics.php').decode('utf-8')
+              readme = zf.read('ua-free-translate-diagnostics/readme.txt').decode('utf-8')
+              assert re.search(r'^ \* Version: 0\.2\.13$', main, re.M)
+              assert re.search(r'^Stable tag: 0\.2\.13$', readme, re.M)
+          manifest_path = root / 'releases/UA_FREE_HUB_RELEASE_LIBRARY_FINAL_2026-07-31_v2.5.manifest.json'
+          manifest = json.loads(manifest_path.read_text(encoding='utf-8'))
+          assert manifest['version'] == '2.5'
+          assert manifest['status'] == 'FINAL'
+          assert len(manifest['packages']) == 12
+          diagnostics = next(p for p in manifest['packages'] if p['slug'] == 'ua-free-translate-diagnostics')
+          assert diagnostics['version'] == '0.2.13'
+          assert diagnostics['sha256'] == release_sha
+          library = root / 'releases/UA_FREE_HUB_RELEASE_LIBRARY_FINAL_2026-07-31_v2.5.zip'
+          library_sha = hashlib.sha256(library.read_bytes()).hexdigest()
+          assert library_sha == '42e88ae13c054caadd74b7b3ffc33d9317b03064d9f4a5079574f0aa88fb1ae0'
+          with zipfile.ZipFile(library) as zf:
+              assert zf.testzip() is None
+              embedded = json.loads(zf.read('manifest.json'))
+              assert embedded == manifest
+              for package in embedded['packages']:
+                  data = zf.read(package['file'])
+                  assert hashlib.sha256(data).hexdigest() == package['sha256']
+                  assert len(data) == package['size']
+          PY
+
+      - name: Record synchronization run
+        shell: bash
+        run: printf '%s\n' "$GITHUB_RUN_ID" > releases/UA_FREE_LAST_CANONICAL_SYNC_RUN_ID.txt
+
+      - name: Upload verified release artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ua-free-translate-diagnostics-0.2.13-library-2.5
+          path: |
+            releases/ua-free-translate-diagnostics-0.2.13.zip
+            releases/ua-free-translate-diagnostics-0.2.13.sha256
+            releases/UA_FREE_HUB_RELEASE_LIBRARY_FINAL_2026-07-31_v2.5.zip
+            releases/UA_FREE_HUB_RELEASE_LIBRARY_FINAL_2026-07-31_v2.5.zip.sha256
+            releases/UA_FREE_HUB_RELEASE_LIBRARY_FINAL_2026-07-31_v2.5.manifest.json
+            releases/UA_FREE_SYNC_REPORT_2026-07-31_v2.5.md
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Commit canonical synchronized state
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f .github/workflows/translate-diagnostics-0.2.13-sync.yml
+          git config user.name 'UA FREE Release Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -A
+          git commit -m 'Release Translate Diagnostics 0.2.13 and library 2.5'
+          git push origin HEAD:main
