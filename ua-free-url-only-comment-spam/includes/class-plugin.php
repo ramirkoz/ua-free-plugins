@@ -43,7 +43,6 @@ final class Plugin {
 		}
 		$this->booted = true;
 
-		add_action( 'plugins_loaded', array( $this, 'load_textdomain' ) );
 		add_filter( 'pre_comment_approved', array( $this, 'filter_comment_approval' ), 20, 2 );
 
 		if ( is_admin() ) {
@@ -51,13 +50,6 @@ final class Plugin {
 		}
 	}
 
-	public function load_textdomain(): void {
-		load_plugin_textdomain(
-			'ua-free-url-only-comment-spam',
-			false,
-			dirname( plugin_basename( UAFREE_URL_SPAM_FILE ) ) . '/languages'
-		);
-	}
 
 	/**
 	 * @param mixed               $approved    WordPress approval result.
