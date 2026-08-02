@@ -4,7 +4,7 @@ Donate link: https://uafree.org/plugins/support-development/
 Tags: 404, redirects, broken links, 410, privacy
 Requires at least: 6.2
 Tested up to: 7.0
-Stable tag: 2.0.7
+Stable tag: 2.0.8
 Requires PHP: 8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -40,6 +40,13 @@ No redirect or 410 rule is created automatically. Uninstalling the plugin does n
 
 == Changelog ==
 
+= 2.0.8 =
+* Redesigned the shared UA FREE support panel.
+* Moved the panel into the WordPress admin content area to prevent overlap with the core footer.
+* Added compact wallet rows and accessible copy buttons.
+* Added PayPal developer donations via kozyriev@uafree.org.
+* Plugin-specific functionality is unchanged.
+
 = 2.0.7 =
 * Standardized the canonical product name as UA FREE 404 Guard & URL Intelligence across WordPress, the Suite catalog and release metadata.
 * No logging, redirect or URL-analysis behaviour changed.
@@ -50,6 +57,9 @@ No redirect or 410 rule is created automatically. Uninstalling the plugin does n
 * No custom update checker or UA FREE usage telemetry was added.
 
 == Upgrade Notice ==
+
+= 2.0.8 =
+Shared admin support panel redesign; plugin-specific functionality is unchanged.
 
 = 2.0.7 =
 Canonical product-name synchronization only; functionality is unchanged.
