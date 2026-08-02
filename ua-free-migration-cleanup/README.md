@@ -1,4 +1,4 @@
-# UA FREE Migration & Cleanup 0.8.9
+# UA FREE Migration & Cleanup 0.8.10
 
 A universal, privacy-conscious WordPress environment inventory and migration foundation.
 
