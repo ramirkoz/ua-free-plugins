@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the deterministic UA FREE Plugin Suite v3.0 release library."""
+"""Build the deterministic UA FREE Plugin Suite v3.0 release assets."""
 
 from __future__ import annotations
 
@@ -80,7 +80,8 @@ def main() -> None:
     output.mkdir(parents=True, exist_ok=True)
 
     packages: list[dict[str, object]] = []
-    package_bytes: list[tuple[str, bytes]] = []
+    package_bytes: list[tuple[str, str, bytes]] = []
+    release_checksums: list[tuple[str, str]] = []
 
     for slug, wporg_slug, root_name, name, version in PLUGINS:
         root = repository / root_name
@@ -89,16 +90,28 @@ def main() -> None:
 
         data = build_plugin_zip(root, root_name)
         validate_zip(data, root_name)
-        file_name = f"packages/{slug}-v{version}.zip"
-        package_bytes.append((file_name, data))
+
+        library_file_name = f"packages/{slug}-v{version}.zip"
+        asset_name = f"{slug}-{version}.zip"
+        digest = sha256(data)
+
+        package_bytes.append((library_file_name, asset_name, data))
+        (output / asset_name).write_bytes(data)
+        (output / f"{asset_name}.sha256").write_text(
+            f"{digest}  {asset_name}\n",
+            encoding="utf-8",
+        )
+        release_checksums.append((asset_name, digest))
+
         packages.append(
             {
                 "slug": slug,
                 "wporg_slug": wporg_slug,
                 "name": name,
                 "version": version,
-                "file": file_name,
-                "sha256": sha256(data),
+                "file": library_file_name,
+                "release_asset": asset_name,
+                "sha256": digest,
                 "size": len(data),
             }
         )
@@ -125,8 +138,8 @@ def main() -> None:
     library_path = output / LIBRARY_NAME
     with ZipFile(library_path, "w", ZIP_DEFLATED, compresslevel=9) as archive:
         archive.writestr(zip_info("manifest.json"), manifest_data)
-        for file_name, data in sorted(package_bytes):
-            archive.writestr(zip_info(file_name), data)
+        for library_file_name, _asset_name, data in sorted(package_bytes):
+            archive.writestr(zip_info(library_file_name), data)
 
     with ZipFile(library_path) as archive:
         if archive.testzip() is not None:
@@ -139,12 +152,26 @@ def main() -> None:
             if sha256(data) != package["sha256"] or len(data) != package["size"]:
                 raise RuntimeError(f"Manifest mismatch: {package['slug']}")
 
-    digest = sha256(library_path.read_bytes())
+    library_digest = sha256(library_path.read_bytes())
     checksum_path = output / f"{LIBRARY_NAME}.sha256"
-    checksum_path.write_text(f"{digest}  {LIBRARY_NAME}\n", encoding="utf-8")
+    checksum_path.write_text(
+        f"{library_digest}  {LIBRARY_NAME}\n",
+        encoding="utf-8",
+    )
+
+    release_checksums.append((LIBRARY_NAME, library_digest))
+    (output / "SHA256SUMS.txt").write_text(
+        "".join(
+            f"{digest}  {file_name}\n"
+            for file_name, digest in sorted(release_checksums)
+        ),
+        encoding="utf-8",
+    )
     (output / "manifest.json").write_bytes(manifest_data)
+
     print(f"Built {library_path}")
-    print(f"SHA-256: {digest}")
+    print(f"Built {len(packages)} individual WordPress plugin ZIP files")
+    print(f"Library SHA-256: {library_digest}")
 
 
 if __name__ == "__main__":
