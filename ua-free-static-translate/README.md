@@ -1,4 +1,4 @@
-# UA FREE Static Translate 0.8.6
+# UA FREE Static Translate 0.8.7
 
 ## Language-aware navigation
 
