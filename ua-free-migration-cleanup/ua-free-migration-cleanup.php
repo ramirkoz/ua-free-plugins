@@ -3,7 +3,7 @@
  * Plugin Name: UA FREE Migration & Cleanup
  * Plugin URI: https://uafree.org/ua-free-plugins/#plugin-ua-free-migration-cleanup
  * Description: Controlled snapshots, environment checks, migration and verified cleanup of plugin leftovers.
- * Version: 0.8.9
+ * Version: 0.8.10
  * Author: UA FREE
  * Author URI: https://uafree.org/
  * Text Domain: ua-free-migration-cleanup
@@ -22,11 +22,11 @@ require_once __DIR__ . '/includes/class-ua-free-suite-registry.php';
 \UAFree\Suite\Registry::register( array(
 	'slug' => 'ua-free-migration-cleanup',
 	'name' => 'UA FREE Migration & Cleanup',
-	'version' => '0.8.9',
+	'version' => '0.8.10',
 	'settings_page' => 'ua-free-migration-cleanup',
 ) );
 
-define( 'UAFREE_MC_VERSION', '0.8.9' );
+define( 'UAFREE_MC_VERSION', '0.8.10' );
 define( 'UAFREE_MC_FILE', __FILE__ );
 define( 'UAFREE_MC_DIR', plugin_dir_path( __FILE__ ) );
 define( 'UAFREE_MC_URL', plugin_dir_url( __FILE__ ) );
