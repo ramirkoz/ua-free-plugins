@@ -4,7 +4,7 @@ Donate link: https://uafree.org/plugins/support-development/
 Tags: translation, diagnostics, multilingual, azure, privacy
 Requires at least: 6.2
 Tested up to: 7.0
-Stable tag: 0.2.13
+Stable tag: 0.2.14
 Requires PHP: 8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -43,6 +43,13 @@ Features:
 
 == Changelog ==
 
+= 0.2.14 =
+* Redesigned the shared UA FREE support panel.
+* Moved the panel into the WordPress admin content area to prevent overlap with the core footer.
+* Added compact wallet rows and accessible copy buttons.
+* Added PayPal developer donations via kozyriev@uafree.org.
+* Plugin-specific functionality is unchanged.
+
 = 0.2.13 =
 * Resolved Plugin Check findings for read-only database diagnostics.
 * Added prepared identifier handling and documented intentional live read-only queries.
@@ -56,6 +63,9 @@ Features:
 * No custom update checker or UA FREE usage telemetry was added.
 
 == Upgrade Notice ==
+
+= 0.2.14 =
+Shared admin support panel redesign; plugin-specific functionality is unchanged.
 
 = 0.2.13 =
 Plugin Check compatibility and shared support-block update.
