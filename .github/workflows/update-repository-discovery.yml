@@ -1,0 +1,87 @@
+name: Update repository discovery metadata
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/update-repository-discovery.yml
+
+permissions:
+  contents: write
+
+jobs:
+  update-metadata:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Add searchable repository topics
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          gh api \
+            --method PUT \
+            -H "Accept: application/vnd.github+json" \
+            "/repos/${GH_REPO}/topics" \
+            -f 'names[]=wordpress' \
+            -f 'names[]=wordpress-plugin' \
+            -f 'names[]=wordpress-plugins' \
+            -f 'names[]=privacy' \
+            -f 'names[]=privacy-first' \
+            -f 'names[]=open-source' \
+            -f 'names[]=nonprofit' \
+            -f 'names[]=charity' \
+            -f 'names[]=ukraine' \
+            -f 'names[]=seo' \
+            -f 'names[]=accessibility' \
+            -f 'names[]=migration' \
+            -f 'names[]=consent-management' \
+            -f 'names[]=anti-spam' \
+            -f 'names[]=donations' \
+            -f 'names[]=google-ads' \
+            -f 'names[]=gpl'
+
+          gh api \
+            --method PATCH \
+            -H "Accept: application/vnd.github+json" \
+            "/repos/${GH_REPO}" \
+            -f 'description=12 privacy-first WordPress plugins for migration, SEO, consent, donations, accessibility, Google Ads and spam control. No telemetry. Plugin Check 12/12 PASS.' \
+            -f 'homepage=https://uafree.org/ua-free-plugins/'
+
+      - name: Verify topics and description
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          TOPICS="$(gh api "/repos/${GH_REPO}/topics" --jq '.names | join(" ")')"
+          DESCRIPTION="$(gh api "/repos/${GH_REPO}" --jq '.description')"
+
+          echo "Topics: ${TOPICS}"
+          echo "Description: ${DESCRIPTION}"
+
+          grep -qw wordpress <<<"${TOPICS}"
+          grep -qw wordpress-plugin <<<"${TOPICS}"
+          grep -qw wordpress-plugins <<<"${TOPICS}"
+          grep -qw privacy-first <<<"${TOPICS}"
+          grep -qw nonprofit <<<"${TOPICS}"
+          grep -qw ukraine <<<"${TOPICS}"
+          grep -qw seo <<<"${TOPICS}"
+          grep -qw accessibility <<<"${TOPICS}"
+          grep -qw anti-spam <<<"${TOPICS}"
+          grep -q 'WordPress plugins' <<<"${DESCRIPTION}"
+
+      - name: Remove one-shot workflow
+        run: |
+          set -euo pipefail
+          rm -f .github/workflows/update-repository-discovery.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Complete repository discovery metadata update"
+          git push
