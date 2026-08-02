@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.3.7
+
+- Redesigned the shared UA FREE support panel.
+- Moved the panel into the WordPress admin content area to prevent overlap with the core footer.
+- Added compact wallet rows and accessible copy buttons.
+- Added PayPal developer donations via `kozyriev@uafree.org`.
+- Preserved all plugin-specific functionality.
+
 ## 1.3.6
 
 - Removed redundant URL decoding from the admin notice message and completed Plugin Check sanitization.
