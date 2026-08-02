@@ -1,4 +1,4 @@
-# UA FREE Translate Diagnostics 0.2.13
+# UA FREE Translate Diagnostics 0.2.14
 
 Universal read-only diagnostics for **UA FREE Static Translate**.
 
@@ -31,7 +31,7 @@ A deep hash scan is available only after an explicit administrator action. The d
 - extension filters cannot add fields or replace strings in the exported report;
 - free-text error, message, reason, name and description fields are fingerprinted in the downloadable JSON;
 - a strict export-only privacy pass runs after the constrained filter merge;
-- URLs, domains, filesystem paths, common credentials, email addresses, international IBANs, formatted card-like numbers and cryptocurrency addresses are redacted.
+- URLs, domains, filesystem paths, common credentials, email addresses, international IBANs, formatted card-like numbers and cryptocurrency addresses are redacted;
 - safe database and rewrite version values remain available after privacy filtering.
 
 ## Compatibility
@@ -51,7 +51,6 @@ The plugin originated from the operational needs of a charitable foundation webs
 - Foundation: https://uafree.org/
 - Development support: https://uafree.org/plugins/support-development/
 
+## Release 0.2.14
 
-## Release 0.2.13
-
-Plugin Check compatibility update with prepared identifier queries and the shared responsive UA FREE support block.
+Shared Support Panel v2.1 update with crypto and PayPal developer donations. Plugin-specific diagnostics remain unchanged.
