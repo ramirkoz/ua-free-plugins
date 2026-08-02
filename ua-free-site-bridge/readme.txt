@@ -4,7 +4,7 @@ Donate link: https://uafree.org/plugins/support-development/
 Tags: diagnostics, rest api, automation, googlebot, adsbot
 Requires at least: 6.2
 Tested up to: 7.0
-Stable tag: 0.4.9
+Stable tag: 0.4.10
 Requires PHP: 8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -37,6 +37,13 @@ The public OpenAPI schema is available without authentication. Every data endpoi
 
 == Changelog ==
 
+= 0.4.10 =
+* Redesigned the shared UA FREE support panel.
+* Moved the panel into the WordPress admin content area to prevent overlap with the core footer.
+* Added compact wallet rows and accessible copy buttons.
+* Added PayPal developer donations via kozyriev@uafree.org.
+* Plugin-specific functionality is unchanged.
+
 = 0.4.9 =
 * Resolved Plugin Check findings for packaging, database diagnostics and uninstall cleanup.
 * Removed the auto-update-status field that could be mistaken for a custom updater.
@@ -48,6 +55,9 @@ The public OpenAPI schema is available without authentication. Every data endpoi
 * No custom update checker or UA FREE usage telemetry was added.
 
 == Upgrade Notice ==
+
+= 0.4.10 =
+Shared admin support panel redesign; plugin-specific functionality is unchanged.
 
 = 0.4.9 =
 Plugin Check compatibility update with unchanged read-only API behavior except removal of the auto-update-status field.
