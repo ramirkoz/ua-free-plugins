@@ -5,7 +5,7 @@
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Author URI: https://uafree.org/
  * Plugin URI: https://uafree.org/ua-free-plugins/#plugin-ua-free-404-guard
- * Version: 2.0.7
+ * Version: 2.0.8
  * Author: UA FREE
  * Text Domain: ua-free-404-guard
  * Domain Path: /languages
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'UAFREE_404_VERSION', '2.0.7' );
+define( 'UAFREE_404_VERSION', '2.0.8' );
 define( 'UAFREE_404_FILE', __FILE__ );
 define( 'UAFREE_404_DIR', plugin_dir_path( __FILE__ ) );
 
