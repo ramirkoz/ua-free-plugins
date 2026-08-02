@@ -5,7 +5,7 @@
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Author URI: https://uafree.org/
  * Plugin URI: https://uafree.org/ua-free-plugins/#plugin-ua-free-google-ads-campaign-builder
- * Version: 1.3.6
+ * Version: 1.3.7
  * Author: UA FREE
  * Text Domain: ua-free-google-ads-campaign-builder
  * Domain Path: /languages
@@ -22,11 +22,11 @@ require_once __DIR__ . '/includes/class-ua-free-suite-registry.php';
 \UAFree\Suite\Registry::register( array(
 	'slug' => 'ua-free-google-ads-campaign-builder',
 	'name' => 'UA FREE Google Ads Campaign Builder',
-	'version' => '1.3.6',
+	'version' => '1.3.7',
 	'settings_page' => 'ua-free-google-ads-campaign-builder',
 ) );
 
-define( 'UAFREE_GACB_VERSION', '1.3.6' );
+define( 'UAFREE_GACB_VERSION', '1.3.7' );
 define( 'UAFREE_GACB_FILE', __FILE__ );
 define( 'UAFREE_GACB_DIR', plugin_dir_path( __FILE__ ) );
 
