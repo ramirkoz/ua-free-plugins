@@ -1,86 +1,81 @@
-# UA FREE WordPress Plugins
+# UA FREE WordPress Plugin Suite
 
-Open-source WordPress plugins created by UA FREE.
+A public collection of privacy-conscious WordPress plugins created from real operational work for the UA FREE charitable foundation and released for reuse by other websites.
 
-These plugins were originally developed for the website of the UA FREE charitable foundation to solve real operational tasks: migration, multilingual content, SEO, accessibility, donation analytics, advertising workflows, consent management, diagnostics, moderation and day-to-day site maintenance. They were later cleaned up and packaged as reusable WordPress plugins for other websites.
+## Current public release
 
-## Plugin landing page
+**UA FREE Plugin Suite v3.0** contains 12 independently installable plugins.
 
-Browse the public plugin catalog, read the descriptions and download current releases:
+- Release status: **FINAL**
+- Live WordPress Plugin Check: **12/12 PASS**
+- Shared support interface: **Support Panel v2.1**
+- Update policy: no custom updater or hidden telemetry; WordPress.org updates will be used after directory approval
+- Release package and checksum: [GitHub Releases](https://github.com/ramirkoz/ua-free-plugins/releases/latest)
 
-https://uafree.org/ua-free-plugins/
+## Included plugins
 
-## Plugins
+| Plugin | Version | Purpose |
+|---|---:|---|
+| UA FREE Migration & Cleanup | 0.8.10 | Controlled snapshots, environment checks, migration assistance and verified cleanup of old plugin leftovers. |
+| UA FREE Static Translate | 0.8.7 | Frontend-only static translations that preserve original WordPress content and existing workflows. |
+| UA FREE Translate Diagnostics | 0.2.14 | Read-only configuration, translation-status and troubleshooting diagnostics. |
+| UA FREE SEO Core | 2.0.8 | Lightweight metadata, schema, sitemap, AI-discovery and accessibility support. |
+| UA FREE 404 Guard & URL Intelligence | 2.0.8 | Privacy-safe 404/410 reporting, broken-link analysis and controlled same-site redirects. |
+| UA FREE Site Bridge | 0.4.10 | Secure read-only diagnostics API and controlled same-site HTTP probes. |
+| UA FREE Consent Manager | 0.1.6 | Visitor consent and a local allowlist for optional analytics, advertising and other scripts. |
+| UA FREE Donate Stats & Conversions | 1.2.8 | Local donation-journey and conversion reporting without unnecessary personal-data collection. |
+| UA FREE Google Ads Campaign Builder | 1.3.7 | Reviewable Google Ad Grants and standard Google Ads packages for Google Ads Editor. |
+| UA FREE Copy | 1.0.7 | Accessible copy-to-clipboard actions for links, text blocks and other useful content. |
+| UA FREE URL-Only Comment Spam | 1.0.7 | Moderation of comments that contain only one or more URLs. |
+| UA FREE Suite Control Center | 0.3.13 | Status, navigation, diagnostics and support links for installed UA FREE plugins. |
 
-### UA FREE Migration & Cleanup
-Creates controlled snapshots, checks the WordPress environment, supports migration work and helps remove verified leftovers from old plugins without blind database cleanup.
+## Design principles
 
-### UA FREE Static Translate
-Adds frontend-only static translations while preserving the original WordPress content and avoiding unnecessary changes to existing page-builder, gallery and donation workflows.
-
-### UA FREE Translate Diagnostics
-Provides read-only diagnostics for UA FREE Static Translate, including configuration checks, translation status and troubleshooting information.
-
-### UA FREE SEO Core
-Adds lightweight SEO metadata, schema markup, sitemap integration, AI-discovery support and accessibility diagnostics without requiring a large SEO suite.
-
-### UA FREE 404 Guard & URL Intelligence
-Records privacy-safe 404 and 410 events, helps find broken links and supports controlled same-site redirects without turning every missing URL into an automatic redirect.
-
-### UA FREE Site Bridge
-Provides a secure read-only diagnostics API and controlled same-site HTTP probes for maintenance, automation and technical checks.
-
-### UA FREE Consent Manager
-Manages visitor consent and a local allowlist for optional analytics, advertising and other scripts that should not load before permission is given.
-
-### UA FREE Donate Stats & Conversions
-Tracks donation journeys and conversion events locally, helping charities understand where donors leave the process without collecting unnecessary personal data.
-
-### UA FREE Google Ads Campaign Builder
-Builds reviewable Google Ad Grants and standard Google Ads campaign packages that can be imported into Google Ads Editor.
-
-### UA FREE Copy
-Adds accessible copy-to-clipboard actions for links, text blocks and other useful content without external tracking services.
-
-### UA FREE URL-Only Comment Spam
-Detects and moderates comments that contain only one or more URLs, a common low-effort spam pattern that WordPress otherwise handles poorly.
-
-### UA FREE Suite Control Center
-Shows the status of installed UA FREE plugins and provides one place for navigation, diagnostics and support links across the suite.
+- Each plugin can be installed and used independently.
+- No Suite-wide telemetry, fingerprinting or external usage reporting.
+- No custom update channel that bypasses WordPress.org.
+- No unnecessary cookies or personal-data storage.
+- Administrative actions use WordPress capabilities, nonces and sanitization.
+- Every v3.0 package passed live Plugin Check on the foundation website.
 
 ## Installation
 
-Each plugin is stored in its own folder. For normal WordPress installation, use the ZIP release from the plugin landing page or the WordPress.org Plugin Directory after publication.
+Download the current ZIP packages from the [UA FREE plugin landing page](https://uafree.org/ua-free-plugins/) or use the consolidated library from [GitHub Releases](https://github.com/ramirkoz/ua-free-plugins/releases/latest).
+
+Install individual plugins through **WordPress Admin → Plugins → Add Plugin → Upload Plugin**.
+
+## Shared support panel
+
+All v3.0 plugins include the responsive **UA FREE Support Panel v2.1**. It clearly separates support for the charitable foundation from optional support for ongoing plugin development.
+
+### Support the UA FREE foundation
+
+- [Donate to UA FREE](https://uafree.org/donate/)
+- [About the foundation](https://uafree.org/)
+
+### Support plugin development
+
+Developer donations are separate from donations to the UA FREE charitable foundation.
+
+- **PayPal:** `kozyriev@uafree.org`
+- **PayPal donation page:** [Donate via PayPal](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=kozyriev%40uafree.org&item_name=Support+UA+FREE+plugin+development&currency_code=USD)
+- **BTC:** `bc1q4dn8e7sz2866g7qp1qtshh98j54tvuau5ghuuk`
+- **ETH / USDC ERC-20:** `0x3aE3b23A7BD94b8a65A7E8Ca205A4e29BEF7c229`
+- **USDT TRC-20:** `TYsGyK7K3XB4NPHprf5w8ZodFafxFfDdbP`
+
+Use only the network shown next to each crypto address.
+
+## Release verification
+
+The v3.0 release includes a SHA-256 checksum file. The library contains a manifest with the version, size and SHA-256 value of every embedded plugin package.
+
+The Google Ads Editor import remains a separate functional workflow test and is not part of WordPress Plugin Check.
 
 ## Development background
 
-The suite grew from practical work on the UA FREE foundation website rather than from a theoretical plugin checklist. The public versions keep that experience but remove foundation-specific assumptions wherever possible so the plugins can be used independently on other websites.
+The suite grew from practical work on the UA FREE foundation website rather than from a theoretical plugin checklist. The public versions retain that experience while removing foundation-specific assumptions wherever possible.
 
-## AI-assisted development and testing
-
-Development, review and test preparation were performed with the assistance of OpenAI ChatGPT using the GPT-5.6 Thinking model. Final decisions, release scope and live-site validation remained under human control.
-
-## Support the developer
-
-These details belong to the plugin developer. They are not donation details of the UA FREE charitable foundation.
-
-### PayPal
-
-`kozyriev@uafree.org`
-
-### BTC · Bitcoin
-
-`bc1q4dn8e7sz2866g7qp1qtshh98j54tvuau5ghuuk`
-
-### ETH + USDC · Ethereum ERC-20
-
-`0x3aE3b23A7BD94b8a65A7E8Ca205A4e29BEF7c229`
-
-### USDT · TRON TRC-20
-
-`TYsGyK7K3XB4NPHprf5w8ZodFafxFfDdbP`
-
-Use only the network shown next to each address.
+Development, review and test preparation were assisted by OpenAI ChatGPT using the GPT-5.6 Thinking model. Final scope, release decisions and live-site validation remained under human control.
 
 ## License
 
