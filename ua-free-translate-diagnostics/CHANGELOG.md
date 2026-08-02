@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.14
+
+- Redesigned the shared UA FREE support panel.
+- Moved the panel into the WordPress admin content area to prevent overlap with the core footer.
+- Added compact wallet rows and accessible copy buttons.
+- Added PayPal developer donations via `kozyriev@uafree.org`.
+- Preserved all plugin-specific functionality.
+
 ## 0.2.13
 
 - Resolved Plugin Check findings for dynamic read-only database diagnostics.
