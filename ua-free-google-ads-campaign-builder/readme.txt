@@ -4,7 +4,7 @@ Donate link: https://uafree.org/plugins/support-development/
 Tags: google ads, ad grants, campaigns, keywords, export
 Requires at least: 6.0
 Tested up to: 7.0
-Stable tag: 1.3.6
+Stable tag: 1.3.7
 Requires PHP: 8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -25,6 +25,13 @@ The plugin can be used independently or together with other UA FREE plugins.
 
 == Changelog ==
 
+= 1.3.7 =
+* Redesigned the shared UA FREE support panel.
+* Moved the panel into the WordPress admin content area to prevent overlap with the core footer.
+* Added compact wallet rows and accessible copy buttons.
+* Added PayPal developer donations via kozyriev@uafree.org.
+* Plugin-specific functionality is unchanged.
+
 = 1.3.6 =
 * Removed redundant URL decoding from the admin notice message and completed Plugin Check input sanitization.
 
@@ -38,6 +45,9 @@ The plugin can be used independently or together with other UA FREE plugins.
 * No custom update checker or UA FREE usage telemetry was added.
 
 == Upgrade Notice ==
+
+= 1.3.7 =
+Shared admin support panel redesign; plugin-specific functionality is unchanged.
 
 = 1.3.6 =
 Final Plugin Check cleanup for the admin notice message.
