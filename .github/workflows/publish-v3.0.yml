@@ -1,0 +1,73 @@
+name: Publish UA FREE Plugin Suite v3.0
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/publish-v3.0.yml
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build deterministic release library
+        run: python tools/build-release-library.py --output dist
+
+      - name: Verify checksum
+        working-directory: dist
+        run: sha256sum -c UA_FREE_HUB_RELEASE_LIBRARY_FINAL_2026-08-02_v3.0.zip.sha256
+
+      - name: Publish public GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG="v3.0"
+          ZIP="dist/UA_FREE_HUB_RELEASE_LIBRARY_FINAL_2026-08-02_v3.0.zip"
+          SHA="dist/UA_FREE_HUB_RELEASE_LIBRARY_FINAL_2026-08-02_v3.0.zip.sha256"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$ZIP" "$SHA" --clobber
+            gh release edit "$TAG" \
+              --title "UA FREE Plugin Suite v3.0" \
+              --notes-file releases/v3.0.md
+          else
+            gh release create "$TAG" "$ZIP" "$SHA" \
+              --target main \
+              --title "UA FREE Plugin Suite v3.0" \
+              --notes-file releases/v3.0.md \
+              --latest
+          fi
+
+      - name: Remove temporary files and one-shot workflow
+        run: |
+          rm -f \
+            __probe__.tmp \
+            README_probe.md \
+            DO_NOT_USE.tmp \
+            tmp_ignore \
+            final_tmp \
+            THIS_SHOULD_NOT_EXIST \
+            TEMP_LAST \
+            _temporary_cleanup_marker \
+            _stop \
+            _final_stop \
+            .github/workflows/publish-v3.0.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet || git commit -m "Finalize v3.0 public release"
+          git push
