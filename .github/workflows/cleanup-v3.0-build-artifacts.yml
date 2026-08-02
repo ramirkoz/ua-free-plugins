@@ -1,0 +1,37 @@
+name: Clean v3.0 build artifacts from repository
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/cleanup-v3.0-build-artifacts.yml
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Remove generated release-only files
+        run: |
+          set -euo pipefail
+          rm -rf release-check
+          rm -f dist/SHA256SUMS.txt
+          find dist -maxdepth 1 -type f \
+            \( -name 'ua-free-*.zip' -o -name 'ua-free-*.zip.sha256' \) \
+            -delete
+          rm -f .github/workflows/cleanup-v3.0-build-artifacts.yml
+
+      - name: Commit clean repository state
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Keep v3.0 binaries in GitHub Releases only"
+          git push
