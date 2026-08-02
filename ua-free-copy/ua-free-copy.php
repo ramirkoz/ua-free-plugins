@@ -5,7 +5,7 @@
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Author URI: https://uafree.org/
  * Plugin URI: https://uafree.org/ua-free-plugins/#plugin-ua-free-copy
- * Version: 1.0.6
+ * Version: 1.0.7
  * Author: UA FREE
  * Text Domain: ua-free-copy
  * Domain Path: /languages
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'UAFREE_COPY_VERSION', '1.0.6' );
+define( 'UAFREE_COPY_VERSION', '1.0.7' );
 define( 'UAFREE_COPY_FILE', __FILE__ );
 define( 'UAFREE_COPY_DIR', plugin_dir_path( __FILE__ ) );
 
