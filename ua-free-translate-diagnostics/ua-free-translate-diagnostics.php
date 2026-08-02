@@ -4,7 +4,7 @@
  * Description: Read-only diagnostics for UA FREE Static Translate, created for a charitable foundation website and rebuilt as a universal WordPress tool.
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Plugin URI: https://uafree.org/ua-free-plugins/#plugin-ua-free-translate-diagnostics
- * Version: 0.2.13
+ * Version: 0.2.14
  * Author: UA FREE
  * Author URI: https://uafree.org/
  * Text Domain: ua-free-translate-diagnostics
@@ -22,11 +22,11 @@ require_once __DIR__ . '/includes/class-ua-free-suite-registry.php';
 \UAFree\Suite\Registry::register( array(
 	'slug' => 'ua-free-translate-diagnostics',
 	'name' => 'UA FREE Translate Diagnostics',
-	'version' => '0.2.13',
+	'version' => '0.2.14',
 	'settings_page' => 'ua-free-translate-diagnostics',
 ) );
 
-define( 'UAFREE_TD_VERSION', '0.2.13' );
+define( 'UAFREE_TD_VERSION', '0.2.14' );
 define( 'UAFREE_TD_FILE', __FILE__ );
 define( 'UAFREE_TD_DIR', plugin_dir_path( __FILE__ ) );
 
