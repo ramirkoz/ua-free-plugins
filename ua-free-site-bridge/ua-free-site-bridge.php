@@ -5,7 +5,7 @@
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Author URI: https://uafree.org/
  * Plugin URI: https://uafree.org/ua-free-plugins/#plugin-ua-free-site-bridge
- * Version: 0.4.9
+ * Version: 0.4.10
  * Author: UA FREE
  * Text Domain: ua-free-site-bridge
  * Requires at least: 6.2
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'UAFREE_SITE_BRIDGE_VERSION', '0.4.9' );
+define( 'UAFREE_SITE_BRIDGE_VERSION', '0.4.10' );
 define( 'UAFREE_SITE_BRIDGE_FILE', __FILE__ );
 define( 'UAFREE_SITE_BRIDGE_DIR', plugin_dir_path( __FILE__ ) );
 
