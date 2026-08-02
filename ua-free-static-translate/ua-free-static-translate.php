@@ -5,7 +5,7 @@
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Author URI: https://uafree.org/
  * Plugin URI: https://uafree.org/ua-free-plugins/#plugin-ua-free-static-translate
- * Version: 0.8.6
+ * Version: 0.8.7
  * Author: UA FREE
  * Text Domain: ua-free-static-translate
  * Domain Path: /languages
@@ -22,11 +22,11 @@ require_once __DIR__ . '/includes/class-ua-free-suite-registry.php';
 \UAFree\Suite\Registry::register( array(
 	'slug' => 'ua-free-static-translate',
 	'name' => 'UA FREE Static Translate',
-	'version' => '0.8.6',
+	'version' => '0.8.7',
 	'settings_page' => 'uafree-static-translate-auto',
 ) );
 
-define( 'UAFREE_ST_VERSION', '0.8.6' );
+define( 'UAFREE_ST_VERSION', '0.8.7' );
 define( 'UAFREE_ST_DIR', plugin_dir_path( __FILE__ ) );
 define( 'UAFREE_ST_FILE', __FILE__ );
 
