@@ -4,7 +4,7 @@ Donate link: https://uafree.org/plugins/support-development/
 Tags: migration, cleanup, diagnostics, database, snapshot
 Requires at least: 6.0
 Tested up to: 7.0
-Stable tag: 0.8.9
+Stable tag: 0.8.10
 Requires PHP: 8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -47,6 +47,13 @@ Development support is separate from charitable donations.
 
 == Changelog ==
 
+= 0.8.10 =
+* Redesigned the shared UA FREE support panel.
+* Moved the panel into the WordPress admin content area to prevent overlap with the core footer.
+* Added compact wallet rows and accessible copy buttons.
+* Added PayPal developer donations via kozyriev@uafree.org.
+* Plugin-specific functionality is unchanged.
+
 = 0.8.9 =
 * Replaced variable translation domains with the literal plugin text domain required by Plugin Check.
 * Added nonce validation or documented read-only request handling.
@@ -61,6 +68,9 @@ Development support is separate from charitable donations.
 * No custom update checker or UA FREE usage telemetry was added.
 
 == Upgrade Notice ==
+
+= 0.8.10 =
+Shared admin support panel redesign; plugin-specific functionality is unchanged.
 
 = 0.8.9 =
 Plugin Check compatibility and shared support-block layout update.
