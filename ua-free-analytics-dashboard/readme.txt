@@ -4,7 +4,7 @@ Donate link: https://uafree.org/plugins/support-development/
 Tags: dashboard, diagnostics, plugin suite, status, management
 Requires at least: 6.2
 Tested up to: 7.0
-Stable tag: 0.3.12
+Stable tag: 0.3.13
 Requires PHP: 8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -25,6 +25,13 @@ The plugin can be used independently or together with other UA FREE plugins.
 
 == Changelog ==
 
+= 0.3.13 =
+* Redesigned the shared UA FREE support panel.
+* Moved the panel into the WordPress admin content area to prevent overlap with the core footer.
+* Added compact wallet rows and accessible copy buttons.
+* Added PayPal developer donations via kozyriev@uafree.org.
+* Plugin-specific functionality is unchanged.
+
 = 0.3.12 =
 * Resolved Plugin Check findings for request handling, translations and package contents.
 * Added nonce-protected report-period links.
@@ -37,6 +44,9 @@ The plugin can be used independently or together with other UA FREE plugins.
 * No custom update checker or UA FREE usage telemetry was added.
 
 == Upgrade Notice ==
+
+= 0.3.13 =
+Shared admin support panel redesign; plugin-specific functionality is unchanged.
 
 = 0.3.12 =
 Plugin Check compatibility update with unchanged Control Center functionality.
