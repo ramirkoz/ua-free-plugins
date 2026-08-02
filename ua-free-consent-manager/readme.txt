@@ -4,7 +4,7 @@ Donate link: https://uafree.org/plugins/support-development/
 Tags: consent, privacy, cookies, analytics, advertising
 Requires at least: 6.2
 Tested up to: 7.0
-Stable tag: 0.1.5
+Stable tag: 0.1.6
 Requires PHP: 8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -35,12 +35,22 @@ The plugin does not include GA4, Google Ads, Google Consent Mode v2 or external-
 
 == Changelog ==
 
+= 0.1.6 =
+* Redesigned the shared UA FREE support panel.
+* Moved the panel into the WordPress admin content area to prevent overlap with the core footer.
+* Added compact wallet rows and accessible copy buttons.
+* Added PayPal developer donations via kozyriev@uafree.org.
+* Plugin-specific functionality is unchanged.
+
 = 0.1.5 =
 * Final stable packaging for repository publication and WordPress.org submission.
 * Updated plugin metadata and WordPress compatibility information.
 * No custom update checker or UA FREE usage telemetry was added.
 
 == Upgrade Notice ==
+
+= 0.1.6 =
+Shared admin support panel redesign; plugin-specific functionality is unchanged.
 
 = 0.1.5 =
 Final stable release prepared for repository and WordPress.org distribution.
