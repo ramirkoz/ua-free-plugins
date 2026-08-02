@@ -1,6 +1,12 @@
-# UA FREE SEO Core 2.0.7
+# UA FREE SEO Core 2.0.8
 
 Universal development build of the SEO plugin originally created for a charitable foundation website.
+
+## 2.0.8 changes
+
+- redesigned the shared UA FREE support panel;
+- added PayPal developer donations via `kozyriev@uafree.org`;
+- preserved the existing SEO output, migration safety and privacy behavior.
 
 ## 2.0.7 changes
 
@@ -37,7 +43,6 @@ Universal development build of the SEO plugin originally created for a charitabl
 ## Migration
 
 The public migration workflow will use provider adapters, a snapshot, dry run and explicit confirmation. Site-specific migration from the previous UA FREE build belongs in the private UA FREE Suite Migration Bridge and is not included here.
-
 
 ## 2.0.3 hardening
 
