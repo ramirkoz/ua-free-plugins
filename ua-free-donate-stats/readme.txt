@@ -4,7 +4,7 @@ Donate link: https://uafree.org/plugins/support-development/
 Tags: donations, analytics, conversions, fundraising, privacy
 Requires at least: 6.2
 Tested up to: 7.0
-Stable tag: 1.2.7
+Stable tag: 1.2.8
 Requires PHP: 8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -25,6 +25,13 @@ The plugin can be used independently or together with other UA FREE plugins.
 
 == Changelog ==
 
+= 1.2.8 =
+* Redesigned the shared UA FREE support panel.
+* Moved the panel into the WordPress admin content area to prevent overlap with the core footer.
+* Added compact wallet rows and accessible copy buttons.
+* Added PayPal developer donations via kozyriev@uafree.org.
+* Plugin-specific functionality is unchanged.
+
 = 1.2.7 =
 * Kept the canonical product name UA FREE Donate Stats & Conversions untranslated in the WordPress plugin list.
 * Ukrainian translations inside the plugin remain available.
@@ -44,6 +51,9 @@ The plugin can be used independently or together with other UA FREE plugins.
 * No custom update checker or UA FREE usage telemetry was added.
 
 == Upgrade Notice ==
+
+= 1.2.8 =
+Shared admin support panel redesign; plugin-specific functionality is unchanged.
 
 = 1.2.7 =
 Canonical product-name synchronization only; tracking behaviour and stored data are unchanged.
