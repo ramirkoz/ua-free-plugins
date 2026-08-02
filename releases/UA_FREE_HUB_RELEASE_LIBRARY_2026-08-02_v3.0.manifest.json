@@ -2,7 +2,7 @@
   "format": "UA FREE Hub Release Library",
   "version": "3.0",
   "created": "2026-08-02",
-  "status": "ROLLING — 1 OF 12 SUPPORT PANEL V2.1 UPDATES VERIFIED",
+  "status": "ROLLING — 2 OF 12 SUPPORT PANEL V2.1 UPDATES VERIFIED",
   "packages": [
     {
       "slug": "ua-free-migration-cleanup",
@@ -17,10 +17,10 @@
       "slug": "ua-free-static-translate",
       "wporg_slug": "ua-free-static-translate",
       "name": "UA FREE Static Translate",
-      "version": "0.8.6",
-      "file": "packages/ua-free-static-translate-v0.8.6.zip",
-      "sha256": "eef9199e70a176fd22963b85be4b98dd1b86aa9e08e280aa9ec53d34537dea96",
-      "size": 77264
+      "version": "0.8.7",
+      "file": "packages/ua-free-static-translate-v0.8.7.zip",
+      "sha256": "9bb5e4f0ae662014334536333b4a3ab151820427ba1cc5f2625a301fb7e58216",
+      "size": 79094
     },
     {
       "slug": "ua-free-translate-diagnostics",
@@ -118,6 +118,12 @@
     {
       "slug": "ua-free-migration-cleanup",
       "version": "0.8.10",
+      "plugin_check": "PASS",
+      "live_visual_check": "PASS"
+    },
+    {
+      "slug": "ua-free-static-translate",
+      "version": "0.8.7",
       "plugin_check": "PASS",
       "live_visual_check": "PASS"
     }
