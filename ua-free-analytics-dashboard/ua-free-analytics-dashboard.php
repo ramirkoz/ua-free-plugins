@@ -5,7 +5,7 @@
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Author URI: https://uafree.org/
  * Plugin URI: https://uafree.org/ua-free-plugins/#plugin-ua-free-suite-control-center
- * Version: 0.3.12
+ * Version: 0.3.13
  * Author: UA FREE
  * Text Domain: ua-free-analytics-dashboard
  * Domain Path: /languages
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'UAFREE_ANALYTICS_DASHBOARD_VERSION', '0.3.12' );
+define( 'UAFREE_ANALYTICS_DASHBOARD_VERSION', '0.3.13' );
 define( 'UAFREE_ANALYTICS_DASHBOARD_FILE', __FILE__ );
 define( 'UAFREE_ANALYTICS_DASHBOARD_DIR', plugin_dir_path( __FILE__ ) );
 define( 'UAFREE_ANALYTICS_DASHBOARD_URL', plugin_dir_url( __FILE__ ) );
