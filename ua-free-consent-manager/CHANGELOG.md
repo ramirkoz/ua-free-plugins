@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.7
+
+- Added `UAFreeConsentManager.allows()` and `getStatus()` browser APIs.
+- Added compatibility aliases for local UA FREE integrations.
+- Emits the canonical `uafree:consent-updated` event and preserves the legacy event.
+- Fixed interoperability with UA FREE Donate Stats & Conversions and guarded duplicate browser initialization.
+
 ## 0.1.6
 
 - Redesigned the shared UA FREE support panel.

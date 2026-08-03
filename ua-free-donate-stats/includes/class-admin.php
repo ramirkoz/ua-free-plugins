@@ -155,8 +155,12 @@ final class Admin {
 	 */
 	public static function manager_summary_from( array $summary, array $settings ): array {
 		$enabled = ! empty( $settings['enabled'] );
+		$translated_routes = ! empty( $settings['include_static_translations'] )
+			? Plugin::translated_routes( (array) ( $settings['tracked_page_ids'] ?? array() ) )
+			: array();
 		$tracked_targets = count( (array) ( $settings['tracked_page_ids'] ?? array() ) )
-			+ count( (array) ( $settings['tracked_paths'] ?? array() ) );
+			+ count( (array) ( $settings['tracked_paths'] ?? array() ) )
+			+ count( $translated_routes );
 		$configured = $tracked_targets > 0;
 
 		$sessions = max( 0, (int) ( $summary['sessions'] ?? 0 ) );
@@ -477,7 +481,16 @@ final class Admin {
 	private static function settings_tab(): void {
 		$settings = Plugin::settings();
 		$items = self::trackable_content();
-		$tracked_targets = count( (array) $settings['tracked_page_ids'] ) + count( (array) $settings['tracked_paths'] );
+		$translated_routes = ! empty( $settings['include_static_translations'] )
+			? Plugin::translated_routes( (array) $settings['tracked_page_ids'] )
+			: array();
+		$routes_by_post = array();
+		foreach ( $translated_routes as $route ) {
+			$routes_by_post[ (int) $route['post_id'] ][] = $route;
+		}
+		$tracked_targets = count( (array) $settings['tracked_page_ids'] )
+			+ count( (array) $settings['tracked_paths'] )
+			+ count( $translated_routes );
 		$ready = ! empty( $settings['enabled'] ) && $tracked_targets > 0;
 		?>
 		<section class="uafree-ds-card uafree-ds-setup-status <?php echo $ready ? 'is-ready' : 'is-attention'; ?>">
@@ -508,18 +521,34 @@ final class Admin {
 			<section class="uafree-ds-card">
 				<h2><?php esc_html_e( '2. Де рахувати', 'ua-free-donate-stats' ); ?></h2>
 				<p><?php esc_html_e( 'Позначте сторінку, де люди можуть підтримати вас або перейти до оплати.', 'ua-free-donate-stats' ); ?></p>
+				<label class="uafree-ds-check">
+					<input type="checkbox" name="<?php echo esc_attr( Plugin::OPTION ); ?>[include_static_translations]" value="1" <?php checked( 1, $settings['include_static_translations'] ); ?>>
+					<span><?php esc_html_e( 'Автоматично враховувати всі активні мовні версії UA FREE Static Translate', 'ua-free-donate-stats' ); ?></span>
+				</label>
+				<p class="description"><?php esc_html_e( 'Після збереження мовні маршрути вибраної сторінки з’являться в цьому ж списку та рахуватимуться автоматично.', 'ua-free-donate-stats' ); ?></p>
 				<div class="uafree-ds-scroll-list">
 					<?php if ( empty( $items ) ) : ?>
 						<p><?php esc_html_e( 'No published public content was found.', 'ua-free-donate-stats' ); ?></p>
 					<?php endif; ?>
 					<?php foreach ( $items as $item ) : ?>
-						<label>
+						<label class="uafree-ds-source-route">
 							<input type="checkbox" name="<?php echo esc_attr( Plugin::OPTION ); ?>[tracked_page_ids][]" value="<?php echo esc_attr( (string) $item['id'] ); ?>" <?php checked( in_array( $item['id'], $settings['tracked_page_ids'], true ) ); ?>>
 							<?php echo esc_html( $item['title'] ); ?>
 							<code><?php echo esc_html( $item['type'] . ':' . $item['id'] ); ?></code>
 						</label>
+						<?php foreach ( (array) ( $routes_by_post[ (int) $item['id'] ] ?? array() ) as $route ) : ?>
+							<label class="uafree-ds-generated-route">
+								<input type="checkbox" checked disabled aria-label="<?php echo esc_attr( sprintf( 'Мовний маршрут %s', strtoupper( (string) $route['language'] ) ) ); ?>">
+								<strong><?php echo esc_html( strtoupper( (string) $route['language'] ) ); ?></strong>
+								<?php echo esc_html( $route['title'] ); ?>
+								<code><?php echo esc_html( $route['path'] ); ?></code>
+							</label>
+						<?php endforeach; ?>
 					<?php endforeach; ?>
 				</div>
+				<?php if ( ! empty( $settings['include_static_translations'] ) && empty( Plugin::static_translate_languages() ) ) : ?>
+					<p class="description uafree-ds-warning-text"><?php esc_html_e( 'UA FREE Static Translate не передав активні мовні маршрути. Зараз рахуватимуться лише вибрані сторінки WordPress і ручні шляхи.', 'ua-free-donate-stats' ); ?></p>
+				<?php endif; ?>
 
 				<label class="uafree-ds-field">
 					<span><?php esc_html_e( 'Додаткові локальні шляхи', 'ua-free-donate-stats' ); ?></span>
@@ -629,7 +658,7 @@ final class Admin {
 					<span><?php esc_html_e( 'Consent category', 'ua-free-donate-stats' ); ?></span>
 					<input type="text" name="<?php echo esc_attr( Plugin::OPTION ); ?>[consent_category]" value="<?php echo esc_attr( $settings['consent_category'] ); ?>" class="regular-text code">
 				</label>
-				<p class="description"><?php esc_html_e( 'The future UA FREE Consent Manager can answer whether this category is allowed. Until a compatible manager is present, gated events remain blocked.', 'ua-free-donate-stats' ); ?></p>
+				<p class="description"><?php esc_html_e( 'UA FREE Consent Manager controls this category. With analytics consent, the Google Ads event is sent; without consent, it remains blocked.', 'ua-free-donate-stats' ); ?></p>
 			</section>
 
 			<section class="uafree-ds-card">

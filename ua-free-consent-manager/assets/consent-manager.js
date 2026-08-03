@@ -5,6 +5,25 @@
 		var config = window.UAFreeConsentManager || null;
 		if (!config) return;
 
+		var runtimeKey = '__UAFreeConsentManagerRuntimeV1';
+		var runtime = window[runtimeKey] || {};
+
+		function statusAllows(status, category) {
+			var key = String(category || '').trim().toLowerCase();
+			if (key === 'necessary') return true;
+			if (['analytics', 'advertising', 'external_media'].indexOf(key) === -1) return false;
+			return Boolean(status && status[key] === true);
+		}
+
+		config.getStatus = function () { return readCookie(); };
+		config.allows = function (category) { return statusAllows(readCookie(), category); };
+		window.UAFreeConsent = config;
+		window.uafreeConsentAllows = config.allows;
+
+		if (runtime.initialized) return;
+		runtime.initialized = true;
+		window[runtimeKey] = runtime;
+
 		var root = document.getElementById('uafree-consent');
 		var reopen = document.getElementById('uafree-consent-reopen');
 		if (!root || !reopen) return;
@@ -145,6 +164,7 @@
 		}
 
 		function emit(status) {
+			window.dispatchEvent(new CustomEvent('uafree:consent-updated', { detail: status }));
 			window.dispatchEvent(new CustomEvent('uafree_consent_update', { detail: status }));
 			if (config.debug && window.console && console.info) console.info('[UA FREE Consent Manager] consent updated', status);
 		}

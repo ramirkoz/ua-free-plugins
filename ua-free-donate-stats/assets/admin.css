@@ -177,3 +177,9 @@
 @media(max-width:782px){
  .uafree-ds-copy-row{grid-template-columns:1fr}
 }
+
+.uafree-ds-source-route{font-weight:600}
+.uafree-ds-generated-route{background:#fff;border-left:3px solid #72aee6;margin:4px 0 4px 26px!important;padding:6px 8px}
+.uafree-ds-generated-route strong{display:inline-block;min-width:34px}
+.uafree-ds-generated-route code{word-break:break-all}
+.uafree-ds-warning-text{color:#996800}

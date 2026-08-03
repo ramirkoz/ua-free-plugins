@@ -4,7 +4,7 @@ Donate link: https://uafree.org/plugins/support-development/
 Tags: donations, analytics, conversions, fundraising, privacy
 Requires at least: 6.2
 Tested up to: 7.0
-Stable tag: 1.2.8
+Stable tag: 1.2.10
 Requires PHP: 8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -24,6 +24,17 @@ The plugin can be used independently or together with other UA FREE plugins.
 3. Open the plugin settings or UA FREE Suite Control Center when configuration is required.
 
 == Changelog ==
+
+= 1.2.10 =
+* Added automatic tracking for active UA FREE Static Translate routes linked to selected source pages.
+* Shows generated language routes in the page-selection list after saving.
+* Preserves manual local paths as a separate advanced option.
+
+= 1.2.10 =
+* Fixed Consent Manager browser API compatibility.
+* Sends one Google Ads dataLayer event per payment-provider opening.
+* Prevents page views and internal journey events from triggering the outbound-click conversion.
+* Added page-level duplicate runtime initialization protection.
 
 = 1.2.8 =
 * Redesigned the shared UA FREE support panel.
@@ -51,6 +62,12 @@ The plugin can be used independently or together with other UA FREE plugins.
 * No custom update checker or UA FREE usage telemetry was added.
 
 == Upgrade Notice ==
+
+= 1.2.10 =
+Adds automatic multilingual donation-route discovery and tracking.
+
+= 1.2.10 =
+Fixes consent-gated Google Ads conversion events and prevents overcounting.
 
 = 1.2.8 =
 Shared admin support panel redesign; plugin-specific functionality is unchanged.

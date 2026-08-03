@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.2.10
+
+- Added automatic discovery and tracking of active UA FREE Static Translate routes for selected source pages.
+- Shows generated language routes directly below the selected WordPress page in the settings list.
+- Keeps manually entered local paths separate and preserves existing settings.
+
+## 1.2.9
+
+- Fixed the browser contract with UA FREE Consent Manager.
+- Restricts the Google Ads dataLayer conversion event to `payment_open`.
+- Prevents page views and local journey events from firing the outbound-click conversion.
+- Added a page-level runtime initialization guard and compatible consent-update listeners.
+
 ## 1.2.8
 
 - Redesigned the shared UA FREE support panel.

@@ -10,7 +10,7 @@ Use one plugin, several plugins, or the whole suite. There is no required framew
 
 ## Release status
 
-- Suite release: **3.0**
+- Suite release: **3.1**
 - Public plugins: **12**
 - Live WordPress Plugin Check: **12/12 PASS**
 - Shared interface: **UA FREE Support Panel v2.1**
@@ -23,18 +23,18 @@ Each plugin is independently installable. Download an individual ZIP from the la
 
 | Plugin | Version | Best for | Download |
 |---|---:|---|---|
-| UA FREE Migration & Cleanup | 0.8.10 | Environment checks, controlled snapshots, migration assistance and cleanup of old plugin leftovers. | [ZIP](https://github.com/ramirkoz/ua-free-plugins/releases/download/v3.0/ua-free-migration-cleanup-0.8.10.zip) |
-| UA FREE Static Translate | 0.8.7 | Frontend-only static translations without rewriting original WordPress content. | [ZIP](https://github.com/ramirkoz/ua-free-plugins/releases/download/v3.0/ua-free-static-translate-0.8.7.zip) |
-| UA FREE Translate Diagnostics | 0.2.14 | Read-only translation status, configuration checks and troubleshooting. | [ZIP](https://github.com/ramirkoz/ua-free-plugins/releases/download/v3.0/ua-free-translate-diagnostics-0.2.14.zip) |
-| UA FREE SEO Core | 2.0.8 | Lightweight metadata, schema, sitemap, AI-discovery and accessibility support. | [ZIP](https://github.com/ramirkoz/ua-free-plugins/releases/download/v3.0/ua-free-seo-core-2.0.8.zip) |
-| UA FREE 404 Guard & URL Intelligence | 2.0.8 | Privacy-safe 404/410 reporting, broken-link analysis and controlled same-site redirects. | [ZIP](https://github.com/ramirkoz/ua-free-plugins/releases/download/v3.0/ua-free-404-guard-2.0.8.zip) |
-| UA FREE Site Bridge | 0.4.10 | Secure read-only diagnostics API and controlled same-site HTTP probes. | [ZIP](https://github.com/ramirkoz/ua-free-plugins/releases/download/v3.0/ua-free-site-bridge-0.4.10.zip) |
-| UA FREE Consent Manager | 0.1.6 | Visitor consent and a local allowlist for optional analytics, advertising and other scripts. | [ZIP](https://github.com/ramirkoz/ua-free-plugins/releases/download/v3.0/ua-free-consent-manager-0.1.6.zip) |
-| UA FREE Donate Stats & Conversions | 1.2.8 | Local donation-journey and conversion reporting with limited personal-data collection. | [ZIP](https://github.com/ramirkoz/ua-free-plugins/releases/download/v3.0/ua-free-donate-stats-1.2.8.zip) |
-| UA FREE Google Ads Campaign Builder | 1.3.7 | Reviewable Google Ad Grants and standard Google Ads packages for Google Ads Editor. | [ZIP](https://github.com/ramirkoz/ua-free-plugins/releases/download/v3.0/ua-free-google-ads-campaign-builder-1.3.7.zip) |
-| UA FREE Copy | 1.0.7 | Accessible copy-to-clipboard actions for links, text blocks and useful content. | [ZIP](https://github.com/ramirkoz/ua-free-plugins/releases/download/v3.0/ua-free-copy-1.0.7.zip) |
-| UA FREE URL-Only Comment Spam | 1.0.7 | Moderation of comments containing only one or more URLs. | [ZIP](https://github.com/ramirkoz/ua-free-plugins/releases/download/v3.0/ua-free-url-only-comment-spam-1.0.7.zip) |
-| UA FREE Suite Control Center | 0.3.13 | Status, navigation, diagnostics and support links for installed UA FREE plugins. | [ZIP](https://github.com/ramirkoz/ua-free-plugins/releases/download/v3.0/ua-free-suite-control-center-0.3.13.zip) |
+| UA FREE Migration & Cleanup | 0.8.10 | Environment checks, controlled snapshots, migration assistance and cleanup of old plugin leftovers. | [ZIP](https://github.com/ramirkoz/ua-free-plugins/releases/download/v3.1/ua-free-migration-cleanup-0.8.10.zip) |
+| UA FREE Static Translate | 0.8.7 | Frontend-only static translations without rewriting original WordPress content. | [ZIP](https://github.com/ramirkoz/ua-free-plugins/releases/download/v3.1/ua-free-static-translate-0.8.7.zip) |
+| UA FREE Translate Diagnostics | 0.2.14 | Read-only translation status, configuration checks and troubleshooting. | [ZIP](https://github.com/ramirkoz/ua-free-plugins/releases/download/v3.1/ua-free-translate-diagnostics-0.2.14.zip) |
+| UA FREE SEO Core | 2.0.8 | Lightweight metadata, schema, sitemap, AI-discovery and accessibility support. | [ZIP](https://github.com/ramirkoz/ua-free-plugins/releases/download/v3.1/ua-free-seo-core-2.0.8.zip) |
+| UA FREE 404 Guard & URL Intelligence | 2.0.8 | Privacy-safe 404/410 reporting, broken-link analysis and controlled same-site redirects. | [ZIP](https://github.com/ramirkoz/ua-free-plugins/releases/download/v3.1/ua-free-404-guard-2.0.8.zip) |
+| UA FREE Site Bridge | 0.4.10 | Secure read-only diagnostics API and controlled same-site HTTP probes. | [ZIP](https://github.com/ramirkoz/ua-free-plugins/releases/download/v3.1/ua-free-site-bridge-0.4.10.zip) |
+| UA FREE Consent Manager | 0.1.7 | Visitor consent and a local allowlist for optional analytics, advertising and other scripts. | [ZIP](https://github.com/ramirkoz/ua-free-plugins/releases/download/v3.1/ua-free-consent-manager-0.1.7.zip) |
+| UA FREE Donate Stats & Conversions | 1.2.10 | Local donation-journey and conversion reporting with limited personal-data collection. | [ZIP](https://github.com/ramirkoz/ua-free-plugins/releases/download/v3.1/ua-free-donate-stats-1.2.10.zip) |
+| UA FREE Google Ads Campaign Builder | 1.3.7 | Reviewable Google Ad Grants and standard Google Ads packages for Google Ads Editor. | [ZIP](https://github.com/ramirkoz/ua-free-plugins/releases/download/v3.1/ua-free-google-ads-campaign-builder-1.3.7.zip) |
+| UA FREE Copy | 1.0.7 | Accessible copy-to-clipboard actions for links, text blocks and useful content. | [ZIP](https://github.com/ramirkoz/ua-free-plugins/releases/download/v3.1/ua-free-copy-1.0.7.zip) |
+| UA FREE URL-Only Comment Spam | 1.0.7 | Moderation of comments containing only one or more URLs. | [ZIP](https://github.com/ramirkoz/ua-free-plugins/releases/download/v3.1/ua-free-url-only-comment-spam-1.0.7.zip) |
+| UA FREE Suite Control Center | 0.3.13 | Status, navigation, diagnostics and support links for installed UA FREE plugins. | [ZIP](https://github.com/ramirkoz/ua-free-plugins/releases/download/v3.1/ua-free-suite-control-center-0.3.13.zip) |
 
 ## Install in WordPress
 
@@ -50,14 +50,14 @@ For a manual update, upload the newer ZIP through the same screen and choose **R
 
 The latest release also includes:
 
-- `UA_FREE_HUB_RELEASE_LIBRARY_FINAL_2026-08-02_v3.0.zip`
+- `UA_FREE_HUB_RELEASE_LIBRARY_FINAL_2026-08-03_v3.1.zip`
 - `manifest.json`
 - `SHA256SUMS.txt`
 - Separate SHA-256 files for every downloadable ZIP
 
 The full library is intended for maintainers, archives and bulk distribution. **It is not a WordPress plugin.** Extract it first, then install the individual plugin ZIP files inside it.
 
-The Git tag `v3.0` identifies the complete suite release. Every plugin retains its own version number.
+The Git tag `v3.1` identifies the complete suite release. Every plugin retains its own version number.
 
 ## Privacy and security principles
 
@@ -67,7 +67,7 @@ The Git tag `v3.0` identifies the complete suite release. Every plugin retains i
 - No unnecessary cookies or personal-data storage.
 - Administrative actions use WordPress capabilities, nonces and sanitization.
 - Each plugin can be installed and removed independently.
-- Every v3.0 plugin package passed live WordPress Plugin Check.
+- Every v3.1 plugin package passed live WordPress Plugin Check.
 
 ## Shared support panel
 

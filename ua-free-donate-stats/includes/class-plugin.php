@@ -15,7 +15,7 @@ final class Plugin {
 	public const ROTATE_SECRET_ACTION = 'uafree_donate_stats_rotate_secret';
 	public const RESET_PHRASE = 'DELETE DONATION STATS';
 	public const LAST_CONFIRMATION_OPTION = 'uafree_donate_stats_last_confirmation_at';
-	public const SETTINGS_VERSION = 3;
+	public const SETTINGS_VERSION = 4;
 
 	public static function init(): void {
 		add_action( 'admin_init', array( __CLASS__, 'maybe_upgrade' ) );
@@ -38,6 +38,7 @@ final class Plugin {
 			'session_minutes'     => 30,
 			'tracked_page_ids'    => array(),
 			'tracked_paths'       => array(),
+			'include_static_translations' => 1,
 			'copy_selector'       => '[data-uafree-copy], [class*="copy-this-"]',
 			'donate_selector'     => '[data-uafree-donate]',
 			'payment_selector'    => 'a[data-uafree-payment], .uafree-payment-link',
@@ -119,23 +120,26 @@ final class Plugin {
 		}
 		$current = is_array( $current ) ? $current : array();
 
-		if ( (int) ( $current['settings_version'] ?? 0 ) >= self::SETTINGS_VERSION ) {
+		$previous_settings_version = (int) ( $current['settings_version'] ?? 0 );
+		if ( $previous_settings_version >= self::SETTINGS_VERSION ) {
 			return;
 		}
 
-		/*
-		 * Old data remains readable in the original tables. Site-specific tracked
-		 * pages and paths are intentionally not guessed here. A site migration
-		 * bridge can map them explicitly without shipping one site's assumptions
-		 * to every public installation.
-		 */
 		$migrated = wp_parse_args( $current, self::defaults() );
 		$migrated['settings_version'] = self::SETTINGS_VERSION;
-		$migrated['tracked_page_ids'] = array();
-		$migrated['tracked_paths'] = array();
-		$migrated['data_layer_enabled'] = 0;
-		$migrated['ad_account_mode'] = 'none';
-		$migrated['confirmation_mode'] = 'webhook';
+
+		/*
+		 * The version 3 migration intentionally cleared site-specific routes.
+		 * Later schema upgrades must preserve the administrator's selections.
+		 */
+		if ( $previous_settings_version < 3 ) {
+			$migrated['tracked_page_ids'] = array();
+			$migrated['tracked_paths'] = array();
+			$migrated['data_layer_enabled'] = 0;
+			$migrated['ad_account_mode'] = 'none';
+			$migrated['confirmation_mode'] = 'webhook';
+		}
+
 		if ( empty( $migrated['confirmation_secret'] ) ) {
 			$migrated['confirmation_secret'] = self::new_confirmation_secret();
 		}
@@ -207,6 +211,7 @@ final class Plugin {
 			'session_minutes'      => max( 5, min( 120, absint( $input['session_minutes'] ?? 30 ) ) ),
 			'tracked_page_ids'     => $page_ids,
 			'tracked_paths'        => $paths,
+			'include_static_translations' => empty( $input['include_static_translations'] ) ? 0 : 1,
 			'copy_selector'        => self::sanitize_selector( (string) ( $input['copy_selector'] ?? $defaults['copy_selector'] ), $defaults['copy_selector'] ),
 			'donate_selector'      => self::sanitize_selector( (string) ( $input['donate_selector'] ?? $defaults['donate_selector'] ), $defaults['donate_selector'] ),
 			'payment_selector'     => self::sanitize_selector( (string) ( $input['payment_selector'] ?? $defaults['payment_selector'] ), $defaults['payment_selector'] ),
@@ -223,6 +228,95 @@ final class Plugin {
 		);
 	}
 
+
+
+	/**
+	 * Return active UA FREE Static Translate language slugs.
+	 *
+	 * @return array<int,string>
+	 */
+	public static function static_translate_languages(): array {
+		if ( ! function_exists( 'uafree_static_translate_get_status' ) ) {
+			return array();
+		}
+
+		try {
+			$status = uafree_static_translate_get_status();
+		} catch ( \Throwable $error ) {
+			return array();
+		}
+
+		if ( ! is_array( $status ) || empty( $status['routes_enabled'] ) ) {
+			return array();
+		}
+
+		$source = sanitize_key( (string) ( $status['source_language'] ?? '' ) );
+		$languages = array();
+		foreach ( (array) ( $status['target_languages'] ?? array() ) as $language ) {
+			$slug = sanitize_key( (string) $language );
+			if ( '' !== $slug && $slug !== $source && preg_match( '/^[a-z]{2,3}(?:-[a-z]{2})?$/', $slug ) ) {
+				$languages[] = $slug;
+			}
+		}
+
+		return array_values( array_unique( $languages ) );
+	}
+
+	/**
+	 * Build translated frontend routes for selected source posts.
+	 *
+	 * @param array<int,int|string> $post_ids
+	 * @return array<int,array{post_id:int,language:string,path:string,title:string}>
+	 */
+	public static function translated_routes( array $post_ids ): array {
+		$languages = self::static_translate_languages();
+		if ( empty( $languages ) ) {
+			return array();
+		}
+
+		$home_path = self::normalize_local_path( (string) wp_parse_url( home_url( '/' ), PHP_URL_PATH ) );
+		$result = array();
+
+		foreach ( array_values( array_unique( array_filter( array_map( 'absint', $post_ids ) ) ) ) as $post_id ) {
+			$permalink = get_permalink( $post_id );
+			if ( ! is_string( $permalink ) || '' === $permalink ) {
+				continue;
+			}
+
+			$source_path = self::normalize_local_path( (string) wp_parse_url( $permalink, PHP_URL_PATH ) );
+			$relative = ltrim( $source_path, '/' );
+			if ( '/' !== $home_path && str_starts_with( $source_path, $home_path ) ) {
+				$relative = ltrim( substr( $source_path, strlen( $home_path ) ), '/' );
+			}
+
+			$title = get_the_title( $post_id );
+			$title = is_string( $title ) && '' !== $title ? $title : sprintf( 'Post %d', $post_id );
+
+			foreach ( $languages as $language ) {
+				$prefix = '/' === $home_path ? '/' : $home_path;
+				$path = $prefix . $language . '/';
+				if ( '' !== $relative ) {
+					$path .= ltrim( $relative, '/' );
+				}
+				$path = self::normalize_local_path( $path );
+
+				$result[] = array(
+					'post_id'  => $post_id,
+					'language' => $language,
+					'path'     => $path,
+					'title'    => $title,
+				);
+			}
+		}
+
+		return $result;
+	}
+
+	private static function normalize_local_path( string $path ): string {
+		$path = '/' . ltrim( $path, '/' );
+		$path = (string) preg_replace( '~/+~', '/', $path );
+		return '/' === $path ? '/' : untrailingslashit( $path ) . '/';
+	}
 
 	public static function new_confirmation_secret(): string {
 		try {

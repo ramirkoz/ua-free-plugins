@@ -99,8 +99,22 @@ final class Tracker {
 			}
 		}
 
-		if ( ! $context ) {
+		$path = null;
+		if ( ! $context && ! empty( $settings['include_static_translations'] ) ) {
 			$path = self::request_path();
+			foreach ( Plugin::translated_routes( (array) $settings['tracked_page_ids'] ) as $route ) {
+				if ( self::path_matches( $path, (string) $route['path'] ) ) {
+					$context = array(
+						'key'   => 'post:' . (int) $route['post_id'],
+						'label' => (string) $route['title'] . ' [' . strtoupper( (string) $route['language'] ) . ']',
+					);
+					break;
+				}
+			}
+		}
+
+		if ( ! $context ) {
+			$path = is_string( $path ) ? $path : self::request_path();
 			foreach ( $settings['tracked_paths'] as $pattern ) {
 				if ( self::path_matches( $path, $pattern ) ) {
 					$context = array(

@@ -280,8 +280,8 @@ msgstr "Ідентифікатор браузера зберігається в 
 msgid "The confirmation phrase does not match."
 msgstr "Фраза підтвердження не збігається."
 
-msgid "The future UA FREE Consent Manager can answer whether this category is allowed. Until a compatible manager is present, gated events remain blocked."
-msgstr "Майбутній UA FREE Consent Manager зможе повідомити, чи дозволена ця категорія. Поки сумісного менеджера немає, події, залежні від згоди, залишаються заблокованими."
+msgid "UA FREE Consent Manager controls this category. With analytics consent, the Google Ads event is sent; without consent, it remains blocked."
+msgstr "UA FREE Consent Manager керує цією категорією. За згоди на аналітику подія Google Ads передається, без згоди — залишається заблокованою."
 
 msgid "This plugin began as a small internal tool for a charitable foundation website and was rebuilt as a reusable public component without domain, page ID, payment provider or theme assumptions."
 msgstr "Плагін починався як невеликий внутрішній інструмент для сайту благодійного фонду, а потім був перебудований у повторно використовуваний публічний компонент без прив’язки до домену, ID сторінок, платіжного сервісу чи теми."

@@ -7,6 +7,19 @@
 		return;
 	}
 
+	const RUNTIME_KEY = '__UAFreeDonateStatsRuntimeV1';
+	const runtime = window[RUNTIME_KEY] || {};
+
+	if (runtime.initialized) {
+		return;
+	}
+
+	runtime.initialized = true;
+	runtime.started = false;
+	runtime.lastDataLayerSignature = '';
+	runtime.lastDataLayerAt = 0;
+	window[RUNTIME_KEY] = runtime;
+
 	const STORAGE_KEY = 'uafree_donate_session_v2';
 	const SESSION_MINUTES = Math.max(5, Math.min(120, Number(config.sessionMinutes || 30)));
 	const COPY_PREFIX = 'copy-this-';
@@ -14,6 +27,7 @@
 	let lastEventSignature = '';
 	let lastEventAt = 0;
 	let successReported = false;
+	let lastConsentUpdateAt = 0;
 
 	function randomSessionId() {
 		if (window.crypto && typeof window.crypto.randomUUID === 'function') {
@@ -228,9 +242,24 @@
 			new CustomEvent('uafree:donation-event', { detail })
 		);
 
-		if (!dataLayerAllowed()) {
+		// Google Ads outbound-click conversion must represent one actual payment-provider opening.
+		// Local journey events remain recorded through the REST endpoint and DOM event above.
+		if (eventType !== 'payment_open' || !dataLayerAllowed()) {
 			return;
 		}
+
+		const dataLayerSignature = `${eventType}|${targetKey}`;
+		const dataLayerNow = Date.now();
+
+		if (
+			dataLayerSignature === runtime.lastDataLayerSignature
+			&& dataLayerNow - runtime.lastDataLayerAt < 1500
+		) {
+			return;
+		}
+
+		runtime.lastDataLayerSignature = dataLayerSignature;
+		runtime.lastDataLayerAt = dataLayerNow;
 
 		window.dataLayer = window.dataLayer || [];
 		window.dataLayer.push({
@@ -378,6 +407,11 @@
 	}
 
 	function start() {
+		if (runtime.started) {
+			return;
+		}
+
+		runtime.started = true;
 		send('page_view', 'page');
 
 		document.addEventListener(
@@ -414,12 +448,23 @@
 
 		startSuccessObserver();
 
-		window.addEventListener('uafree:consent-updated', () => {
+		const handleConsentUpdated = () => {
+			const now = Date.now();
+
+			if (now - lastConsentUpdateAt < 100) {
+				return;
+			}
+
+			lastConsentUpdateAt = now;
+
 			if (localAllowed()) {
 				send('page_view', 'consent-granted');
 				detectSuccess();
 			}
-		});
+		};
+
+		window.addEventListener('uafree:consent-updated', handleConsentUpdated);
+		window.addEventListener('uafree_consent_update', handleConsentUpdated);
 	}
 
 	if (document.readyState === 'loading') {

@@ -280,7 +280,7 @@ msgstr ""
 msgid "The confirmation phrase does not match."
 msgstr ""
 
-msgid "The future UA FREE Consent Manager can answer whether this category is allowed. Until a compatible manager is present, gated events remain blocked."
+msgid "UA FREE Consent Manager controls this category. With analytics consent, the Google Ads event is sent; without consent, it remains blocked."
 msgstr ""
 
 msgid "This plugin began as a small internal tool for a charitable foundation website and was rebuilt as a reusable public component without domain, page ID, payment provider or theme assumptions."
