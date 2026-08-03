@@ -113,7 +113,7 @@ jobs:
             name="$(basename "$source" | sed -E 's/-v([0-9])/-\1/')"
             cp "$source" "dist/$name"
           done
-          sha256sum -c dist/UA_FREE_HUB_RELEASE_LIBRARY_FINAL_2026-08-03_v3.1.zip.sha256
+          (cd dist && sha256sum -c UA_FREE_HUB_RELEASE_LIBRARY_FINAL_2026-08-03_v3.1.zip.sha256)
 
       - name: Create or refresh GitHub release v3.1
         env:
