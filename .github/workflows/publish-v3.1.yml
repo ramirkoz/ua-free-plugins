@@ -1,0 +1,133 @@
+name: Publish UA FREE Suite v3.1
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .release-v3.1.trigger
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download exact tested plugin packages
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/uafree-sync
+          curl -L --fail --retry 3 \
+            'https://drive.usercontent.google.com/download?id=1zCAfLfj_NQcZ_6h95scuXwNtnBrQqLM8&export=download&confirm=t' \
+            -o /tmp/uafree-sync/ua-free-consent-manager-0.1.7.zip
+          curl -L --fail --retry 3 \
+            'https://drive.usercontent.google.com/download?id=1WjJntH2uq-upKHgGK3kDt7Qsq4Kkmg_9&export=download&confirm=t' \
+            -o /tmp/uafree-sync/ua-free-donate-stats-1.2.10.zip
+          unzip -t /tmp/uafree-sync/ua-free-consent-manager-0.1.7.zip
+          unzip -t /tmp/uafree-sync/ua-free-donate-stats-1.2.10.zip
+
+      - name: Synchronize plugin source and README
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/uafree-sync/consent /tmp/uafree-sync/donate
+          mkdir -p /tmp/uafree-sync/consent /tmp/uafree-sync/donate
+          unzip -q /tmp/uafree-sync/ua-free-consent-manager-0.1.7.zip -d /tmp/uafree-sync/consent
+          unzip -q /tmp/uafree-sync/ua-free-donate-stats-1.2.10.zip -d /tmp/uafree-sync/donate
+          rm -rf ua-free-consent-manager ua-free-donate-stats
+          cp -a /tmp/uafree-sync/consent/ua-free-consent-manager ./
+          cp -a /tmp/uafree-sync/donate/ua-free-donate-stats ./
+          rm -f .sync-placeholder
+
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('README.md')
+          s = p.read_text(encoding='utf-8')
+          s = s.replace('Suite release: **3.0**', 'Suite release: **3.1**')
+          s = s.replace('/releases/download/v3.0/', '/releases/download/v3.1/')
+          s = s.replace('| UA FREE Consent Manager | 0.1.6 |', '| UA FREE Consent Manager | 0.1.7 |')
+          s = s.replace('ua-free-consent-manager-0.1.6.zip', 'ua-free-consent-manager-0.1.7.zip')
+          s = s.replace('| UA FREE Donate Stats & Conversions | 1.2.8 |', '| UA FREE Donate Stats & Conversions | 1.2.10 |')
+          s = s.replace('ua-free-donate-stats-1.2.8.zip', 'ua-free-donate-stats-1.2.10.zip')
+          s = s.replace('UA_FREE_HUB_RELEASE_LIBRARY_FINAL_2026-08-02_v3.0.zip', 'UA_FREE_HUB_RELEASE_LIBRARY_FINAL_2026-08-03_v3.1.zip')
+          s = s.replace('The Git tag `v3.0` identifies the complete suite release.', 'The Git tag `v3.1` identifies the complete suite release.')
+          s = s.replace('Every v3.0 plugin package passed live WordPress Plugin Check.', 'Every v3.1 plugin package passed live WordPress Plugin Check.')
+          p.write_text(s, encoding='utf-8')
+          PY
+
+          cat > RELEASE_NOTES_v3.1.md <<'MD'
+          # UA FREE WordPress Plugin Suite 3.1
+
+          This maintenance release updates two privacy and conversion components while preserving the other ten verified packages unchanged.
+
+          ## Updated plugins
+
+          - **UA FREE Consent Manager 0.1.7**: stable public consent API and protection against duplicate initialization.
+          - **UA FREE Donate Stats & Conversions 1.2.10**: one Google Ads intent event per payment action, consent-aware dataLayer delivery, and automatic detection of active multilingual donation routes from UA FREE Static Translate.
+
+          ## Verification
+
+          - WordPress Plugin Check: **12/12 PASS**.
+          - Donate multilingual route display and selection: **PASS** on the live site.
+          - ZIP structure, CRC, manifest SHA-256 and package count: **PASS**.
+
+          Google Tag Manager publication remains intentionally deferred until the repository and Hub library synchronization is complete.
+          MD
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m 'Release Consent Manager 0.1.7 and Donate Stats 1.2.10'
+            git push origin HEAD:main
+          fi
+
+      - name: Prepare exact release assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist /tmp/uafree-library
+          curl -L --fail --retry 3 \
+            'https://drive.usercontent.google.com/download?id=1ttLkgQSk0rr7D9w_e2ujqvK18A-WX68k&export=download&confirm=t' \
+            -o dist/UA_FREE_HUB_RELEASE_LIBRARY_FINAL_2026-08-03_v3.1.zip
+          curl -L --fail --retry 3 \
+            'https://drive.usercontent.google.com/download?id=1dal4KhmVQOsZ7VRmDu905Xat8XzpKv77&export=download&confirm=t' \
+            -o dist/UA_FREE_HUB_RELEASE_LIBRARY_FINAL_2026-08-03_v3.1.manifest.json
+          curl -L --fail --retry 3 \
+            'https://drive.usercontent.google.com/download?id=1s3iY80P91Vg_jloculZf-6fhcnpemsFs&export=download&confirm=t' \
+            -o dist/UA_FREE_HUB_RELEASE_LIBRARY_FINAL_2026-08-03_v3.1.zip.sha256
+          curl -L --fail --retry 3 \
+            'https://drive.usercontent.google.com/download?id=1UwKaxVMKehA07qeA0xIqqRnEtm67BNEy&export=download&confirm=t' \
+            -o dist/UA_FREE_SYNC_REPORT_FINAL_2026-08-03_v3.1.md
+
+          unzip -t dist/UA_FREE_HUB_RELEASE_LIBRARY_FINAL_2026-08-03_v3.1.zip
+          unzip -q dist/UA_FREE_HUB_RELEASE_LIBRARY_FINAL_2026-08-03_v3.1.zip -d /tmp/uafree-library
+          for source in /tmp/uafree-library/packages/*.zip; do
+            name="$(basename "$source" | sed -E 's/-v([0-9])/-\1/')"
+            cp "$source" "dist/$name"
+          done
+          sha256sum -c dist/UA_FREE_HUB_RELEASE_LIBRARY_FINAL_2026-08-03_v3.1.zip.sha256
+
+      - name: Create or refresh GitHub release v3.1
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if gh release view v3.1 >/dev/null 2>&1; then
+            gh release upload v3.1 dist/* --clobber
+            gh release edit v3.1 --title 'UA FREE WordPress Plugin Suite 3.1' --notes-file RELEASE_NOTES_v3.1.md
+          else
+            gh release create v3.1 dist/* \
+              --target main \
+              --title 'UA FREE WordPress Plugin Suite 3.1' \
+              --notes-file RELEASE_NOTES_v3.1.md
+          fi
+          gh release view v3.1 --json tagName,name,isDraft,isPrerelease,assets
