@@ -10,29 +10,31 @@ Date: 2026-08-04
 - Plugin header/version match: **PASS**
 - Unsafe paths/traversal: **PASS**
 - Bundled `.po` / `.mo` files: **NONE**
-- Live functional checks: **12/12 PASS** (confirmed on production WordPress)
-- Live WordPress Plugin Check: **12/12 PASS**
-- Locales checked during rollout included Ukrainian, Spanish, German and English fallback; multilingual Consent templates were also validated.
+- Live functional checks for plugin code: **12/12 PASS**
+- Live WordPress Plugin Check before readme-only canonicalization: **12/12 PASS**
+- Canonical WordPress.org-ready ZIP local package checks: **12/12 PASS**
+- Standalone release ZIP = bundle ZIP = WordPress.org set ZIP: **12/12 SHA-256 PASS**
 
 ## Plugin matrix
 
-| Plugin | Version | ZIP SHA-256 | Live | Plugin Check |
+| Plugin | Version | Canonical ZIP SHA-256 | Runtime | Package |
 |---|---:|---|---|---|
-| KOZ Migration & Cleanup | 0.9.3 | `4f2ec223f6c6e0c3281e6fd18fa90ffda170cfba102b0ac3d2a990ce7eaa7010` | PASS | PASS |
-| KOZ Static Translate | 0.9.0 | `f1604cef2d639e51ce28667d07b37cbe7ee545d4e9f5508dc52fa5fe8f063550` | PASS | PASS |
-| KOZ Translate Diagnostics | 0.3.1 | `37c2319907d252467222f4de22f455b4add44c97eb88cebeddd325a828c1af2c` | PASS | PASS |
-| KOZ SEO Core | 2.1.2 | `299ed6fde4d18a9c198a057ac4b3d0c44e8c046cbe3e9c4767fd114f061b2a5c` | PASS | PASS |
-| KOZ 404 Guard & URL Intelligence | 2.1.0 | `999ef8168ec338351ba7c4604d4a63f1c552cea80acfa74d00ce7e452eb0a5ef` | PASS | PASS |
-| KOZ Site Bridge | 0.5.0 | `4e34de99d61eb415e9d8b435a80ef97ff4a4322c4ad2517c9e6b349668fa595a` | PASS | PASS |
-| KOZ Consent Manager | 0.2.7 | `35d3ddd7d6b248d6df4e69c8602e902e8074785ec00ac938f83265c8f5bc18a4` | PASS | PASS |
-| KOZ Donate Stats & Conversions | 1.3.4 | `02d0cf4abac9b91db87a2b3e94f345d1beb29e6d5d3ad57ce96afb3caf9d37be` | PASS | PASS |
-| KOZ Google Ads Campaign Builder | 1.4.3 | `5491587b23d1c51b79e00040c7f31ea93558fa51590aa4767a9d915fa2d575ef` | PASS | PASS |
-| KOZ Copy Actions | 1.1.7 | `6c6527de71e2eb22237340edc80b19b5f4395809cc3f32692139f92d282e095e` | PASS | PASS |
-| KOZ URL-Only Comment Spam | 1.1.5 | `80bf0a9ef0dac86619942f477bd75574bc729598b01169e03b5614a2672202cf` | PASS | PASS |
-| KOZ Suite Control Center | 0.4.0 | `915106d4c1b3a22e4f982537c8e13b529f825ff2f27fb5f0bebb4324a022abcf` | PASS | PASS |
+| KOZ Migration & Cleanup | 0.9.3 | `518a7bb38a66c4b8a89831360be9a7714c707540f161db0465c0fe2a3493f1b4` | PASS | PASS |
+| KOZ Static Translate | 0.9.0 | `5ef6aa4dcce10107cbdd1c5f0a088603d9322e8e95de363030baf85654a55f33` | PASS | PASS |
+| KOZ Translate Diagnostics | 0.3.1 | `d481919a07d2070fffd8346686e44532b110fe79ffe19f59b74c08212b24e229` | PASS | PASS |
+| KOZ SEO Core | 2.1.2 | `324033fb23acc176bdf8c7858e48a490213f83beb9b220c66114f2511abf073a` | PASS | PASS |
+| KOZ 404 Guard & URL Intelligence | 2.1.0 | `4dde0e9c6926d2c5c45b26eeff9509cbba78608978f2ee7d15f3052e913a116f` | PASS | PASS |
+| KOZ Site Bridge | 0.5.0 | `9fd25590de9677fd347d968f94364a23345d60863981f502a377c54c14cb122d` | PASS | PASS |
+| KOZ Consent Manager | 0.2.7 | `e56305578d1c2231a487cf0f8c2aeb6a054ddb57448a011f8d4ff4fa5babdd67` | PASS | PASS |
+| KOZ Donate Stats & Conversions | 1.3.4 | `450ec4d492467db75806857fcf7a6f09841b041d75da5350fa3086d68b093bcb` | PASS | PASS |
+| KOZ Google Ads Campaign Builder | 1.4.3 | `76274b0cb23c70fe263980bcc9517175dd9f7a8ea9404b492cce0c94e7ab6854` | PASS | PASS |
+| KOZ Copy Actions | 1.1.7 | `33469531b2922b7f5604ed435e6ada91a62a2f6bdaa2990b0d4c08c559496704` | PASS | PASS |
+| KOZ URL-Only Comment Spam | 1.1.5 | `e2e9cb9be29c8891243074d53278bf3a8fa7afa2e9e9e29d43ae85b24c2122ce` | PASS | PASS |
+| KOZ Suite Control Center | 0.4.0 | `c450c921d7944ffd3f340ed634e7327269c88e52c859619f9443db93bbb32e57` | PASS | PASS |
 
 ## Notes
 
+- Canonical repack changes are limited to `readme.txt`; PHP, JavaScript, CSS and runtime settings are unchanged.
+- KOZ Copy Actions 1.1.7 should be replaced once on the live site with the canonical ZIP, then Plugin Check rerun on that exact package.
 - Google Ads Editor import remains a separate workflow test outside WordPress Plugin Check.
-- KOZ Static Translate diagnostics reported the production translation queue paused at its configured monthly character limit; this does not affect package integrity.
 - The private release hub is versioned and distributed separately from this 12-plugin public bundle.
