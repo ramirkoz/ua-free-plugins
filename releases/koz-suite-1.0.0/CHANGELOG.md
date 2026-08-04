@@ -26,3 +26,9 @@ Release date: 2026-08-04
 - **KOZ Copy Actions 1.1.7**
 - **KOZ URL-Only Comment Spam 1.1.5**
 - **KOZ Suite Control Center 0.4.0**
+
+## Canonical package correction
+
+- Removed separate `-wordpress-org` plugin ZIP variants.
+- Each plugin now has one canonical file named only `slug-version.zip`.
+- The canonical package includes the WordPress.org-ready `readme.txt` and is reused unchanged in the release library and submission set.
