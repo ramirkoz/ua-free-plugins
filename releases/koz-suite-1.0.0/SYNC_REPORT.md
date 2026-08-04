@@ -10,6 +10,7 @@ Date: 2026-08-04
 - Production Control Center: **12/12 active**
 - KOZ Google Ads Campaign Builder: **1.4.3 confirmed**
 - One canonical ZIP per public plugin: **PASS**
+- KOZ Copy Actions 1.1.7 production/library hash: `33469531b2922b7f5604ed435e6ada91a62a2f6bdaa2990b0d4c08c559496704`
 
 ## Canonical release files
 
