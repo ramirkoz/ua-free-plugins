@@ -4,7 +4,7 @@ A practical collection of 12 privacy-first WordPress plugins created from real p
 
 ## Release status
 
-- Suite release: **1.0.0**
+- Suite release: **1.0.1**
 - Public plugins: **12**
 - Live functional checks: **12/12 PASS**
 - Live WordPress Plugin Check: **12/12 PASS**
@@ -16,7 +16,7 @@ A practical collection of 12 privacy-first WordPress plugins created from real p
 | Plugin | Version | Purpose |
 |---|---:|---|
 | KOZ Migration & Cleanup | 0.9.3 | Environment inventory, migration snapshots and controlled cleanup assistance. |
-| KOZ Static Translate | 0.9.0 | Frontend static translations with language routes, queue and translation memory. |
+| KOZ Static Translate | 0.9.1 | Frontend static translations with language routes, queue, translation memory and protected JSON-LD output. |
 | KOZ Translate Diagnostics | 0.3.1 | Read-only diagnostics and privacy-safe reports for translation infrastructure. |
 | KOZ SEO Core | 2.1.2 | Metadata, schema, hreflang, sitemap and AI-discovery support. |
 | KOZ 404 Guard & URL Intelligence | 2.1.0 | Privacy-safe 404/410 intelligence and controlled same-site redirects. |
@@ -32,9 +32,9 @@ A practical collection of 12 privacy-first WordPress plugins created from real p
 
 Each plugin is independently installable. Upload its ZIP through **WordPress Admin → Plugins → Add New Plugin → Upload Plugin**, activate it and review its settings. During migration, deactivate the corresponding former UA FREE package before activating the KOZ replacement. Existing compatible settings are reused where applicable.
 
-## KOZ Suite Bundle 1.0.0
+## KOZ Suite Bundle 1.0.1
 
-The release library contains `manifest.json`, `SHA256SUMS.txt`, changelog, test report and 12 individual plugin ZIP files. The library itself is **not a WordPress plugin**; extract it before installing individual packages.
+The release library contains `manifest.json`, `SHA256SUMS.txt`, changelog, test report and 12 individual plugin ZIP files. Release 1.0.1 updates KOZ Static Translate to 0.9.1 and protects JSON and JSON-LD script blocks from translated-page HTML reserialization. The library itself is **not a WordPress plugin**; extract it before installing individual packages.
 
 ## Privacy and security
 
