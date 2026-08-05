@@ -1,4 +1,4 @@
-# KOZ Suite 1.0.1 — Synchronization Report
+# KOZ Suite 1.0.1 — Final Synchronization Report
 
 Date: 2026-08-05
 
@@ -20,20 +20,20 @@ Date: 2026-08-05
 - ZIP CRC / canonical roots / traversal checks: **PASS**
 - Bundled `.po` / `.mo` files: **NONE**
 
-## WordPress.org package set
+## Production confirmation
 
-- File: `KOZ_WORDPRESS_ORG_PACKAGES_1.0.1.zip`
-- SHA-256: `365d7810bbf188dde288e3f25b07537a5fb0f2bce9740d56f22e5fe4ccbc36d7`
-- Status: **READY — NOT SENT**
+- KOZ Suite Hub — Private import: **PASS**
+- KOZ Static Translate shown in catalog as version **0.9.1**
+- Catalog checksum prefix: **de43c9e**
+- Production library alignment: **PASS**
 
 ## Synchronization
 
 - Google Drive standalone plugin: **PASS**
 - Google Drive Bundle 1.0.1 and release documents: **PASS**
 - GitHub release metadata `releases/koz-suite-1.0.1/`: **PASS**
-- GitHub README latest-version update: **PASS**
 - Google Sheets version registry: **PASS**
 
-## Next production action
+## Status
 
-Import `KOZ_SUITE_BUNDLE_1.0.1.zip` into KOZ Suite Hub — Private and confirm that the catalog displays KOZ Static Translate 0.9.1 with checksum prefix `de43c9e`.
+KOZ Suite 1.0.1 synchronization is closed.
