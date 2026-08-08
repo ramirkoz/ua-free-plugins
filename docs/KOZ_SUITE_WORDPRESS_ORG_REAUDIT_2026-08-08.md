@@ -30,7 +30,7 @@ The manual WordPress.org review of KOZ Copy Actions introduced a stricter accept
 | KOZ Donate Stats & Conversions | 1.3.4 | 1.3.5 | kozdonate / KOZDONATE | RE-AUDIT REQUIRED | shared KOZ/UA FREE runtime, support/registry identifiers; legacy uafree names |
 | KOZ Google Ads Campaign Builder | 1.4.3 | 1.4.4 | kozgads / KOZGADS | RE-AUDIT REQUIRED | shared KOZ/UA FREE runtime, support/registry identifiers; legacy uafree names |
 | KOZ Copy Actions | 1.1.11 | 1.1.11 | kozcoac / KOZCOAC | PASS / UNDER REVIEW | WordPress.org prefix fix + Plugin Check + live test PASS |
-| KOZ URL-Only Comment Spam | 1.1.5 | 1.1.6 | kozurlspam / KOZURLSPAM | RE-AUDIT REQUIRED | shared KOZ/UA FREE runtime/support identifiers; legacy uafree options/hooks |
+| KOZ URL-Only Comment Spam | 1.1.6 | 1.1.6 | kozurlspam / KOZURLSPAM | PASS | Live functional test + WordPress Plugin Check PASS on UA FREE foundation site; canonical package approved |
 | KOZ Suite Control Center | 0.4.0 | 0.4.1 | kozsuitecc / KOZSUITECC | RE-AUDIT REQUIRED | shared KOZ/UA FREE runtime/support identifiers; suite-wide generic names |
 
 ## Release workflow
@@ -47,4 +47,4 @@ The manual WordPress.org review of KOZ Copy Actions introduced a stricter accept
 
 ## Current gate
 
-KOZ Copy Actions 1.1.11 is the reference implementation and remains frozen while WordPress.org review is pending. The other 11 plugins are not considered current WordPress.org-ready until this re-audit is complete.
+KOZ Copy Actions 1.1.11 is the reference implementation and remains frozen while WordPress.org review is pending. KOZ URL-Only Comment Spam 1.1.6 has also completed the stricter re-audit with live functional and Plugin Check PASS. The remaining 10 plugins are not considered current WordPress.org-ready until this re-audit is complete.
