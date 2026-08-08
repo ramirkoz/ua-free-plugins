@@ -4,12 +4,17 @@ A practical collection of 12 privacy-first WordPress plugins created from real p
 
 ## Release status
 
-- Suite release: **1.0.1**
+- Archived suite baseline: **1.0.1**
 - Public plugins: **12**
-- Live functional checks: **12/12 PASS**
-- Live WordPress Plugin Check: **12/12 PASS**
+- Previous live functional baseline: **12/12 PASS**
+- Previous WordPress Plugin Check baseline: **12/12 PASS**
+- Current WordPress.org manual-review gate: **re-audit in progress**
+- Reference package: **KOZ Copy Actions 1.1.11 — live PASS, Plugin Check PASS, submitted for review**
+- Remaining packages: **11 require plugin-specific prefix/namespace re-audit before being considered WordPress.org-ready**
 - Administration languages: Ukrainian, English, Chinese, Spanish, Arabic, Indonesian, Portuguese, French, Japanese, German and Hindi
 - License: **GPL-2.0-or-later**
+
+See [`docs/KOZ_SUITE_WORDPRESS_ORG_REAUDIT_2026-08-08.md`](docs/KOZ_SUITE_WORDPRESS_ORG_REAUDIT_2026-08-08.md) for the current audit matrix and acceptance rules.
 
 ## Included plugins
 
@@ -34,7 +39,7 @@ Each plugin is independently installable. Upload its ZIP through **WordPress Adm
 
 ## KOZ Suite Bundle 1.0.1
 
-The release library contains `manifest.json`, `SHA256SUMS.txt`, changelog, test report and 12 individual plugin ZIP files. Release 1.0.1 updates KOZ Static Translate to 0.9.1 and protects JSON and JSON-LD script blocks from translated-page HTML reserialization. The library itself is **not a WordPress plugin**; extract it before installing individual packages.
+Bundle 1.0.1 is retained as the last fully live-tested archive baseline. It is no longer labeled as the current WordPress.org-readiness library because the manual review of KOZ Copy Actions introduced a stricter requirement for plugin-specific collision-safe identifiers. A replacement download library will be rebuilt after all 12 plugins pass the new gate.
 
 ## Privacy and security
 
@@ -46,13 +51,13 @@ The release library contains `manifest.json`, `SHA256SUMS.txt`, changelog, test 
 
 ## Project background and ownership
 
-The suite grew from practical work on the UA FREE charitable foundation website, which became the first production and testing environment. The plugins and source code are independently owned and maintained by Tony Kozyriev. UA FREE does not own the plugins.
+The suite grew from practical work on the UA FREE charitable foundation website, which remains the live production and testing environment. The plugins and source code are independently owned and maintained by Tony Kozyriev. UA FREE does not own the plugins.
 
 Developer support and charitable donations are separate. See [SUPPORT.md](SUPPORT.md).
 
 ## WordPress.org
 
-The first pending submission is **KOZ Copy Actions 1.1.11** with the requested slug `koz-copy-actions`. The current package has passed live functional testing and WordPress Plugin Check on the UA FREE foundation site after the requested unique-prefix corrections. Other plugins will be submitted independently after approval and final directory checks.
+The first pending submission is **KOZ Copy Actions 1.1.11** with slug `koz-copy-actions`. It has passed live functional testing and WordPress Plugin Check on the UA FREE foundation site after the requested unique-prefix corrections. The other 11 plugins are being re-audited against the same manual-review standard before submission.
 
 ## Contributing
 
