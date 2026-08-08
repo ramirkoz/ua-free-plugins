@@ -1,0 +1,11 @@
+.kozcoac-copy-target{cursor:pointer}
+.kozcoac-copy-target:focus{outline:2px solid currentColor;outline-offset:3px}
+.kozcoac-copy-icon::after{content:" ⧉";font-size:.82em;opacity:.72}
+.kozcoac-copy-success{filter:brightness(.92)}
+#kozcoac-copy-toast{position:fixed;z-index:2147483000;max-width:min(90vw,440px);padding:10px 14px;border-radius:8px;background:#1d2327;color:#fff;box-shadow:0 4px 20px rgba(0,0,0,.24);font:600 14px/1.35 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;opacity:0;pointer-events:none;transform:translateY(8px);transition:opacity .16s ease,transform .16s ease}
+#kozcoac-copy-toast.is-visible{opacity:1;transform:translateY(0)}
+#kozcoac-copy-toast.is-error{background:#b32d2e}
+.kozcoac-copy-toast-bottom-center{left:50%;bottom:24px;transform:translate(-50%,8px)!important}
+.kozcoac-copy-toast-bottom-center.is-visible{transform:translate(-50%,0)!important}
+.kozcoac-copy-toast-bottom-left{left:24px;bottom:24px}
+.kozcoac-copy-toast-bottom-right{right:24px;bottom:24px}
