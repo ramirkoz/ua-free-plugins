@@ -24,7 +24,7 @@ A practical collection of 12 privacy-first WordPress plugins created from real p
 | KOZ Consent Manager | 0.2.7 | Consent banner, allowlist and multilingual default templates. |
 | KOZ Donate Stats & Conversions | 1.3.4 | Local donation journey and conversion reporting. |
 | KOZ Google Ads Campaign Builder | 1.4.3 | Reviewable Google Ads campaign packages for Google Ads Editor. |
-| KOZ Copy Actions | 1.1.7 | Accessible privacy-safe copy-to-clipboard actions. |
+| KOZ Copy Actions | 1.1.11 | Accessible privacy-safe copy-to-clipboard actions. |
 | KOZ URL-Only Comment Spam | 1.1.5 | Moderation of comments containing only one or more URLs. |
 | KOZ Suite Control Center | 0.4.0 | Status, navigation and diagnostics for the complete KOZ Suite. |
 
@@ -52,7 +52,7 @@ Developer support and charitable donations are separate. See [SUPPORT.md](SUPPOR
 
 ## WordPress.org
 
-The first pending submission is being updated from UA FREE Copy to **KOZ Copy Actions**, with the requested slug `koz-copy-actions`. Other plugins will be submitted independently after approval and final directory checks.
+The first pending submission is **KOZ Copy Actions 1.1.11** with the requested slug `koz-copy-actions`. The current package has passed live functional testing and WordPress Plugin Check on the UA FREE foundation site after the requested unique-prefix corrections. Other plugins will be submitted independently after approval and final directory checks.
 
 ## Contributing
 
