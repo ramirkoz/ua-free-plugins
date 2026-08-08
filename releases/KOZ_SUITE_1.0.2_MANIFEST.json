@@ -1,0 +1,17 @@
+{
+  "format": "KOZ Suite Release Library",
+  "version": "1.0.2",
+  "created": "2026-08-08",
+  "status": "CURRENT — 4/12 STRICT WORDPRESS.ORG RE-AUDIT PASS; 8/12 RE-AUDIT PENDING",
+  "repository": "https://github.com/ramirkoz/ua-free-plugins",
+  "bundle_sha256": "63931ce91def4ee452ba831a79c2bebf8a881df999111fb98c92929d48d9f6cc",
+  "drive_release_folder": "https://drive.google.com/drive/folders/1UpJ2QD91_ZZgmT2MEG335eKT2togRahz",
+  "current_pass_packages": [
+    {"slug":"koz-copy-actions","version":"1.1.11","sha256":"903a7c7766d9157bd75ddfe50e7e8d1b02f9f8224b7a86a3cb8c6448bf369bed"},
+    {"slug":"koz-url-only-comment-spam","version":"1.1.9","sha256":"45b63453669998f2663ce9c66936b9271945e6a1aeec9611b5e88db3e722d9ba"},
+    {"slug":"koz-consent-manager","version":"0.2.10","sha256":"651fc95473010eee0cb6666a5a1361aaae0015096a39f7d7ac7f63ffebbc7f7e"},
+    {"slug":"koz-donate-stats","version":"1.3.9","sha256":"7aebfc42c1d93c74dbd079d9920504d0223fad9ac7498010a52ad9fd3556d22a"}
+  ],
+  "strict_re_audit_pass": 4,
+  "strict_re_audit_pending": 8
+}
