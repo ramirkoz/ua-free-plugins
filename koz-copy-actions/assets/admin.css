@@ -1,0 +1,10 @@
+.kozcoac-admin{max-width:1100px}
+.kozcoac-lead{max-width:860px;font-size:14px;color:#50575e}
+.kozcoac-card{margin:18px 0;padding:18px 20px;border:1px solid #dcdcde;border-radius:10px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.kozcoac-card h2{margin-top:0}
+.kozcoac-support-panel{max-width:1100px;margin:24px 20px 42px 0;padding:18px;border:1px solid #dcdcde;border-radius:10px;background:#fff}
+.kozcoac-support-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.kozcoac-support-grid article{padding:16px;border:1px solid #dcdcde;border-radius:8px;background:#f6f7f7}
+.kozcoac-support-grid h2{margin-top:0}
+.kozcoac-support-grid code{word-break:break-all}
+@media(max-width:780px){.kozcoac-support-grid{grid-template-columns:1fr}}
