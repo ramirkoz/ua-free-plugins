@@ -1,0 +1,12 @@
+{
+  "plugin": "KOZ Migration & Cleanup",
+  "version": "0.9.4",
+  "canonical_prefix": "kozmig / KOZMIG",
+  "sha256": "f8741294a061ad3ec4d21ab30c0733b5d61f125f4c20ff17ccfc035df7264057",
+  "live_functional_test": "PASS",
+  "plugin_check": "PASS",
+  "prefix_reaudit": "PASS",
+  "drive_folder": "https://drive.google.com/drive/folders/1yCQcFjC-sknbqoq44rb9qNYcShXoL_8P",
+  "status": "FULL RE-AUDIT PASS",
+  "confirmed_date": "2026-08-10"
+}
