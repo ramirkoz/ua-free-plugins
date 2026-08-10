@@ -1,6 +1,6 @@
 # KOZ Suite — WordPress.org re-audit
 
-Date: 2026-08-08
+Date: 2026-08-10
 
 ## Mandatory baseline
 
@@ -21,13 +21,13 @@ Date: 2026-08-08
 | KOZ Translate Diagnostics | 0.3.2 | koztdiag / KOZTDIAG | PASS — live + Plugin Check |
 | KOZ SEO Core | 2.1.3 | kozseo / KOZSEO | PASS — live + Plugin Check |
 | KOZ 404 Guard & URL Intelligence | 2.1.1 | koz404 / KOZ404 | PASS — live + Plugin Check |
-| KOZ Site Bridge | 0.5.0 | kozbridge / KOZBRIDGE | RE-AUDIT REQUIRED |
+| KOZ Site Bridge | 0.5.2 | kozbridge / KOZBRIDGE | PASS — live + Plugin Check |
 | KOZ Consent Manager | 0.2.10 | kozconsent / KOZCONSENT | PASS — live + Plugin Check |
 | KOZ Donate Stats & Conversions | 1.3.9 | kozdonate / KOZDONATE | PASS — live + Plugin Check |
-| KOZ Google Ads Campaign Builder | 1.4.4 | kozgads / KOZGADS | PASS — live + Plugin Check |
+| KOZ Google Ads Campaign Builder | 1.4.5 | kozgads / KOZGADS | PASS — live + Plugin Check |
 | KOZ Copy Actions | 1.1.11 | kozcoac / KOZCOAC | PASS — directory review pending |
 | KOZ URL-Only Comment Spam | 1.1.9 | kozurlspam / KOZURLSPAM | PASS — live + Plugin Check |
-| KOZ Suite Control Center | 0.4.0 | kozsuitecc / KOZSUITECC | RE-AUDIT REQUIRED |
+| KOZ Suite Control Center | 0.4.5 | kozsuitecc / KOZSUITECC | PASS — live + Plugin Check |
 
 ## Release workflow
 
@@ -39,8 +39,13 @@ Date: 2026-08-08
 6. Run WordPress Plugin Check until zero errors/warnings.
 7. Run live functional test and verify preserved data/settings.
 8. After PASS, synchronize GitHub, Google Drive package/report and central version registry.
-9. Rebuild the KOZ Suite library metadata after synchronization; pending plugins remain explicitly marked as not current WordPress.org-ready.
+9. Rebuild the KOZ Suite library metadata after synchronization.
 
 ## Current gate
 
-Ten plugins have completed the stricter re-audit: KOZ Copy Actions 1.1.11, KOZ URL-Only Comment Spam 1.1.9, KOZ Consent Manager 0.2.10, KOZ Donate Stats & Conversions 1.3.9, KOZ Google Ads Campaign Builder 1.4.4, KOZ Migration & Cleanup 0.9.4, KOZ Static Translate 0.9.2, KOZ Translate Diagnostics 0.3.2, KOZ SEO Core 2.1.3 and KOZ 404 Guard & URL Intelligence 2.1.1. The remaining two plugins are not considered current WordPress.org-ready until their re-audit is complete.
+All **12/12 public plugins** have completed the strict WordPress.org re-audit, live functional testing and WordPress Plugin Check.
+
+- KOZ Suite Bundle 1.0.3: 12/12 strict PASS.
+- KOZ WordPress.org Package Set 1.0.3: rebuilt from the 12 current canonical packages.
+- KOZ Suite Hub — Private 0.4.2: live + Plugin Check + single-menu integration PASS; private and not part of the public 12-plugin WordPress.org bundle.
+- KOZ Copy Actions 1.1.11 remains under WordPress.org directory review.
