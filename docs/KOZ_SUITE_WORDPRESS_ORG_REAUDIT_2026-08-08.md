@@ -20,7 +20,7 @@ Date: 2026-08-08
 | KOZ Static Translate | 0.9.2 | kozstx / KOZSTX | PASS — live + Plugin Check |
 | KOZ Translate Diagnostics | 0.3.2 | koztdiag / KOZTDIAG | PASS — live + Plugin Check |
 | KOZ SEO Core | 2.1.3 | kozseo / KOZSEO | PASS — live + Plugin Check |
-| KOZ 404 Guard & URL Intelligence | 2.1.0 | koz404 / KOZ404 | RE-AUDIT REQUIRED |
+| KOZ 404 Guard & URL Intelligence | 2.1.1 | koz404 / KOZ404 | PASS — live + Plugin Check |
 | KOZ Site Bridge | 0.5.0 | kozbridge / KOZBRIDGE | RE-AUDIT REQUIRED |
 | KOZ Consent Manager | 0.2.10 | kozconsent / KOZCONSENT | PASS — live + Plugin Check |
 | KOZ Donate Stats & Conversions | 1.3.9 | kozdonate / KOZDONATE | PASS — live + Plugin Check |
@@ -43,4 +43,4 @@ Date: 2026-08-08
 
 ## Current gate
 
-Nine plugins have completed the stricter re-audit: KOZ Copy Actions 1.1.11, KOZ URL-Only Comment Spam 1.1.9, KOZ Consent Manager 0.2.10, KOZ Donate Stats & Conversions 1.3.9, KOZ Google Ads Campaign Builder 1.4.4, KOZ Migration & Cleanup 0.9.4, KOZ Static Translate 0.9.2, KOZ Translate Diagnostics 0.3.2 and KOZ SEO Core 2.1.3. The remaining three plugins are not considered current WordPress.org-ready until their re-audit is complete.
+Ten plugins have completed the stricter re-audit: KOZ Copy Actions 1.1.11, KOZ URL-Only Comment Spam 1.1.9, KOZ Consent Manager 0.2.10, KOZ Donate Stats & Conversions 1.3.9, KOZ Google Ads Campaign Builder 1.4.4, KOZ Migration & Cleanup 0.9.4, KOZ Static Translate 0.9.2, KOZ Translate Diagnostics 0.3.2, KOZ SEO Core 2.1.3 and KOZ 404 Guard & URL Intelligence 2.1.1. The remaining two plugins are not considered current WordPress.org-ready until their re-audit is complete.

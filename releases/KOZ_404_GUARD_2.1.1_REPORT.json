@@ -1,0 +1,13 @@
+{
+  "plugin": "KOZ 404 Guard & URL Intelligence",
+  "version": "2.1.1",
+  "canonical_prefix": "koz404 / KOZ404",
+  "sha256": "419615c9a961f426796a053234b1e8c620b59071ffa6d2e1ea1fc9694d2ab78f",
+  "live_functional_test": "PASS",
+  "plugin_check": "PASS",
+  "migration_smoke": "PASS",
+  "prefix_reaudit": "PASS",
+  "status": "FULL RE-AUDIT PASS",
+  "confirmed_date": "2026-08-10",
+  "drive_folder_id": "1LWVg-9ez00TVItYjPNbH6Fa17PjkSHI6"
+}
