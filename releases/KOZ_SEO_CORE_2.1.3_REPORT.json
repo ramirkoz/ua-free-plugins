@@ -1,0 +1,13 @@
+{
+  "plugin": "KOZ SEO Core",
+  "version": "2.1.3",
+  "canonical_prefix": "kozseo / KOZSEO",
+  "sha256": "b7cf3bcb7538c710d0e14b3ebd47938dd9d785994d4b62e1de6ffb936b3a341d",
+  "live_functional_test": "PASS",
+  "plugin_check": "PASS",
+  "settings_meta_migration": "PASS",
+  "prefix_reaudit": "PASS",
+  "status": "FULL RE-AUDIT PASS",
+  "confirmed_date": "2026-08-10",
+  "drive_folder_id": "1MJUTp3WQqi76F17hjREtq6hXJ8lcb2eW"
+}
