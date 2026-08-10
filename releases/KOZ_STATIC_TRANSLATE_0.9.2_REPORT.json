@@ -1,0 +1,12 @@
+{
+  "plugin": "KOZ Static Translate",
+  "version": "0.9.2",
+  "canonical_prefix": "kozstx / KOZSTX",
+  "sha256": "ea011815d7acc8384e07a8f0e9423d30a65ec593d6a93d58770b41978d5c6ab8",
+  "live_functional_test": "PASS",
+  "plugin_check": "PASS",
+  "migration": "PASS",
+  "prefix_reaudit": "PASS",
+  "status": "FULL RE-AUDIT PASS",
+  "confirmed_date": "2026-08-10"
+}
