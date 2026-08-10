@@ -1,0 +1,13 @@
+{
+  "plugin": "KOZ Translate Diagnostics",
+  "version": "0.3.2",
+  "canonical_prefix": "koztdiag / KOZTDIAG",
+  "sha256": "66eb496fce55239b68e4756b709cd1309fdd0c0bb451c411f043b8c262a2db9b",
+  "live_functional_test": "PASS",
+  "plugin_check": "PASS",
+  "compatibility_smoke": "PASS",
+  "prefix_reaudit": "PASS",
+  "status": "FULL RE-AUDIT PASS",
+  "confirmed_date": "2026-08-10",
+  "drive_folder": "https://drive.google.com/drive/folders/1U9x7NpGHc01c_xhQsg1kwpTXmcthHYcl"
+}
