@@ -24,7 +24,7 @@ Date: 2026-08-08
 | KOZ Site Bridge | 0.5.0 | kozbridge / KOZBRIDGE | RE-AUDIT REQUIRED |
 | KOZ Consent Manager | 0.2.10 | kozconsent / KOZCONSENT | PASS — live + Plugin Check |
 | KOZ Donate Stats & Conversions | 1.3.9 | kozdonate / KOZDONATE | PASS — live + Plugin Check |
-| KOZ Google Ads Campaign Builder | 1.4.3 | kozgads / KOZGADS | RE-AUDIT REQUIRED |
+| KOZ Google Ads Campaign Builder | 1.4.4 | kozgads / KOZGADS | PASS — live + Plugin Check |
 | KOZ Copy Actions | 1.1.11 | kozcoac / KOZCOAC | PASS — directory review pending |
 | KOZ URL-Only Comment Spam | 1.1.9 | kozurlspam / KOZURLSPAM | PASS — live + Plugin Check |
 | KOZ Suite Control Center | 0.4.0 | kozsuitecc / KOZSUITECC | RE-AUDIT REQUIRED |
@@ -43,4 +43,4 @@ Date: 2026-08-08
 
 ## Current gate
 
-Four plugins have completed the stricter re-audit: KOZ Copy Actions 1.1.11, KOZ URL-Only Comment Spam 1.1.9, KOZ Consent Manager 0.2.10 and KOZ Donate Stats & Conversions 1.3.9. The remaining eight plugins are not considered current WordPress.org-ready until their re-audit is complete.
+Five plugins have completed the stricter re-audit: KOZ Copy Actions 1.1.11, KOZ URL-Only Comment Spam 1.1.9, KOZ Consent Manager 0.2.10, KOZ Donate Stats & Conversions 1.3.9 and KOZ Google Ads Campaign Builder 1.4.4. The remaining seven plugins are not considered current WordPress.org-ready until their re-audit is complete.
