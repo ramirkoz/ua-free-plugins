@@ -1,0 +1,20 @@
+{
+  "plugin": "KOZ Consent Manager",
+  "version": "0.2.11",
+  "change": "Optional Google Consent Mode v2 synchronization",
+  "mapping": {
+    "analytics": ["analytics_storage"],
+    "advertising": ["ad_storage", "ad_user_data", "ad_personalization"]
+  },
+  "default_state": "denied until matching consent is granted",
+  "php_lint": "PASS",
+  "js_syntax": "PASS",
+  "json_parse": "PASS",
+  "static_integration_check": "PASS",
+  "zip_integrity": "PASS",
+  "live_test": "PASS",
+  "plugin_check": "PASS",
+  "status": "FULL RE-AUDIT PASS",
+  "confirmed_date": "2026-08-11",
+  "sha256": "29b258dff2642ff07ff23b8753ead70399f9f1743e4a87296bab03353a8f0338"
+}
