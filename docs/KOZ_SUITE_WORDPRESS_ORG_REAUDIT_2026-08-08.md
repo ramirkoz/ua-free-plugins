@@ -1,6 +1,6 @@
 # KOZ Suite — WordPress.org re-audit
 
-Date: 2026-08-10
+Date: 2026-08-11
 
 ## Mandatory baseline
 
@@ -25,8 +25,8 @@ Date: 2026-08-10
 | KOZ Consent Manager | 0.2.10 | kozconsent / KOZCONSENT | PASS — live + Plugin Check |
 | KOZ Donate Stats & Conversions | 1.3.9 | kozdonate / KOZDONATE | PASS — live + Plugin Check |
 | KOZ Google Ads Campaign Builder | 1.4.5 | kozgads / KOZGADS | PASS — live + Plugin Check |
-| KOZ Copy Actions | 1.1.11 | kozcoac / KOZCOAC | PASS — directory review pending |
-| KOZ URL-Only Comment Spam | 1.1.9 | kozurlspam / KOZURLSPAM | PASS — live + Plugin Check |
+| KOZ Copy Actions | 1.1.12 | kozcoac / KOZCOAC | PASS — WordPress.org LIVE |
+| KOZ URL-Only Comment Spam | 1.1.9 | kozurlspam / KOZURLSPAM | PASS — WordPress.org review pending |
 | KOZ Suite Control Center | 0.4.5 | kozsuitecc / KOZSUITECC | PASS — live + Plugin Check |
 
 ## Release workflow
@@ -45,7 +45,8 @@ Date: 2026-08-10
 
 All **12/12 public plugins** have completed the strict WordPress.org re-audit, live functional testing and WordPress Plugin Check.
 
-- KOZ Suite Bundle 1.0.3: 12/12 strict PASS.
-- KOZ WordPress.org Package Set 1.0.3: rebuilt from the 12 current canonical packages.
+- KOZ Suite Bundle 1.0.4: 12/12 strict PASS.
+- KOZ WordPress.org Package Set 1.0.4: rebuilt from the 12 current canonical packages.
 - KOZ Suite Hub — Private 0.4.2: live + Plugin Check + single-menu integration PASS; private and not part of the public 12-plugin WordPress.org bundle.
-- KOZ Copy Actions 1.1.11 remains under WordPress.org directory review.
+- KOZ Copy Actions 1.1.12: WordPress.org LIVE; rollout delay may apply.
+- KOZ URL-Only Comment Spam 1.1.9: WordPress.org REVIEW PENDING.
