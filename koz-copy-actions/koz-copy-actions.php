@@ -27,14 +27,14 @@ require_once KOZCOAC_DIR . 'includes/class-admin.php';
 
 register_activation_hook(
 	__FILE__,
-	array( '\\ramirkz\\kozcopyactions\\KOZCOAC_Plugin', 'activate' )
+	array( '\ramirkz\kozcopyactions\KOZCOAC_Plugin', 'activate' )
 );
 
 add_action(
 	'plugins_loaded',
 	static function (): void {
-		\\ramirkz\\kozcopyactions\\KOZCOAC_Plugin::init();
-		\\ramirkz\\kozcopyactions\\KOZCOAC_Admin::init();
+		\ramirkz\kozcopyactions\KOZCOAC_Plugin::init();
+		\ramirkz\kozcopyactions\KOZCOAC_Admin::init();
 	}
 );
 
@@ -44,10 +44,10 @@ add_action(
  * @return array<string,mixed>
  */
 function kozcoac_get_status(): array {
-	return \\ramirkz\\kozcopyactions\\KOZCOAC_Plugin::public_status();
+	return \ramirkz\kozcopyactions\KOZCOAC_Plugin::public_status();
 }
 
 if ( is_admin() ) {
 	require_once KOZCOAC_DIR . 'includes/class-kozcoac-admin-support-panel.php';
-	\\ramirkz\\kozcopyactions\\KOZCOAC_Admin_Support_Panel::init();
+	\ramirkz\kozcopyactions\KOZCOAC_Admin_Support_Panel::init();
 }
