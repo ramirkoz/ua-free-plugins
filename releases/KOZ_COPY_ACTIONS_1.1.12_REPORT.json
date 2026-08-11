@@ -1,0 +1,13 @@
+{
+  "plugin": "KOZ Copy Actions",
+  "version": "1.1.12",
+  "canonical_prefix": "kozcoac / KOZCOAC",
+  "sha256": "9104547dfa2a325362cf8269bbe559ce2db8bf8ff18220099ac5d38c370c8553",
+  "live_functional_test": "PASS",
+  "plugin_check": "PASS",
+  "strict_re_audit": "PASS",
+  "wordpress_org": "LIVE — version 1.1.12 published; rollout delay may apply",
+  "documentation": "PASS — expanded quick start, examples, FAQ, privacy and multilingual guidance",
+  "status": "FULL PASS / WORDPRESS.ORG LIVE",
+  "confirmed_date": "2026-08-11"
+}
