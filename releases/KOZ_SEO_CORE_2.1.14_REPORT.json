@@ -1,0 +1,14 @@
+{
+  "name": "KOZ SEO Core",
+  "version": "2.1.14",
+  "date": "2026-08-12",
+  "file": "koz-seo-core-2.1.14.zip",
+  "sha256": "80a9081d10226558be2bbaf80ac1704fdc4fff3725d86a6dbafb8bf9b668bdd8",
+  "size": 77996,
+  "zip_integrity": "PASS",
+  "live_functional": "PASS",
+  "plugin_check": "PASS",
+  "wordpress_core_tested": "7.0.4 PASS",
+  "wordpress_org_ready": "YES",
+  "notes": "Gallery/block JSON is stripped from automatic meta and Open Graph descriptions; gallery pages use a clean fallback description."
+}
