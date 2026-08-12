@@ -1,0 +1,14 @@
+{
+  "name": "KOZ Translate Diagnostics",
+  "version": "0.3.5",
+  "date": "2026-08-12",
+  "file": "koz-translate-diagnostics-0.3.5.zip",
+  "sha256": "21910af8135c5f32d2ab4c7a452e048d395976793e7d45c3328480d885733bea",
+  "size": 113325,
+  "zip_integrity": "PASS",
+  "live_functional": "PASS",
+  "plugin_check": "PASS",
+  "wordpress_core_tested": "7.0.4 PASS",
+  "wordpress_org_ready": "YES",
+  "notes": "Effective readiness and memory fallback diagnostics verified on production; deep JSON export no longer triggers a duplicate heavy scan and the prior Cloudflare 524 download timeout is resolved."
+}
