@@ -1,0 +1,13 @@
+{
+  "name": "KOZ SEO Core",
+  "version": "2.1.13",
+  "date": "2026-08-12",
+  "file": "koz-seo-core-2.1.13.zip",
+  "sha256": "cc2e455e42e2a284c82756ff7c20aa05a0595283e232a5917532c0c80e78c313",
+  "size": 76976,
+  "zip_integrity": "PASS",
+  "live_functional": "PASS",
+  "plugin_check": "PASS",
+  "wordpress_org_ready": "YES",
+  "notes": "AI Vision ALT controls remain active after Apply; ALT apply updates page in place without forced reload."
+}

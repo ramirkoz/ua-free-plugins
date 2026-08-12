@@ -4,11 +4,11 @@ A practical collection of 12 privacy-first WordPress plugins created from real p
 
 ## Current release status
 
-- Suite bundle: **1.0.8**
+- Suite bundle: **1.0.9**
 - Public plugins: **12**
 - Live functional baseline: **12/12 PASS**
 - WordPress Plugin Check baseline: **12/12 PASS**
-- Current changed components: **KOZ Static Translate 0.9.7** and **KOZ SEO Core 2.1.12**
+- Current changed component: **KOZ SEO Core 2.1.13**
 - Administration languages: Ukrainian, English, Chinese, Spanish, Arabic, Indonesian, Portuguese, French, Japanese, German and Hindi
 - License: **GPL-2.0-or-later**
 
@@ -19,7 +19,7 @@ A practical collection of 12 privacy-first WordPress plugins created from real p
 | KOZ Migration & Cleanup | 0.9.4 |
 | KOZ Static Translate | 0.9.7 |
 | KOZ Translate Diagnostics | 0.3.2 |
-| KOZ SEO Core | 2.1.12 |
+| KOZ SEO Core | 2.1.13 |
 | KOZ 404 Guard & URL Intelligence | 2.1.1 |
 | KOZ Site Bridge | 0.5.3 |
 | KOZ Consent Manager | 0.2.11 |
@@ -31,7 +31,7 @@ A practical collection of 12 privacy-first WordPress plugins created from real p
 
 ## Current bundle
 
-**KOZ Suite Bundle 1.0.8** contains the 12 verified plugin ZIP packages. Release metadata and SHA-256 checksums are stored under `releases/`.
+**KOZ Suite Bundle 1.0.9** contains the 12 verified plugin ZIP packages. Release metadata and SHA-256 checksums are stored under `releases/`.
 
 ## Privacy and security
 
