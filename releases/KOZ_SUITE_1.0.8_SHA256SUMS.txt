@@ -1,5 +1,5 @@
 f8741294a061ad3ec4d21ab30c0733b5d61f125f4c20ff17ccfc035df7264057  packages/koz-migration-cleanup-0.9.4.zip
-7d1a6bb48908bd1f07a877495e553ce003a481060d0e9a74d6844134a98553f1  packages/koz-static-translate-0.9.7.zip
+6fb6572308103c0285b0a15125d8a9fc0efa8a460384065a49f1b9cd399e15c4  packages/koz-static-translate-0.9.7.zip
 66eb496fce55239b68e4756b709cd1309fdd0c0bb451c411f043b8c262a2db9b  packages/koz-translate-diagnostics-0.3.2.zip
 80969c188cca2e3f5b7ab23bcb65ac428aee3fa83284ee1fafa1f7541173d745  packages/koz-seo-core-2.1.12.zip
 419615c9a961f426796a053234b1e8c620b59071ffa6d2e1ea1fc9694d2ab78f  packages/koz-404-guard-2.1.1.zip
