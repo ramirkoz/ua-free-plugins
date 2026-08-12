@@ -1,0 +1,38 @@
+name: Finalize Site Bridge 0.5.3 sync
+
+on:
+  push:
+    branches:
+      - sync/site-bridge-0.5.3
+    paths:
+      - .sync-finalize.trigger
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: sync/site-bridge-0.5.3
+          fetch-depth: 0
+      - name: Rebuild tested package and synchronize source
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/koz053
+          cat .sync/sitebridge053/chunk-* | base64 -d > /tmp/koz-site-bridge-0.5.3.zip
+          echo 'd18a1178a60e9a858b21c9d2fa85058b29e28ef1b4123e4b957c0c34ff5730d8  /tmp/koz-site-bridge-0.5.3.zip' | sha256sum -c -
+          unzip -t /tmp/koz-site-bridge-0.5.3.zip
+          unzip -q /tmp/koz-site-bridge-0.5.3.zip -d /tmp/koz053
+          rm -rf ua-free-site-bridge koz-site-bridge
+          cp -a /tmp/koz053/koz-site-bridge ./koz-site-bridge
+          rm -rf .sync/sitebridge053
+          rm -f .sync-finalize.trigger .github/workflows/finalize-site-bridge-053.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Synchronize KOZ Site Bridge 0.5.3 and Suite 1.0.7'
+          git push origin HEAD:sync/site-bridge-0.5.3
