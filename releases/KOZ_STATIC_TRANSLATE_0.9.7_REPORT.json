@@ -1,0 +1,13 @@
+{
+  "plugin": "KOZ Static Translate",
+  "version": "0.9.7",
+  "date": "2026-08-12",
+  "file": "koz-static-translate-0.9.7.zip",
+  "sha256": "7d1a6bb48908bd1f07a877495e553ce003a481060d0e9a74d6844134a98553f1",
+  "size": 135732,
+  "zip_integrity": "PASS",
+  "live_functional": "PASS",
+  "plugin_check": "PASS",
+  "status": "CURRENT / production",
+  "summary": "Validated multilingual SEO metadata/H1 fixes for translated routes."
+}
