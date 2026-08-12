@@ -1,0 +1,15 @@
+{
+  "plugin": "KOZ Site Bridge",
+  "slug": "koz-site-bridge",
+  "version": "0.5.3",
+  "date": "2026-08-12",
+  "sha256": "d18a1178a60e9a858b21c9d2fa85058b29e28ef1b4123e4b957c0c34ff5730d8",
+  "size": 113538,
+  "canonical_prefix": "kozbridge / KOZBRIDGE",
+  "local_php_syntax": "PASS",
+  "zip_integrity": "PASS",
+  "bundle_contract": "PASS",
+  "live_functional": "PASS",
+  "plugin_check": "PASS",
+  "status": "CURRENT"
+}
