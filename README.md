@@ -4,11 +4,11 @@ A practical collection of 12 privacy-first WordPress plugins created from real p
 
 ## Current release status
 
-- Suite bundle: **1.0.13**
+- Suite bundle: **1.0.14**
 - Public plugins: **12**
 - Live functional baseline: **12/12 PASS**
 - WordPress Plugin Check baseline: **12/12 PASS**
-- Current changed component: **KOZ Migration & Cleanup 0.9.6**
+- Current changed component: **KOZ Suite Control Center 0.4.6**
 - Administration languages: Ukrainian, English, Chinese, Spanish, Arabic, Indonesian, Portuguese, French, Japanese, German and Hindi
 - License: **GPL-2.0-or-later**
 
@@ -27,11 +27,11 @@ A practical collection of 12 privacy-first WordPress plugins created from real p
 | KOZ Google Ads Campaign Builder | 1.4.5 |
 | KOZ Copy Actions | 1.1.12 |
 | KOZ URL-Only Comment Spam | 1.1.9 |
-| KOZ Suite Control Center | 0.4.5 |
+| KOZ Suite Control Center | 0.4.6 |
 
 ## Current bundle
 
-**KOZ Suite Bundle 1.0.13** contains the 12 verified plugin ZIP packages. Release metadata and SHA-256 checksums are stored under `releases/`.
+**KOZ Suite Bundle 1.0.14** contains the 12 verified plugin ZIP packages. Release metadata and SHA-256 checksums are stored under `releases/`.
 
 ## Privacy and security
 
@@ -40,6 +40,7 @@ A practical collection of 12 privacy-first WordPress plugins created from real p
 - Administrative actions use WordPress capabilities, nonces and sanitization.
 - KOZ Site Bridge remains read-only and limits probes to safe same-site public routes.
 - KOZ SEO Core AI Vision ALT analysis is review-first; analysis does not write ALT values until explicitly approved.
+- KOZ Suite Control Center includes a privacy-safe public exposure scanner; it redacts secret values and detected a private-download token URL exposed on `/koz-plugins/`. Remediation belongs to the private Hub flow.
 
 ## Project background and ownership
 
