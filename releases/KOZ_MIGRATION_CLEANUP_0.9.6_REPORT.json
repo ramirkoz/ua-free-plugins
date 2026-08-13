@@ -1,0 +1,24 @@
+{
+  "plugin": "KOZ Migration & Cleanup",
+  "version": "0.9.6",
+  "date": "2026-08-13",
+  "status": "LIVE FUNCTIONAL PASS; PLUGIN CHECK PASS; WORDPRESS 7.0.4 PASS",
+  "sha256": "ba56a9efa77c2ffddff87b8e1744d15de54f2db083fdd82afeb36aa14bab3976",
+  "size": 65717,
+  "live_snapshot": {
+    "source": "kozmig-environment-20260813-065626.json",
+    "snapshot_sha256": "5aadc78c8712c50c309b861b4437a1986661c7cd433a2c3e5834af23d1cdd130",
+    "placeholder_pages": 3,
+    "legacy_attachment_query_links": 11178,
+    "legacy_attachment_sources": 1399,
+    "old_slug_candidates": 23,
+    "read_only": true,
+    "redirects_created": false,
+    "content_changes": false
+  },
+  "plugin_check": {
+    "status": "PASS",
+    "metadata_fix": "Tested up to: 7.0"
+  },
+  "suite_bundle": "1.0.13"
+}
