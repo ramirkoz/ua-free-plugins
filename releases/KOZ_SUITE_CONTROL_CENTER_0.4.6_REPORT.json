@@ -1,0 +1,19 @@
+{
+  "plugin": "KOZ Suite Control Center",
+  "version": "0.4.6",
+  "validated_on": "2026-08-13",
+  "wordpress": "7.0.4",
+  "live_functional": "PASS",
+  "plugin_check": "PASS",
+  "public_exposure_scan": {
+    "status": "PASS",
+    "pages_checked": 3,
+    "sensitive_url_findings": 1,
+    "finding_path": "/koz-plugins/",
+    "finding_type": "private admin-post download URL exposed publicly",
+    "sensitive_parameters": ["token"],
+    "secret_values_exported": false,
+    "secret_values_stored": false
+  },
+  "security_followup": "Private Hub flow remediation required; scanner is detection-only."
+}
