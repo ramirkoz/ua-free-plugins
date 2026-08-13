@@ -9,6 +9,7 @@ A practical collection of 12 privacy-first WordPress plugins created from real p
 - Live functional baseline: **12/12 PASS**
 - WordPress Plugin Check baseline: **12/12 PASS**
 - Current changed component: **KOZ Suite Control Center 0.4.6**
+- Private Hub: **KOZ Suite Hub — Private 0.4.5** — live + Plugin Check + security remediation PASS
 - Administration languages: Ukrainian, English, Chinese, Spanish, Arabic, Indonesian, Portuguese, French, Japanese, German and Hindi
 - License: **GPL-2.0-or-later**
 
@@ -40,7 +41,8 @@ A practical collection of 12 privacy-first WordPress plugins created from real p
 - Administrative actions use WordPress capabilities, nonces and sanitization.
 - KOZ Site Bridge remains read-only and limits probes to safe same-site public routes.
 - KOZ SEO Core AI Vision ALT analysis is review-first; analysis does not write ALT values until explicitly approved.
-- KOZ Suite Control Center includes a privacy-safe public exposure scanner; it redacts secret values and detected a private-download token URL exposed on `/koz-plugins/`. Remediation belongs to the private Hub flow.
+- KOZ Suite Control Center includes a privacy-safe public exposure scanner that redacts secret values.
+- The `/koz-plugins/` reusable private-download token exposure detected by Control Center 0.4.6 was remediated in **KOZ Suite Hub — Private 0.4.5**; live downloads and Plugin Check passed without exposing token/nonce values.
 
 ## Project background and ownership
 
