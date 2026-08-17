@@ -4,12 +4,13 @@ A practical collection of 12 privacy-first WordPress plugins created from real p
 
 ## Current release status
 
-- Suite bundle: **1.0.17**
+- Suite bundle: **1.0.18**
 - Public plugins: **12**
 - Live functional baseline: **12/12 PASS**
 - WordPress Plugin Check baseline: **12/12 PASS**
-- Current changed component: **KOZ SEO Core 2.1.15**
+- Current changed components: **KOZ Static Translate 0.9.9** and **KOZ Google Ads Campaign Builder 1.4.10**
 - Private Hub: **KOZ Suite Hub — Private 0.4.5** — live + Plugin Check + security remediation PASS
+- WordPress.org: **KOZ Copy Actions 1.1.12 LIVE**; **KOZ URL-Only Comment Spam 1.1.9 APPROVED — SVN publication pending**
 - Administration languages: Ukrainian, English, Chinese, Spanish, Arabic, Indonesian, Portuguese, French, Japanese, German and Hindi
 - License: **GPL-2.0-or-later**
 
@@ -18,21 +19,21 @@ A practical collection of 12 privacy-first WordPress plugins created from real p
 | Plugin | Version |
 |---|---:|
 | KOZ Migration & Cleanup | 0.9.6 |
-| KOZ Static Translate | 0.9.7 |
+| KOZ Static Translate | 0.9.9 |
 | KOZ Translate Diagnostics | 0.3.5 |
 | KOZ SEO Core | 2.1.15 |
 | KOZ 404 Guard & URL Intelligence | 2.1.2 |
 | KOZ Site Bridge | 0.5.3 |
 | KOZ Consent Manager | 0.2.11 |
 | KOZ Donate Stats & Conversions | 1.3.10 |
-| KOZ Google Ads Campaign Builder | 1.4.6 |
+| KOZ Google Ads Campaign Builder | 1.4.10 |
 | KOZ Copy Actions | 1.1.12 |
 | KOZ URL-Only Comment Spam | 1.1.9 |
 | KOZ Suite Control Center | 0.4.6 |
 
 ## Current bundle
 
-**KOZ Suite Bundle 1.0.17** contains the 12 verified plugin ZIP packages. Release metadata and SHA-256 checksums are stored under `releases/`.
+**KOZ Suite Bundle 1.0.18** contains the 12 verified plugin ZIP packages. Release metadata and SHA-256 checksums are stored under `releases/`.
 
 ## Privacy and security
 
@@ -41,11 +42,12 @@ A practical collection of 12 privacy-first WordPress plugins created from real p
 - Administrative actions use WordPress capabilities, nonces and sanitization.
 - KOZ Site Bridge remains read-only and limits probes to safe same-site public routes.
 - KOZ SEO Core AI Vision ALT analysis is review-first; analysis does not write ALT values until explicitly approved.
-- KOZ SEO Core 2.1.15 adds a read-only browser-rendered public-page audit; production scan covered 69 public pages with 0 HTTP errors and surfaced site cleanup work for H1, ALT, empty links and meta descriptions.
-- KOZ Donate Stats 1.3.10 includes a privacy-safe instrumentation diagnostic; server-side export explicitly does not claim browser-runtime verification.
-- KOZ Google Ads Campaign Builder 1.4.6 includes a read-only landing-page preflight; production check passed 4 pages / 8 generated same-site URLs with 0 problems and 0 warnings.
+- KOZ SEO Core 2.1.15 adds a read-only browser-rendered public-page audit.
+- KOZ Donate Stats 1.3.10 includes a privacy-safe instrumentation diagnostic.
+- KOZ Static Translate 0.9.9 adds short render caching; production `/en/about/` recovered from timeout and returns HTTP 200.
+- KOZ Google Ads Campaign Builder 1.4.10 includes live same-site AdsBot checks for canonical About / Reports / Gallery / Partners / Donate routes; production validation passed 14 URLs with 0 problems and 2 slow-response warnings.
 - KOZ Suite Control Center includes a privacy-safe public exposure scanner that redacts secret values.
-- The `/koz-plugins/` reusable private-download token exposure detected by Control Center 0.4.6 was remediated in **KOZ Suite Hub — Private 0.4.5**; live downloads and Plugin Check passed without exposing token/nonce values.
+- The `/koz-plugins/` reusable private-download token exposure detected by Control Center 0.4.6 was remediated in **KOZ Suite Hub — Private 0.4.5**.
 
 ## Project background and ownership
 
