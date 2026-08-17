@@ -1,0 +1,14 @@
+{
+  "name": "KOZ SEO Core",
+  "version": "2.1.19",
+  "date": "2026-08-17",
+  "file": "koz-seo-core-2.1.19.zip",
+  "sha256": "e08084c153b78b283d36284b6b084e088b37b21412aa02cb360f39f7aa074374",
+  "size": 86864,
+  "zip_integrity": "PASS",
+  "live_functional": "PASS",
+  "plugin_check": "PASS",
+  "wordpress_core_tested": "7.0.4 PASS",
+  "wordpress_org_ready": "YES",
+  "notes": "Technical Pagelayer template and user/author sitemap providers are excluded from the public WordPress XML sitemap; author archives remain noindex; valid Simply Gallery content and the reports category remain in sitemap output."
+}
