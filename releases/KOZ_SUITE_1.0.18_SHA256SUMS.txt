@@ -1,0 +1,12 @@
+ba56a9efa77c2ffddff87b8e1744d15de54f2db083fdd82afeb36aa14bab3976  packages/koz-migration-cleanup-0.9.6.zip
+6956bc4b3f542e122f3879bb60711570556920bcd0584288a0cfc82d9aafb6f5  packages/koz-static-translate-0.9.9.zip
+21910af8135c5f32d2ab4c7a452e048d395976793e7d45c3328480d885733bea  packages/koz-translate-diagnostics-0.3.5.zip
+351c5b56aa5675ee46ed2713a067507e46cd970b3e0fa680570894b5e03a1570  packages/koz-seo-core-2.1.15.zip
+1e2dcdb97a33a1a5e9e3238ed16bb9766fbcab80e587a25accc7bd83cae7c8e0  packages/koz-404-guard-2.1.2.zip
+d18a1178a60e9a858b21c9d2fa85058b29e28ef1b4123e4b957c0c34ff5730d8  packages/koz-site-bridge-0.5.3.zip
+29b258dff2642ff07ff23b8753ead70399f9f1743e4a87296bab03353a8f0338  packages/koz-consent-manager-0.2.11.zip
+b0ecff916f98f550515a57cfcee57b7cf681c8eb6b52dfa7ab1360e6c6349e72  packages/koz-donate-stats-1.3.10.zip
+6ca507c83b0bed245682893096779ec2d5dd3e1f4365d7d91d927debf4835114  packages/koz-google-ads-campaign-builder-1.4.12.zip
+9104547dfa2a325362cf8269bbe559ce2db8bf8ff18220099ac5d38c370c8553  packages/koz-copy-actions-1.1.12.zip
+45b63453669998f2663ce9c66936b9271945e6a1aeec9611b5e88db3e722d9ba  packages/koz-url-only-comment-spam-1.1.9.zip
+dde8fff5cd348ccff389204955adc526a56f6848f3eaeca316086b12e53fd272  packages/koz-suite-control-center-0.4.6.zip
