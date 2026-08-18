@@ -1,0 +1,11 @@
+{
+  "plugin": "KOZ SEO Core",
+  "version": "2.1.20",
+  "release_date": "2026-08-18",
+  "sha256": "b31b07b17fdae60087d6994863723ad223b0ba271792cb884074351c410a3818",
+  "size": 85160,
+  "status": "LIVE + PLUGIN CHECK PASS — WP 7.0.4",
+  "wordpress_org_ready": true,
+  "wordpress_org_compliance": "PASS — automatic deactivation of other plugins removed; optional OpenAI AI Vision service disclosed in readme.txt",
+  "regression": "PASS — existing SEO, sitemap cleanup and optional Static Translate integration preserved"
+}
