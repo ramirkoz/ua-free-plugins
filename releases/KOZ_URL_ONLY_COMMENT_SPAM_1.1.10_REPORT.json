@@ -1,0 +1,15 @@
+{
+  "name": "KOZ URL-Only Comment Spam",
+  "version": "1.1.10",
+  "date": "2026-08-18",
+  "file": "koz-url-only-comment-spam-1.1.10.zip",
+  "sha256": "e944dd9dcc4c866761db95b2404b3ea924407169b0d4ac2e05ea3e6e90726a8e",
+  "size": 72511,
+  "zip_integrity": "PASS",
+  "live_functional": "PASS",
+  "plugin_check": "PASS",
+  "wordpress_core_tested": "7.0.4 PASS",
+  "wordpress_org_status": "LIVE",
+  "svn_revision": "3652143",
+  "notes": "Canonical WordPress.org release with trunk, tag 1.1.10 and public assets published successfully."
+}
