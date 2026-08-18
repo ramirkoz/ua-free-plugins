@@ -4,13 +4,13 @@ A practical collection of 12 privacy-first WordPress plugins created from real p
 
 ## Current release status
 
-- Suite bundle: **1.0.21**
+- Suite bundle: **1.0.22**
 - Public plugins: **12**
 - Live functional baseline: **12/12 PASS**
 - WordPress Plugin Check baseline: **12/12 PASS**
-- Current changed component in the released bundle: **KOZ SEO Core 2.1.19**
+- Current changed component in the released bundle: **KOZ URL-Only Comment Spam 1.1.10**
 - Private Hub: **KOZ Suite Hub — Private 0.4.5** — live + Plugin Check + security remediation PASS
-- WordPress.org: **KOZ Copy Actions 1.1.12 LIVE**; **KOZ URL-Only Comment Spam 1.1.9 APPROVED — SVN publication pending**
+- WordPress.org: **KOZ Copy Actions 1.1.13 LIVE**; **KOZ URL-Only Comment Spam 1.1.10 LIVE**
 - Administration languages: Ukrainian, English, Chinese, Spanish, Arabic, Indonesian, Portuguese, French, Japanese, German and Hindi
 - Translation target languages: English, Chinese, Spanish, Arabic, Indonesian, Portuguese, French, Japanese, German and Hindi
 - License: **GPL-2.0-or-later**
@@ -29,12 +29,12 @@ A practical collection of 12 privacy-first WordPress plugins created from real p
 | KOZ Donate Stats & Conversions | 1.3.10 |
 | KOZ Google Ads Campaign Builder | 1.4.12 |
 | KOZ Copy Actions | 1.1.13 |
-| KOZ URL-Only Comment Spam | 1.1.9 |
+| KOZ URL-Only Comment Spam | 1.1.10 |
 | KOZ Suite Control Center | 0.4.6 |
 
 ## Current bundle
 
-**KOZ Suite Bundle 1.0.21** contains the 12 verified plugin ZIP packages. Release metadata and SHA-256 checksums are stored under `releases/`.
+**KOZ Suite Bundle 1.0.22** contains the 12 verified plugin ZIP packages. Release metadata and SHA-256 checksums are stored under `releases/`.
 
 ## Privacy and security
 
@@ -46,7 +46,8 @@ A practical collection of 12 privacy-first WordPress plugins created from real p
 - KOZ SEO Core 2.1.19 remains autonomous, integrates with KOZ Static Translate only when available, and excludes technical Pagelayer template plus user/author providers from the public XML sitemap while retaining valid gallery and reports-category sitemap content.
 - KOZ Static Translate 0.9.16 uses the canonical target-language contract EN/ZH/ES/AR/ID/PT/FR/JA/DE/HI; incomplete translated pages stay noindex/follow with untranslated SEO metadata suppressed until ready.
 - KOZ 404 Guard & URL Intelligence 2.1.3 prevents obsolete language-like 404 routes from being guessed and redirected by WordPress to unrelated Ukrainian pages while preserving explicit redirects and active translated routes.
-- KOZ Copy Actions 1.1.13 aligns its runtime interface and frontend notices with the Suite language standard: UK plus EN/ZH/ES/AR/ID/PT/FR/JA/DE/HI.
+- KOZ Copy Actions 1.1.13 aligns its runtime interface and frontend notices with the Suite language standard: UK plus EN/ZH/ES/AR/ID/PT/FR/JA/DE/HI and is live on WordPress.org.
+- KOZ URL-Only Comment Spam 1.1.10 is live on WordPress.org and preserves the validated comment-spam behavior from the approved package line.
 - KOZ Donate Stats 1.3.10 includes a privacy-safe instrumentation diagnostic.
 - KOZ Google Ads Campaign Builder 1.4.12 preserves automatic landing-page discovery and performs universal live AdsBot checks without site-specific destination slugs or page names.
 - KOZ Suite Control Center includes a privacy-safe public exposure scanner that redacts secret values.
