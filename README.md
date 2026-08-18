@@ -10,7 +10,7 @@ A practical collection of 12 privacy-first WordPress plugins created from real p
 - WordPress Plugin Check baseline: **12/12 PASS**
 - Current changed component in the released bundle: **KOZ SEO Core 2.1.20**
 - Private Hub: **KOZ Suite Hub — Private 0.4.5** — live + Plugin Check + security remediation PASS
-- WordPress.org: **KOZ Copy Actions 1.1.13 LIVE**; **KOZ URL-Only Comment Spam 1.1.10 LIVE**; **KOZ SEO Core 2.1.20 REVIEW READY**
+- WordPress.org: **KOZ Copy Actions 1.1.13 LIVE**; **KOZ URL-Only Comment Spam 1.1.10 LIVE**; **KOZ SEO Core 2.1.20 SUBMITTED — REVIEW PENDING**
 - Administration languages: Ukrainian, English, Chinese, Spanish, Arabic, Indonesian, Portuguese, French, Japanese, German and Hindi
 - Translation target languages: English, Chinese, Spanish, Arabic, Indonesian, Portuguese, French, Japanese, German and Hindi
 - License: **GPL-2.0-or-later**
