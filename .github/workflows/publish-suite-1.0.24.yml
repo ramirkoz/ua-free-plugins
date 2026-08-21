@@ -1,22 +1,22 @@
 name: Publish KOZ Suite 1.0.24
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - .release-suite-1.0.24.trigger
+  pull_request_target:
+    types: [opened, synchronize, reopened]
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
   publish:
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'koz-suite-1.0.24-sync'
     runs-on: ubuntu-latest
     steps:
-      - name: Check out repository
+      - name: Check out trusted main
         uses: actions/checkout@v4
         with:
+          ref: main
           fetch-depth: 0
 
       - name: Mark synchronization start
@@ -31,177 +31,75 @@ jobs:
           git commit -m 'Mark KOZ Suite 1.0.24 synchronization start'
           git push origin HEAD:main
 
-      - name: Download exact verified Suite 1.0.24 bundle
+      - name: Download and verify exact tested bundle
         shell: bash
         run: |
           set -euo pipefail
-          rm -rf /tmp/koz124
-          mkdir -p /tmp/koz124
-          curl -L --fail --retry 3 \
-            'https://drive.usercontent.google.com/download?id=1NdMFxHcOdQUV_03EEBR9tyHX7iinkViX&export=download&confirm=t' \
-            -o /tmp/KOZ_SUITE_BUNDLE_1.0.24.zip
+          rm -rf /tmp/koz124 /tmp/koz124-release
+          mkdir -p /tmp/koz124 /tmp/koz124-release
+          curl -L --fail --retry 3 'https://drive.usercontent.google.com/download?id=1NdMFxHcOdQUV_03EEBR9tyHX7iinkViX&export=download&confirm=t' -o /tmp/KOZ_SUITE_BUNDLE_1.0.24.zip
           echo 'b7768143bbe519c8caefab440894a05c0854392021c139026408d3bd9bb8ff9d  /tmp/KOZ_SUITE_BUNDLE_1.0.24.zip' | sha256sum -c -
-          unzip -t /tmp/KOZ_SUITE_BUNDLE_1.0.24.zip
+          unzip -t /tmp/KOZ_SUITE_BUNDLE_1.0.24.zip >/dev/null
           unzip -q /tmp/KOZ_SUITE_BUNDLE_1.0.24.zip -d /tmp/koz124
           (cd /tmp/koz124 && sha256sum -c SHA256SUMS.txt)
 
-          printf '%s\n' 'Verified Drive bundle downloaded and all package SHA-256 checks passed.' > sync/KOZ_SUITE_1.0.24_BUNDLE_OK.txt
-          git add sync/KOZ_SUITE_1.0.24_BUNDLE_OK.txt
-          git commit -m 'Verify KOZ Suite 1.0.24 release bundle'
-          git push origin HEAD:main
-
-      - name: Synchronize exact tested plugin source
+      - name: Synchronize exact public source
         shell: bash
         run: |
           set -euo pipefail
           python3 - <<'PY'
           from pathlib import Path, PurePosixPath
-          import shutil
-          import zipfile
+          import shutil, zipfile
 
-          root = Path('.')
-          source = Path('/tmp/koz124')
-          expected = {
-              'koz-migration-cleanup': '0.9.7',
-              'koz-static-translate': '0.9.17',
-              'koz-translate-diagnostics': '0.3.6',
-              'koz-seo-core': '2.1.22',
-              'koz-404-guard': '2.1.4',
-              'koz-site-bridge': '0.5.6',
-              'koz-consent-manager': '0.2.12',
-              'koz-donate-stats': '1.3.11',
-              'koz-google-ads-campaign-builder': '1.4.13',
-              'koz-copy-actions': '1.1.14',
-              'koz-url-only-comment-spam': '1.1.11',
-              'koz-suite-control-center': '0.4.7',
+          root=Path('.')
+          src=Path('/tmp/koz124')
+          versions={
+            'koz-migration-cleanup':'0.9.7',
+            'koz-static-translate':'0.9.17',
+            'koz-translate-diagnostics':'0.3.6',
+            'koz-seo-core':'2.1.22',
+            'koz-404-guard':'2.1.4',
+            'koz-site-bridge':'0.5.6',
+            'koz-consent-manager':'0.2.12',
+            'koz-donate-stats':'1.3.11',
+            'koz-google-ads-campaign-builder':'1.4.13',
+            'koz-copy-actions':'1.1.14',
+            'koz-url-only-comment-spam':'1.1.11',
+            'koz-suite-control-center':'0.4.7',
           }
+          for slug,ver in versions.items():
+            z=src/'packages'/f'{slug}-{ver}.zip'
+            if not z.is_file(): raise SystemExit(f'Missing {z}')
+            with zipfile.ZipFile(z) as a:
+              roots={PurePosixPath(i.filename).parts[0] for i in a.infolist() if not i.is_dir() and PurePosixPath(i.filename).parts}
+              if roots!={slug}: raise SystemExit(f'Bad root {slug}: {roots}')
+              for i in a.infolist():
+                p=PurePosixPath(i.filename)
+                if p.is_absolute() or '..' in p.parts: raise SystemExit(f'Unsafe member {i.filename}')
+              shutil.rmtree(root/slug,ignore_errors=True)
+              a.extractall(root)
 
-          for slug, version in expected.items():
-              package = source / 'packages' / f'{slug}-{version}.zip'
-              if not package.is_file():
-                  raise SystemExit(f'Missing verified package: {package}')
-              with zipfile.ZipFile(package) as archive:
-                  roots = set()
-                  for info in archive.infolist():
-                      if info.is_dir():
-                          continue
-                      member = PurePosixPath(info.filename)
-                      if member.is_absolute() or '..' in member.parts:
-                          raise SystemExit(f'Unsafe package member: {info.filename}')
-                      if member.parts:
-                          roots.add(member.parts[0])
-                  if roots != {slug}:
-                      raise SystemExit(f'Unexpected package root for {slug}: {roots}')
-                  shutil.rmtree(root / slug, ignore_errors=True)
-                  archive.extractall(root)
+          rel=root/'releases'; rel.mkdir(exist_ok=True)
+          shutil.copy2(src/'manifest.json',rel/'KOZ_SUITE_1.0.24_MANIFEST.json')
+          shutil.copy2(src/'SHA256SUMS.txt',rel/'KOZ_SUITE_1.0.24_SHA256SUMS.txt')
+          (rel/'KOZ_SUITE_1.0.24_TEST_REPORT.md').write_text('''# KOZ Suite 1.0.24 Test Report\n\nStatus: **FINAL — LIVE + WORDPRESS 7.1 + PLUGIN CHECK PASS**\n\n- Public plugins: **12/12 LIVE PASS**.\n- WordPress Plugin Check: **12/12 PASS**.\n- WordPress compatibility: **7.1 PASS**.\n- KOZ Site Bridge 0.5.6 preserves the exact live 0.5.5 functionality.\n- KOZ SEO Core 2.1.22 includes the WordPress.org JSON-output remediation.\n- Private Hub 0.4.6 remains excluded from public GitHub.\n- Bundle and package SHA-256 validation: **PASS**.\n''',encoding='utf-8')
+          (rel/'KOZ_SUITE_1.0.24_CHANGELOG.md').write_text('''# KOZ Suite 1.0.24\n\n- Synchronized all 12 public plugins to the verified WordPress 7.1 live baseline.\n- Site Bridge 0.5.6 preserves the exact live 0.5.5 functionality.\n- SEO Core updated to 2.1.22.\n- Copy Actions updated to 1.1.14.\n- URL-Only Comment Spam updated to 1.1.11.\n- Private Hub 0.4.6 remains Drive-only.\n''',encoding='utf-8')
+          (root/'RELEASE_NOTES_v1.0.24.md').write_text('''# KOZ WordPress Plugin Suite 1.0.24\n\nWordPress 7.1 maintenance release synchronized from the exact packages verified on the live site.\n\n- 12/12 public plugins LIVE PASS.\n- 12/12 WordPress Plugin Check PASS.\n- Private Hub 0.4.6 remains outside the public repository and release.\n''',encoding='utf-8')
+          rows='\n'.join(f'| {s} | {v} |' for s,v in versions.items())
+          (root/'README.md').write_text(f'''# KOZ WordPress Plugin Suite\n\nA practical collection of 12 privacy-first WordPress plugins independently maintained by Tony Kozyriev (`ramirkz`).\n\n## Current release status\n\n- Suite bundle: **1.0.24**\n- Public plugins: **12**\n- Live functional baseline: **12/12 PASS**\n- WordPress Plugin Check baseline: **12/12 PASS**\n- WordPress compatibility baseline: **7.1**\n- Private Hub: **KOZ Suite Hub — Private 0.4.6**, live + Plugin Check PASS, intentionally excluded from this public repository and release.\n\n## Included plugins\n\n| Plugin slug | Version |\n|---|---:|\n{rows}\n\n## Current bundle\n\n**KOZ Suite Bundle 1.0.24** contains the exact 12 verified public plugin ZIP packages.\n\n## License\n\nGPL-2.0-or-later.\n''',encoding='utf-8')
 
-          releases = root / 'releases'
-          releases.mkdir(exist_ok=True)
-          shutil.copy2(source / 'manifest.json', releases / 'KOZ_SUITE_1.0.24_MANIFEST.json')
-          shutil.copy2(source / 'SHA256SUMS.txt', releases / 'KOZ_SUITE_1.0.24_SHA256SUMS.txt')
+          for slug,ver in versions.items():
+            text=(root/slug/'readme.txt').read_text(encoding='utf-8')
+            if 'Tested up to: 7.1' not in text: raise SystemExit(f'WP 7.1 missing: {slug}')
+            if f'Stable tag: {ver}' not in text: raise SystemExit(f'Stable tag mismatch: {slug}')
+          if 'JSON_UNESCAPED_SLASHES' in '\n'.join(p.read_text(encoding='utf-8',errors='ignore') for p in (root/'koz-seo-core').rglob('*.php')):
+            raise SystemExit('SEO JSON remediation missing')
+          bridge=(root/'koz-site-bridge'/'includes'/'class-kozbridge-bridge.php').read_text(encoding='utf-8')
+          if "'/admin-error-log'" not in bridge: raise SystemExit('Site Bridge live delta missing')
 
-          (releases / 'KOZ_SUITE_1.0.24_TEST_REPORT.md').write_text('''# KOZ Suite 1.0.24 Test Report
-
-Status: **FINAL — LIVE + WORDPRESS 7.1 + PLUGIN CHECK PASS**
-
-- Public plugins installed on the production WordPress site: **12/12 PASS**.
-- WordPress Plugin Check: **12/12 PASS**.
-- WordPress compatibility metadata: **Tested up to 7.1 PASS**.
-- KOZ Site Bridge **0.5.6** is based on the exact live 0.5.5 source and passed Plugin Check.
-- KOZ SEO Core **2.1.22** contains the WordPress.org JSON-output remediation and passed Plugin Check.
-- KOZ Copy Actions **1.1.14** is live on WordPress.org.
-- KOZ URL-Only Comment Spam **1.1.11** is released on WordPress.org.
-- KOZ Suite Hub — Private **0.4.6** is live and passed Plugin Check, but remains excluded from the public repository and bundle.
-- Bundle and package SHA-256 validation: **PASS**.
-''', encoding='utf-8')
-
-          (releases / 'KOZ_SUITE_1.0.24_CHANGELOG.md').write_text('''# KOZ Suite 1.0.24
-
-- Synchronized all 12 public plugins to the verified WordPress 7.1 live baseline.
-- Updated compatibility metadata to WordPress 7.1 across the suite.
-- Preserved the exact live KOZ Site Bridge 0.5.5 functionality in Site Bridge 0.5.6.
-- Included KOZ SEO Core 2.1.22 WordPress.org review remediation.
-- Updated KOZ Copy Actions to 1.1.14 and KOZ URL-Only Comment Spam to 1.1.11.
-- Private Hub 0.4.6 remains a separate private Google Drive release and is not included in this public bundle.
-''', encoding='utf-8')
-
-          (root / 'RELEASE_NOTES_v1.0.24.md').write_text('''# KOZ WordPress Plugin Suite 1.0.24
-
-WordPress 7.1 maintenance release synchronized from the exact packages installed and verified on the live site.
-
-## Verification
-
-- 12/12 public plugins installed and active.
-- 12/12 WordPress Plugin Check PASS.
-- All package checksums match the verified Suite 1.0.24 bundle.
-- Private Hub 0.4.6 remains outside the public repository and release.
-''', encoding='utf-8')
-
-          rows = '\n'.join(f'| {slug} | {version} |' for slug, version in expected.items())
-          (root / 'README.md').write_text(f'''# KOZ WordPress Plugin Suite
-
-A practical collection of 12 privacy-first WordPress plugins independently maintained by Tony Kozyriev (`ramirkz`).
-
-## Current release status
-
-- Suite bundle: **1.0.24**
-- Public plugins: **12**
-- Live functional baseline: **12/12 PASS**
-- WordPress Plugin Check baseline: **12/12 PASS**
-- WordPress compatibility baseline: **7.1**
-- Private Hub: **KOZ Suite Hub — Private 0.4.6**, live + Plugin Check PASS, intentionally excluded from this public repository and bundle.
-
-## Included plugins
-
-| Plugin slug | Version |
-|---|---:|
-{rows}
-
-## Current bundle
-
-**KOZ Suite Bundle 1.0.24** contains the exact 12 verified public plugin ZIP packages. Package and bundle SHA-256 checksums are recorded under `releases/` and in the GitHub release assets.
-
-## Privacy and security
-
-- No suite-wide telemetry or hidden tracking.
-- No custom updater that bypasses WordPress.org.
-- Administrative actions use WordPress capabilities, nonces and sanitization.
-- KOZ Site Bridge remains read-only and preserves the verified live diagnostics functionality from 0.5.5 in 0.5.6.
-- KOZ SEO Core 2.1.22 contains the JSON-output remediation required by WordPress.org review.
-- KOZ Suite Hub — Private remains a separate private Google Drive release and is not included here.
-
-## License
-
-GPL-2.0-or-later. See each plugin for details.
-''', encoding='utf-8')
-
-          for slug, version in expected.items():
-              readme_path = root / slug / 'readme.txt'
-              text = readme_path.read_text(encoding='utf-8')
-              if 'Tested up to: 7.1' not in text:
-                  raise SystemExit(f'WordPress 7.1 metadata missing: {slug}')
-              if f'Stable tag: {version}' not in text:
-                  raise SystemExit(f'Stable tag mismatch: {slug}')
-
-          seo_php = '\n'.join(p.read_text(encoding='utf-8', errors='ignore') for p in (root / 'koz-seo-core').rglob('*.php'))
-          if 'JSON_UNESCAPED_SLASHES' in seo_php:
-              raise SystemExit('SEO Core still contains JSON_UNESCAPED_SLASHES in PHP')
-
-          bridge = (root / 'koz-site-bridge' / 'includes' / 'class-kozbridge-bridge.php').read_text(encoding='utf-8')
-          if "'/admin-error-log'" not in bridge:
-              raise SystemExit('Site Bridge live diagnostics endpoint missing')
-
-          for helper in (
-              root / 'sync' / 'sitebridge-live-0.5.5.patch',
-              root / 'sync' / 'KOZ_SUITE_1.0.24_RUN_STARTED.txt',
-              root / 'sync' / 'KOZ_SUITE_1.0.24_BUNDLE_OK.txt',
-              root / '.release-suite-1.0.24.trigger',
-              root / '.github' / 'workflows' / 'publish-suite-1.0.24.yml',
-          ):
-              if helper.exists():
-                  helper.unlink()
+          for p in [root/'sync'/'sitebridge-live-0.5.5.patch',root/'sync'/'KOZ_SUITE_1.0.24_RUN_STARTED.txt',root/'.release-suite-1.0.24.trigger',root/'.github'/'workflows'/'publish-suite-1.0.24.yml']:
+            if p.exists(): p.unlink()
           PY
-
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A
@@ -212,34 +110,28 @@ GPL-2.0-or-later. See each plugin for details.
         shell: bash
         run: |
           set -euo pipefail
-          rm -rf /tmp/koz124-release
-          mkdir -p /tmp/koz124-release
-          cp /tmp/KOZ_SUITE_BUNDLE_1.0.24.zip /tmp/koz124-release/KOZ_SUITE_BUNDLE_1.0.24.zip
+          cp /tmp/KOZ_SUITE_BUNDLE_1.0.24.zip /tmp/koz124-release/
           cp /tmp/koz124/packages/*.zip /tmp/koz124-release/
-          cp releases/KOZ_SUITE_1.0.24_MANIFEST.json /tmp/koz124-release/
-          cp releases/KOZ_SUITE_1.0.24_SHA256SUMS.txt /tmp/koz124-release/
-          cp releases/KOZ_SUITE_1.0.24_TEST_REPORT.md /tmp/koz124-release/
-          cp releases/KOZ_SUITE_1.0.24_CHANGELOG.md /tmp/koz124-release/
+          cp releases/KOZ_SUITE_1.0.24_{MANIFEST.json,SHA256SUMS.txt,TEST_REPORT.md,CHANGELOG.md} /tmp/koz124-release/
           printf '%s  %s\n' 'b7768143bbe519c8caefab440894a05c0854392021c139026408d3bd9bb8ff9d' 'KOZ_SUITE_BUNDLE_1.0.24.zip' > /tmp/koz124-release/KOZ_SUITE_BUNDLE_1.0.24.zip.sha256
 
-      - name: Publish clean GitHub release v1.0.24
+      - name: Publish clean GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           set -euo pipefail
-          mapfile -t assets < <(find /tmp/koz124-release -maxdepth 1 -type f -printf '%p\n' | sort)
           if gh release view v1.0.24 >/dev/null 2>&1; then
-            mapfile -t existing < <(gh release view v1.0.24 --json assets --jq '.assets[].name')
-            for name in "${existing[@]}"; do
-              case "$name" in
-                KOZ_SUITE_BUNDLE_1.0.24.zip|KOZ_SUITE_BUNDLE_1.0.24.zip.sha256|KOZ_SUITE_1.0.24_MANIFEST.json|KOZ_SUITE_1.0.24_SHA256SUMS.txt|KOZ_SUITE_1.0.24_TEST_REPORT.md|KOZ_SUITE_1.0.24_CHANGELOG.md|koz-migration-cleanup-0.9.7.zip|koz-static-translate-0.9.17.zip|koz-translate-diagnostics-0.3.6.zip|koz-seo-core-2.1.22.zip|koz-404-guard-2.1.4.zip|koz-site-bridge-0.5.6.zip|koz-consent-manager-0.2.12.zip|koz-donate-stats-1.3.11.zip|koz-google-ads-campaign-builder-1.4.13.zip|koz-copy-actions-1.1.14.zip|koz-url-only-comment-spam-1.1.11.zip|koz-suite-control-center-0.4.7.zip) ;;
-                *) gh release delete-asset v1.0.24 "$name" -y ;;
-              esac
-            done
-            gh release upload v1.0.24 "${assets[@]}" --clobber
+            for n in $(gh release view v1.0.24 --json assets --jq '.assets[].name'); do gh release delete-asset v1.0.24 "$n" -y; done
+            gh release upload v1.0.24 /tmp/koz124-release/*
             gh release edit v1.0.24 --title 'KOZ WordPress Plugin Suite 1.0.24' --notes-file RELEASE_NOTES_v1.0.24.md
           else
-            gh release create v1.0.24 "${assets[@]}" --target main --title 'KOZ WordPress Plugin Suite 1.0.24' --notes-file RELEASE_NOTES_v1.0.24.md
+            gh release create v1.0.24 /tmp/koz124-release/* --target main --title 'KOZ WordPress Plugin Suite 1.0.24' --notes-file RELEASE_NOTES_v1.0.24.md
           fi
           gh release view v1.0.24 --json tagName,name,isDraft,isPrerelease,assets
+
+      - name: Close sync pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: gh pr close '${{ github.event.pull_request.number }}' --delete-branch || true
