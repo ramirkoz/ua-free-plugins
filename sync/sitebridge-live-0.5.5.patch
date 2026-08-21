@@ -1,0 +1,233 @@
+diff --git a/koz-site-bridge/includes/class-kozbridge-bridge.php b/koz-site-bridge/includes/class-kozbridge-bridge.php
+index bc7e011..b9b20d2 100644
+--- a/koz-site-bridge/includes/class-kozbridge-bridge.php
++++ b/koz-site-bridge/includes/class-kozbridge-bridge.php
+@@ -32,6 +32,8 @@ final class KOZBRIDGE_Bridge {
+ 	private const SITEMAP_LIMIT   = 100;
+ 	private const SITEMAP_URL_MAX = 1000;
+ 	private const SITEMAP_CHILD_MAX = 50;
++	private const LOG_TAIL_BYTES   = 262144;
++	private const LOG_LINE_LIMIT   = 200;
+ 
+ 	public static function migrate_legacy_data(): void {
+ 		self::migrate_first_available_option( self::KEY_HASH_OPTION, self::LEGACY_KEY_HASH_OPTIONS );
+@@ -251,6 +253,7 @@ final class KOZBRIDGE_Bridge {
+ 			'/links'       => 'links',
+ 			'/404-log'     => 'error_404_log',
+ 			'/diagnostics'    => 'diagnostics',
++			'/admin-error-log' => 'admin_error_log',
+ 			'/sitemap'        => 'sitemap_inventory',
+ 			'/page-audit'     => 'page_audit',
+ 			'/rendered-audit' => 'rendered_audit',
+@@ -395,6 +398,16 @@ final class KOZBRIDGE_Bridge {
+ 			);
+ 		}
+ 
++		if ( 'admin_error_log' === $method ) {
++			return array(
++				'limit' => array(
++					'default'           => 80,
++					'sanitize_callback' => 'absint',
++					'validate_callback' => static fn( $value ): bool => (int) $value >= 1 && (int) $value <= self::LOG_LINE_LIMIT,
++				),
++			);
++		}
++
+ 		if ( 'http_probe' === $method ) {
+ 			return array(
+ 				'path' => array(
+@@ -1160,6 +1173,176 @@ final class KOZBRIDGE_Bridge {
+ 		);
+ 	}
+ 
++
++	/**
++	 * Return recent sanitized lines from fixed WordPress/PHP error-log candidates.
++	 *
++	 * This endpoint is authenticated, read-only and intentionally does not accept
++	 * a filesystem path from the caller.
++	 */
++	public static function admin_error_log( WP_REST_Request $request ): WP_REST_Response {
++		$limit = min( self::LOG_LINE_LIMIT, max( 1, (int) $request->get_param( 'limit' ) ) );
++		$sources = array();
++
++		foreach ( self::error_log_candidates() as $label => $candidate ) {
++			$path = self::normalise_error_log_candidate( $candidate );
++			if ( null === $path ) {
++				continue;
++			}
++
++			$key = self::safe_log_path( $path );
++			if ( isset( $sources[ $key ] ) ) {
++				continue;
++			}
++
++			$lines = self::read_log_tail( $path, $limit );
++			$sources[ $key ] = array(
++				'label'        => sanitize_key( (string) $label ),
++				'path'         => $key,
++				'readable'     => is_readable( $path ),
++				'size_bytes'   => is_file( $path ) ? max( 0, (int) filesize( $path ) ) : 0,
++				'last_modified'=> is_file( $path ) ? gmdate( 'c', (int) filemtime( $path ) ) : '',
++				'line_count'   => count( $lines ),
++				'lines'        => $lines,
++			);
++		}
++
++		return self::response(
++			array(
++				'generated_at' => current_time( 'c' ),
++				'mode'         => 'read-only',
++				'privacy'      => 'Credentials, cookies, email addresses, query strings and local filesystem prefixes are redacted. No arbitrary log path is accepted.',
++				'runtime'      => array(
++					'wp_debug'          => defined( 'WP_DEBUG' ) ? (bool) WP_DEBUG : false,
++					'wp_debug_log'      => defined( 'WP_DEBUG_LOG' ) ? ( is_string( WP_DEBUG_LOG ) ? self::safe_log_path( (string) WP_DEBUG_LOG ) : (bool) WP_DEBUG_LOG ) : false,
++					'wp_debug_display'  => defined( 'WP_DEBUG_DISPLAY' ) ? (bool) WP_DEBUG_DISPLAY : null,
++					'php_log_errors'    => filter_var( ini_get( 'log_errors' ), FILTER_VALIDATE_BOOLEAN ),
++					'php_error_log'     => self::safe_log_path( (string) ini_get( 'error_log' ) ),
++					'memory_limit'      => sanitize_text_field( (string) ini_get( 'memory_limit' ) ),
++					'max_execution_time'=> max( 0, (int) ini_get( 'max_execution_time' ) ),
++				),
++				'source_count'  => count( $sources ),
++				'sources'       => array_values( $sources ),
++			)
++		);
++	}
++
++	private static function error_log_candidates(): array {
++		$candidates = array(
++			'wp_debug'       => trailingslashit( WP_CONTENT_DIR ) . 'debug.log',
++			'php_error_log'  => (string) ini_get( 'error_log' ),
++			'site_error_log' => trailingslashit( ABSPATH ) . 'error_log',
++		);
++
++		$parent = dirname( untrailingslashit( ABSPATH ) );
++		if ( '' !== $parent && $parent !== untrailingslashit( ABSPATH ) ) {
++			$candidates['parent_error_log'] = trailingslashit( $parent ) . 'error_log';
++		}
++
++		return $candidates;
++	}
++
++	private static function normalise_error_log_candidate( string $candidate ): ?string {
++		$candidate = trim( $candidate );
++		if ( '' === $candidate || in_array( strtolower( $candidate ), array( 'syslog', 'stderr', 'error_log' ), true ) ) {
++			return null;
++		}
++		if ( str_contains( $candidate, '://' ) || str_contains( $candidate, "\0" ) ) {
++			return null;
++		}
++		if ( ! self::is_absolute_path( $candidate ) ) {
++			$candidate = trailingslashit( ABSPATH ) . ltrim( $candidate, '/\\' );
++		}
++		$real = realpath( $candidate );
++		return is_string( $real ) && is_file( $real ) ? $real : null;
++	}
++
++	private static function is_absolute_path( string $path ): bool {
++		return str_starts_with( $path, '/' ) || 1 === preg_match( '/^[A-Za-z]:[\\\\\/]/', $path );
++	}
++
++	private static function read_log_tail( string $path, int $limit ): array {
++		if ( ! is_readable( $path ) || ! is_file( $path ) ) {
++			return array();
++		}
++
++		if ( ! function_exists( 'WP_Filesystem' ) ) {
++			require_once ABSPATH . 'wp-admin/includes/file.php';
++		}
++
++		global $wp_filesystem;
++		if ( ! WP_Filesystem() || ! is_object( $wp_filesystem ) ) {
++			return array();
++		}
++
++		$data = $wp_filesystem->get_contents( $path );
++		if ( false === $data || ! is_string( $data ) ) {
++			return array();
++		}
++
++		if ( strlen( $data ) > self::LOG_TAIL_BYTES ) {
++			$data = substr( $data, -self::LOG_TAIL_BYTES );
++		}
++
++		$lines = preg_split( '/\R/u', $data ) ?: array();
++		$lines = array_values( array_filter( array_map( 'trim', $lines ), static fn( string $line ): bool => '' !== $line ) );
++		$lines = array_slice( $lines, -$limit );
++		return array_values( array_map( array( __CLASS__, 'redact_log_line' ), $lines ) );
++	}
++
++	private static function redact_log_line( string $line ): string {
++		$line = wp_check_invalid_utf8( $line, true );
++		$replacements = array(
++			untrailingslashit( WP_CONTENT_DIR ) => '<WP_CONTENT>',
++			untrailingslashit( ABSPATH )        => '<ABSPATH>',
++		);
++		$parent = dirname( untrailingslashit( ABSPATH ) );
++		if ( '' !== $parent && $parent !== untrailingslashit( ABSPATH ) ) {
++			$replacements[ $parent ] = '<SITE_PARENT>';
++		}
++		foreach ( $replacements as $from => $to ) {
++			if ( '' !== $from ) {
++				$line = str_replace( array( $from, wp_normalize_path( $from ) ), $to, $line );
++			}
++		}
++
++		$line = preg_replace( '/\b(Authorization|Cookie|Set-Cookie|X-KOZ-Key|X-UAFree-Key|api[_ -]?key|token|secret)\b\s*[:=]\s*[^\s,;]+/i', '$1=[redacted]', $line ) ?? $line;
++		$line = preg_replace( '/[A-Z0-9._%+\-]+@[A-Z0-9.\-]+\.[A-Z]{2,}/i', '[redacted-email]', $line ) ?? $line;
++		$line = preg_replace_callback(
++			'#https?://[^\s"\']+#i',
++			static function ( array $match ): string {
++				$url = (string) $match[0];
++				$question = strpos( $url, '?' );
++				return false === $question ? $url : substr( $url, 0, $question ) . '?[redacted]';
++			},
++			$line
++		) ?? $line;
++		$line = preg_replace( '/\b[A-Fa-f0-9]{48,}\b/', '[redacted-token]', $line ) ?? $line;
++		$line = preg_replace( '/\b[A-Za-z0-9_\-]{64,}\b/', '[redacted-token]', $line ) ?? $line;
++		return self::truncate_text( $line, 2000 );
++	}
++
++	private static function safe_log_path( string $path ): string {
++		$path = trim( $path );
++		if ( '' === $path ) {
++			return '';
++		}
++		$path = wp_normalize_path( $path );
++		$content = wp_normalize_path( untrailingslashit( WP_CONTENT_DIR ) );
++		$root = wp_normalize_path( untrailingslashit( ABSPATH ) );
++		$parent = wp_normalize_path( dirname( $root ) );
++		if ( '' !== $content && str_starts_with( $path, $content ) ) {
++			return '<WP_CONTENT>' . substr( $path, strlen( $content ) );
++		}
++		if ( '' !== $root && str_starts_with( $path, $root ) ) {
++			return '<ABSPATH>' . substr( $path, strlen( $root ) );
++		}
++		if ( '' !== $parent && str_starts_with( $path, $parent ) ) {
++			return '<SITE_PARENT>' . substr( $path, strlen( $parent ) );
++		}
++		return basename( $path );
++	}
++
+ 	public static function sitemap_inventory( WP_REST_Request $request ): WP_REST_Response {
+ 		$page  = max( 1, (int) $request->get_param( 'page' ) );
+ 		$limit = min( self::SITEMAP_LIMIT, max( 1, (int) $request->get_param( 'limit' ) ) );
+@@ -2166,6 +2349,9 @@ final class KOZBRIDGE_Bridge {
+ 			'404-log' => array(
+ 				self::query_parameter( 'limit', 'integer', false, 'Maximum privacy-safe grouped rows.' ),
+ 			),
++			'admin-error-log' => array(
++				self::query_parameter( 'limit', 'integer', false, 'Recent sanitized log lines per fixed local source, maximum 200.' ),
++			),
+ 			'sitemap' => array(
+ 				self::query_parameter( 'page', 'integer', false, 'Sitemap result page.' ),
+ 				self::query_parameter( 'limit', 'integer', false, 'URLs per page, maximum 100.' ),
+@@ -2198,6 +2384,7 @@ final class KOZBRIDGE_Bridge {
+ 			'/links'       => array( 'scanInternalLinks', 'Inspect a small number of same-site public links.' ),
+ 			'/404-log'     => array( 'getPrivacySafe404Log', 'Read only privacy-safe grouped 404/410 fingerprints.' ),
+ 			'/diagnostics'    => array( 'runSafeDiagnostics', 'Run fixed same-site checks for home, robots, sitemap, AI discovery and 404 status.' ),
++			'/admin-error-log' => array( 'getAdminErrorLog', 'Read recent privacy-redacted lines from fixed local WordPress/PHP error-log candidates for private troubleshooting.' ),
+ 			'/sitemap'        => array( 'getSitemapInventory', 'List same-site public URLs discovered from the WordPress sitemap.' ),
+ 			'/page-audit'     => array( 'auditRenderedPage', 'Fetch and inspect one safe public frontend page including rendered SEO, H1, alt, links, hreflang and schema signals.' ),
+ 			'/rendered-audit' => array( 'auditSitemapBatch', 'Audit a small batch of sitemap URLs and return concrete per-URL issues.' ),
