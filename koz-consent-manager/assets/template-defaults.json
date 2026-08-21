@@ -1,0 +1,101 @@
+{
+  "en": {
+    "banner_title": "Privacy settings",
+    "banner_message": "We use necessary technologies to operate the site. Analytics, advertising and external media are enabled only after your consent.",
+    "accept_label": "Accept all",
+    "reject_label": "Reject optional",
+    "customize_label": "Customize",
+    "save_label": "Save choices",
+    "reopen_label": "Privacy settings"
+  },
+  "ar": {
+    "banner_title": "إعدادات الخصوصية",
+    "banner_message": "نستخدم التقنيات الضرورية لتشغيل الموقع. لا يتم تفعيل التحليلات والإعلانات والوسائط الخارجية إلا بعد موافقتك.",
+    "accept_label": "قبول الكل",
+    "reject_label": "رفض الاختياري",
+    "customize_label": "تخصيص",
+    "save_label": "حفظ الاختيارات",
+    "reopen_label": "إعدادات الخصوصية"
+  },
+  "de": {
+    "banner_title": "Datenschutzeinstellungen",
+    "banner_message": "Wir verwenden notwendige Technologien zum Betrieb der Website. Analyse, Werbung und externe Medien werden erst nach Ihrer Einwilligung aktiviert.",
+    "accept_label": "Alle akzeptieren",
+    "reject_label": "Optionale ablehnen",
+    "customize_label": "Anpassen",
+    "save_label": "Auswahl speichern",
+    "reopen_label": "Datenschutzeinstellungen"
+  },
+  "es": {
+    "banner_title": "Configuración de privacidad",
+    "banner_message": "Usamos tecnologías necesarias para operar el sitio. La analítica, la publicidad y los medios externos solo se activan con tu consentimiento.",
+    "accept_label": "Aceptar todo",
+    "reject_label": "Rechazar opcionales",
+    "customize_label": "Personalizar",
+    "save_label": "Guardar selección",
+    "reopen_label": "Configuración de privacidad"
+  },
+  "fr": {
+    "banner_title": "Paramètres de confidentialité",
+    "banner_message": "Nous utilisons les technologies nécessaires au fonctionnement du site. Les statistiques, la publicité et les médias externes ne sont activés qu’après votre consentement.",
+    "accept_label": "Tout accepter",
+    "reject_label": "Refuser les options",
+    "customize_label": "Personnaliser",
+    "save_label": "Enregistrer les choix",
+    "reopen_label": "Paramètres de confidentialité"
+  },
+  "hi": {
+    "banner_title": "गोपनीयता सेटिंग्स",
+    "banner_message": "हम साइट चलाने के लिए आवश्यक तकनीकों का उपयोग करते हैं। विश्लेषण, विज्ञापन और बाहरी मीडिया केवल आपकी सहमति के बाद सक्रिय होते हैं।",
+    "accept_label": "सभी स्वीकार करें",
+    "reject_label": "वैकल्पिक अस्वीकार करें",
+    "customize_label": "अनुकूलित करें",
+    "save_label": "विकल्प सहेजें",
+    "reopen_label": "गोपनीयता सेटिंग्स"
+  },
+  "id": {
+    "banner_title": "Pengaturan privasi",
+    "banner_message": "Kami menggunakan teknologi yang diperlukan untuk mengoperasikan situs. Analitik, iklan, dan media eksternal hanya diaktifkan setelah persetujuan Anda.",
+    "accept_label": "Terima semua",
+    "reject_label": "Tolak yang opsional",
+    "customize_label": "Sesuaikan",
+    "save_label": "Simpan pilihan",
+    "reopen_label": "Pengaturan privasi"
+  },
+  "ja": {
+    "banner_title": "プライバシー設定",
+    "banner_message": "サイト運営に必要な技術を使用します。分析、広告、外部メディアは同意後にのみ有効になります。",
+    "accept_label": "すべて許可",
+    "reject_label": "任意項目を拒否",
+    "customize_label": "カスタマイズ",
+    "save_label": "選択を保存",
+    "reopen_label": "プライバシー設定"
+  },
+  "pt": {
+    "banner_title": "Configurações de privacidade",
+    "banner_message": "Usamos tecnologias necessárias para operar o site. Análises, publicidade e mídia externa só são ativadas após o seu consentimento.",
+    "accept_label": "Aceitar tudo",
+    "reject_label": "Recusar opcionais",
+    "customize_label": "Personalizar",
+    "save_label": "Guardar escolhas",
+    "reopen_label": "Configurações de privacidade"
+  },
+  "uk": {
+    "banner_title": "Налаштування конфіденційності",
+    "banner_message": "Ми використовуємо необхідні технології для роботи сайту. Аналітика, реклама та зовнішні медіа вмикаються лише після вашої згоди.",
+    "accept_label": "Прийняти всі",
+    "reject_label": "Відхилити необов’язкові",
+    "customize_label": "Налаштувати",
+    "save_label": "Зберегти вибір",
+    "reopen_label": "Налаштування конфіденційності"
+  },
+  "zh": {
+    "banner_title": "隐私设置",
+    "banner_message": "我们使用网站运行所需的必要技术。分析、广告和外部媒体仅在您同意后启用。",
+    "accept_label": "全部接受",
+    "reject_label": "拒绝可选项",
+    "customize_label": "自定义",
+    "save_label": "保存选择",
+    "reopen_label": "隐私设置"
+  }
+}

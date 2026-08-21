@@ -1,0 +1,45 @@
+.kozgads{max-width:1280px}
+.kozgads .nav-tab-wrapper{margin-bottom:18px}
+.kozgads-hero{background:#fff;border:1px solid #dcdcde;border-inline-start:6px solid #dba617;padding:20px 22px;margin:18px 0}
+.kozgads-hero.is-good{border-left-color:#00a32a}
+.kozgads-hero>span{display:block;color:#50575e;margin-bottom:6px}
+.kozgads-hero>strong{display:block;font-size:24px;line-height:1.25}
+.kozgads-hero>p{margin:8px 0 0;color:#50575e}
+.kozgads-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:18px 0 28px}
+.kozgads-cards>div,.kozgads-package-grid>div{background:#fff;border:1px solid #dcdcde;padding:16px}
+.kozgads-cards span,.kozgads-package-grid span{display:block;color:#50575e;margin-bottom:8px}
+.kozgads-cards strong{display:block;font-size:23px;line-height:1.25}
+.kozgads-section{margin:26px 0}
+.kozgads-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+.kozgads-item{background:#fff;border:1px solid #dcdcde;border-inline-start:5px solid #00a32a;padding:15px}
+.kozgads-item.is-warning{border-left-color:#dba617}
+.kozgads-item.is-critical{border-left-color:#d63638}
+.kozgads-item h3{font-size:16px;margin:0 0 7px}
+.kozgads-item p{margin:0;color:#50575e;line-height:1.5}
+.kozgads-empty{background:#fff;border:1px solid #dcdcde;padding:14px}
+.kozgads-generate,.kozgads-last-package,.kozgads-settings-intro{background:#fff;border:1px solid #dcdcde;padding:18px;margin:26px 0}
+.kozgads-package-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-bottom:15px}
+.kozgads-package-grid strong{display:block}
+.kozgads-technical{background:#fff;border:1px solid #dcdcde;margin:28px 0}
+.kozgads-technical>summary{cursor:pointer;font-weight:600;padding:16px}
+.kozgads-technical>div{padding:0 16px 16px}
+.kozgads-technical table{margin:12px 0}
+.kozgads .form-table{background:#fff;border:1px solid #dcdcde;padding:12px}
+@media(max-width:782px){.kozgads-list,.kozgads-cards,.kozgads-package-grid{grid-template-columns:1fr}}
+
+.kozgads-country-grid{
+	display:grid;
+	grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+	gap:8px 14px;
+	max-width:980px;
+	margin:12px 0;
+	padding:14px;
+	background:#fff;
+	border:1px solid #dcdcde
+}
+.kozgads-country-grid label{
+	display:flex;
+	align-items:center;
+	gap:7px;
+	min-height:28px
+}

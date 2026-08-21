@@ -1,0 +1,386 @@
+# Translation template for KOZ Translate Diagnostics.
+# Copyright (C) 2026 Tony Kozyriev
+# This file is distributed under the GPL-2.0-or-later license.
+
+msgid ""
+msgstr ""
+"Project-Id-Version: KOZ Translate Diagnostics 0.3.4\n"
+"Report-Msgid-Bugs-To: https://github.com/ramirkoz/ua-free-plugins\n"
+"POT-Creation-Date: 2026-08-12 17:25+0000\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#, php-format
+msgid "%1$s: %2$d queue rows contain an error."
+msgstr ""
+
+#, php-format
+msgid "%1$s: %2$d translation rows have a stale source hash."
+msgstr ""
+
+#, php-format
+msgid "%1$s: approximately %2$d current translation rows are missing."
+msgstr ""
+
+msgid "(estimate)"
+msgstr ""
+
+msgid "404, 410, redirects and URL intelligence."
+msgstr ""
+
+msgid "About the foundation"
+msgstr ""
+
+msgid "Accessible copying of configured values."
+msgstr ""
+
+msgid "Active"
+msgstr ""
+
+msgid "Address copied."
+msgstr ""
+
+msgid "Automatic static WordPress translation."
+msgstr ""
+
+msgid "Automatic translation is manually paused."
+msgstr ""
+
+msgid "Automatic translation is paused because the configured monthly character limit was reached."
+msgstr ""
+
+msgid "Automatic translation is temporarily paused."
+msgstr ""
+
+msgid "Available"
+msgstr ""
+
+msgid "Azure key configured"
+msgstr ""
+
+msgid "Compatibility mode"
+msgstr ""
+
+msgid "Consent management and controlled external scripts."
+msgstr ""
+
+msgid "Copied"
+msgstr ""
+
+msgid "Copy"
+msgstr ""
+
+msgid "Copy BTC address"
+msgstr ""
+
+msgid "Copy ETH and USDC address"
+msgstr ""
+
+msgid "Copy PayPal email"
+msgstr ""
+
+msgid "Copy USDT address"
+msgstr ""
+
+msgid "Data inventory"
+msgstr ""
+
+msgid "Deep scan completed. It compares source hashes and uses heavier read-only database queries."
+msgstr ""
+
+msgid "Detected version"
+msgstr ""
+
+msgid "Developed and maintained by Tony Kozyriev. The suite began as production tooling for the UA FREE charitable foundation and remains in active use on its website."
+msgstr ""
+
+msgid "Development contact:"
+msgstr ""
+
+msgid "Diagnostic findings"
+msgstr ""
+
+msgid "Diagnostic mode"
+msgstr ""
+
+msgid "Diagnostics"
+msgstr ""
+
+msgid "Donate"
+msgstr ""
+
+msgid "Donate to UA FREE"
+msgstr ""
+
+msgid "Download deep privacy-safe JSON report"
+msgstr ""
+
+msgid "Exists"
+msgstr ""
+
+msgid "Expected segments"
+msgstr ""
+
+msgid "Filter for comments containing only URLs."
+msgstr ""
+
+msgid "Free, open source and privacy-conscious"
+msgstr ""
+
+msgid "Google Ad Grants and Standard Google Ads packages."
+msgstr ""
+
+msgid "Inactive"
+msgstr ""
+
+msgid "Independent WordPress tools shaped by real production use on the UA FREE charitable foundation website."
+msgstr ""
+
+msgid "Installed"
+msgstr ""
+
+msgid "Installed but inactive"
+msgstr ""
+
+msgid "KOZ project support"
+msgstr ""
+
+msgid "KOZ Static Translate was not detected."
+msgstr ""
+
+msgid "KOZ Suite"
+msgstr ""
+
+msgid "KOZ Translate Diagnostics"
+msgstr ""
+
+msgid "KOZ Translate Diagnostics activated. The former UA FREE package was deactivated without deleting data."
+msgstr ""
+
+msgid "KOZ WordPress Suite"
+msgstr ""
+
+msgid "Language"
+msgstr ""
+
+msgid "Languages"
+msgstr ""
+
+msgid "Last runtime error"
+msgstr ""
+
+msgid "Legacy UA FREE version active"
+msgstr ""
+
+msgid "Manual pause"
+msgstr ""
+
+msgid "Memory"
+msgstr ""
+
+msgid "Migration freeze"
+msgstr ""
+
+msgid "Missing estimate"
+msgstr ""
+
+#, php-format
+msgid "Missing translator tables: %s."
+msgstr ""
+
+msgid "No"
+msgstr ""
+
+msgid "No automatic findings were generated."
+msgstr ""
+
+msgid "No queue rows"
+msgstr ""
+
+msgid "No target languages were detected."
+msgstr ""
+
+msgid "No translation sources were found."
+msgstr ""
+
+msgid "Not checked"
+msgstr ""
+
+msgid "Not installed"
+msgstr ""
+
+msgid "Open"
+msgstr ""
+
+msgid "Pause reason"
+msgstr ""
+
+msgid "PayPal and crypto donations support maintenance, testing and new free releases."
+msgstr ""
+
+msgid "Privacy"
+msgstr ""
+
+msgid "Privacy-safe statistics and conversions."
+msgstr ""
+
+msgid "Public diagnostics API"
+msgstr ""
+
+msgid "Queue"
+msgstr ""
+
+msgid "Quick mode does not calculate completeness totals. Deep mode calculates the missing estimate from current translatable segments and exact ready translation rows; translation memory may reduce the work required."
+msgstr ""
+
+msgid "Quick scan is active. It uses metadata and limited recent-row reads only; full-table aggregates and hash joins are deferred to deep mode."
+msgstr ""
+
+msgid "Read-only translation diagnostics."
+msgstr ""
+
+msgid "Read-only:"
+msgstr ""
+
+msgid "Ready"
+msgstr ""
+
+msgid "Rows"
+msgstr ""
+
+msgid "Run deep hash scan"
+msgstr ""
+
+msgid "Scanning, snapshots, migration and controlled cleanup."
+msgstr ""
+
+msgid "Secure read-only site diagnostics."
+msgstr ""
+
+msgid "SEO, sitemaps, schema, AI discovery and accessibility."
+msgstr ""
+
+msgid "Source language"
+msgstr ""
+
+msgid "Stale"
+msgstr ""
+
+msgid "Support independent development and Ukraine"
+msgstr ""
+
+msgid "Support the developer"
+msgstr ""
+
+msgid "Support Ukraine through UA FREE"
+msgstr ""
+
+msgid "Table"
+msgstr ""
+
+msgid "The Azure Translator key is not configured."
+msgstr ""
+
+msgid "The exported report uses an allowlisted translator API contract, removes raw plugin paths and table names, fingerprints operational identifiers, and applies a final privacy pass after third-party filters."
+msgstr ""
+
+msgid "The foundation was the first production environment for these plugins. Its charitable work is separate from plugin ownership and developer donations."
+msgstr ""
+
+msgid "The plugin first uses the translator public diagnostics API. For older translator versions it automatically falls back to a read-only compatibility scan."
+msgstr ""
+
+msgid "The quick scan does not compare translation hashes. Run the deep scan before treating stale-row counts as verified."
+msgstr ""
+
+msgid "The translator plugin is installed but inactive."
+msgstr ""
+
+msgid "The translator public diagnostics API is unavailable; the report uses the read-only database compatibility layer."
+msgstr ""
+
+msgid "The translator public diagnostics API returned an error."
+msgstr ""
+
+msgid "The translator reports an active migration freeze."
+msgstr ""
+
+msgid "this plugin does not call Azure, run the translation queue, change options, alter cron, clear caches or modify translation data."
+msgstr ""
+
+msgid "Translation Diagnostics"
+msgstr ""
+
+msgid "Translation sources:"
+msgstr ""
+
+msgid "Translator status"
+msgstr ""
+
+msgid "Unified suite status and navigation dashboard."
+msgstr ""
+
+msgid "Yes"
+msgstr ""
+
+msgid "You do not have permission to export this report."
+msgstr ""
+
+msgid "Coverage"
+msgstr ""
+
+msgid "Critical fields missing"
+msgstr ""
+
+msgid "Developer contact:"
+msgstr ""
+
+msgid "Highest-priority blockers"
+msgstr ""
+
+msgid "Keep noindex"
+msgstr ""
+
+msgid "Missing critical fields"
+msgstr ""
+
+msgid "Mixed-language critical fields"
+msgstr ""
+
+msgid "Mixed-language fields"
+msgstr ""
+
+msgid "Page"
+msgstr ""
+
+msgid "Pages checked"
+msgstr ""
+
+msgid "Ready for indexing"
+msgstr ""
+
+msgid "Reason"
+msgstr ""
+
+msgid "Recommendation"
+msgstr ""
+
+msgid "Run the deep scan to calculate page-level translation coverage, critical metadata/H1 readiness and mixed-language blockers."
+msgstr ""
+
+msgid "Source scan not ready"
+msgstr ""
+
+msgid "Translation coverage incomplete"
+msgstr ""
+
+msgid "Translation index readiness"
+msgstr ""
+
+msgid "Translation readiness could not be calculated because the required translator tables or columns were not available."
+msgstr ""
+
+msgid "“Ready for indexing” is a diagnostic recommendation only. It requires complete current translation rows plus translated title, meta description, Open Graph title/description and H1 when those fields exist in the source. The plugin does not change robots directives."
+msgstr ""
+

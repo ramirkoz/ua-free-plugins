@@ -35,6 +35,7 @@ final class KOZCOAC_Plugin {
 	}
 
 	private static function legacy_option_name(): string {
+		// Compatibility only. The legacy key is read once and never used as the current option.
 		return implode( '_', array( 'uafree', 'copy', 'settings' ) );
 	}
 
@@ -99,6 +100,7 @@ final class KOZCOAC_Plugin {
 	private static function sanitize_selectors( string $raw ): string {
 		$valid = array();
 		$lines = preg_split( '/\R/u', $raw ) ?: array();
+
 		foreach ( $lines as $line ) {
 			$line = trim( wp_strip_all_tags( (string) $line ) );
 			if ( '' === $line ) {
@@ -111,6 +113,7 @@ final class KOZCOAC_Plugin {
 				break;
 			}
 		}
+
 		return implode( "\n", array_keys( $valid ) );
 	}
 
@@ -118,6 +121,7 @@ final class KOZCOAC_Plugin {
 		if ( preg_match( '/^[.#][A-Za-z0-9_-]{1,100}$/', $selector ) ) {
 			return true;
 		}
+
 		return 1 === preg_match(
 			'/^\[(data-(?:uafree-copy|copy-value|copy-target|copy-key))(?:=(?:"[A-Za-z0-9_-]{1,80}"|\'[A-Za-z0-9_-]{1,80}\'))?\]$/',
 			$selector
@@ -127,6 +131,7 @@ final class KOZCOAC_Plugin {
 	private static function sanitize_paths( string $raw ): string {
 		$valid = array();
 		$lines = preg_split( '/\R/u', $raw ) ?: array();
+
 		foreach ( $lines as $line ) {
 			$line = trim( wp_strip_all_tags( (string) $line ) );
 			if ( '' === $line ) {
@@ -142,6 +147,7 @@ final class KOZCOAC_Plugin {
 				break;
 			}
 		}
+
 		return implode( "\n", array_keys( $valid ) );
 	}
 
@@ -151,7 +157,9 @@ final class KOZCOAC_Plugin {
 	}
 
 	private static function current_path(): string {
-		$request = isset( $_SERVER['REQUEST_URI'] ) ? sanitize_text_field( wp_unslash( (string) $_SERVER['REQUEST_URI'] ) ) : '/';
+		$request = isset( $_SERVER['REQUEST_URI'] )
+			? sanitize_text_field( wp_unslash( (string) $_SERVER['REQUEST_URI'] ) )
+			: '/';
 		$path = wp_parse_url( $request, PHP_URL_PATH );
 		return is_string( $path ) && '' !== $path ? $path : '/';
 	}
@@ -161,6 +169,7 @@ final class KOZCOAC_Plugin {
 		if ( empty( $lines ) ) {
 			return true;
 		}
+
 		foreach ( $lines as $rule ) {
 			if ( str_ends_with( $rule, '*' ) ) {
 				$prefix = substr( $rule, 0, -1 );
@@ -171,6 +180,7 @@ final class KOZCOAC_Plugin {
 				return true;
 			}
 		}
+
 		return false;
 	}
 
@@ -178,9 +188,11 @@ final class KOZCOAC_Plugin {
 		$settings = self::settings();
 		$path = self::current_path();
 		$forced = (bool) apply_filters( 'kozcoac_copy_force_load', false, $path, $settings );
+
 		if ( ! $forced && ( empty( $settings['enabled'] ) || empty( self::selectors() ) ) ) {
 			return false;
 		}
+
 		$allowed = self::path_allowed( $path, (string) $settings['path_rules'] );
 		return $forced ? true : (bool) apply_filters( 'kozcoac_copy_should_load', $allowed, $path, $settings );
 	}
@@ -189,15 +201,18 @@ final class KOZCOAC_Plugin {
 		if ( ! self::should_load() ) {
 			return;
 		}
+
 		$settings = self::settings();
 		$selectors = (array) apply_filters( 'kozcoac_copy_selectors', self::selectors(), $settings );
 		$selectors = array_values( array_filter( array_map( 'strval', $selectors ) ) );
 		if ( empty( $selectors ) ) {
 			return;
 		}
+
 		$base = plugin_dir_url( KOZCOAC_FILE );
 		wp_enqueue_style( 'kozcoac-copy', $base . 'assets/frontend.css', array(), KOZCOAC_VERSION );
 		wp_enqueue_script( 'kozcoac-copy', $base . 'assets/frontend.js', array(), KOZCOAC_VERSION, true );
+
 		$config = array(
 			'selectors'             => $selectors,
 			'collapseWhitespace'    => 'collapse' === $settings['whitespace'],
@@ -213,12 +228,14 @@ final class KOZCOAC_Plugin {
 				'hint'   => __( 'Copy to clipboard', 'koz-copy-actions' ),
 			),
 		);
+
 		$config = (array) apply_filters( 'kozcoac_copy_frontend_config', $config, $settings );
 		wp_localize_script( 'kozcoac-copy', 'KOZCOACConfig', $config );
 	}
 
 	public static function public_status(): array {
 		$settings = self::settings();
+
 		return array(
 			'plugin'               => 'koz-copy-actions',
 			'version'              => KOZCOAC_VERSION,
@@ -236,6 +253,7 @@ final class KOZCOAC_Plugin {
 		if ( ! function_exists( 'wp_add_privacy_policy_content' ) ) {
 			return;
 		}
+
 		$content = '<p>' . esc_html__( 'KOZ Copy Actions performs clipboard actions in the visitor browser. It does not store copied values, IP addresses, cookies, identifiers or analytics data, and it makes no external requests.', 'koz-copy-actions' ) . '</p>';
 		wp_add_privacy_policy_content( 'KOZ Copy Actions', wp_kses_post( wpautop( $content ) ) );
 	}

@@ -1,0 +1,150 @@
+# Copyright (C) 2026 Tony Kozyriev
+# This file is distributed under the GPL-2.0-or-later.
+msgid ""
+msgstr ""
+"Project-Id-Version: KOZ Copy Actions 1.1.14\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/koz-copy-actions\n"
+"POT-Creation-Date: 2026-08-17 00:00+0000\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Text Domain: koz-copy-actions\n"
+
+msgid "Accessible copy-to-clipboard actions without storing copied values or loading an external service."
+msgstr ""
+
+msgid "Activation and scope"
+msgstr ""
+
+msgid "Add keyboard focus and accessible button semantics to non-interactive elements."
+msgstr ""
+
+msgid "Allowed paths"
+msgstr ""
+
+msgid "Another active clipboard plugin was detected."
+msgstr ""
+
+msgid "Behaviour and accessibility"
+msgstr ""
+
+msgid "Bottom centre"
+msgstr ""
+
+msgid "Bottom left"
+msgstr ""
+
+msgid "Bottom right"
+msgstr ""
+
+msgid "CSS selectors"
+msgstr ""
+
+msgid "Collapse repeated whitespace"
+msgstr ""
+
+msgid "Configured selectors: %d"
+msgstr ""
+
+msgid "Copied"
+msgstr ""
+
+msgid "Copied values stored by this plugin: no. External requests: no. Cookies: no. Telemetry: no."
+msgstr ""
+
+msgid "Copy Actions"
+msgstr ""
+
+msgid "Copy targets"
+msgstr ""
+
+msgid "Copy to clipboard"
+msgstr ""
+
+msgid "Could not copy"
+msgstr ""
+
+msgid "Developer support is separate from donations to the foundation."
+msgstr ""
+
+msgid "Diagnostics"
+msgstr ""
+
+msgid "Do not enable two copy handlers on the same elements until you have tested the result."
+msgstr ""
+
+msgid "Donate to UA FREE"
+msgstr ""
+
+msgid "Enable copy actions"
+msgstr ""
+
+msgid "Help the charitable foundation continue its work in Ukraine."
+msgstr ""
+
+msgid "KOZ Copy Actions"
+msgstr ""
+
+msgid "KOZ Copy Actions performs clipboard actions in the visitor browser. It does not store copied values, IP addresses, cookies, identifiers or analytics data, and it makes no external requests."
+msgstr ""
+
+msgid "KOZ Suite"
+msgstr ""
+
+msgid "KOZ WordPress Suite"
+msgstr ""
+
+msgid "Links"
+msgstr ""
+
+msgid "Load the copy handler on matching public pages."
+msgstr ""
+
+msgid "Message duration"
+msgstr ""
+
+msgid "Message position"
+msgstr ""
+
+msgid "One simple class, ID or approved data attribute selector per line."
+msgstr ""
+
+msgid "Optional. One local path per line. Use an ending * for a prefix. Leave empty to allow all public paths."
+msgstr ""
+
+msgid "Plugin support"
+msgstr ""
+
+msgid "Preserve formatting"
+msgstr ""
+
+msgid "Prevent navigation when a matching link is clicked."
+msgstr ""
+
+msgid "Save settings"
+msgstr ""
+
+msgid "Settings"
+msgstr ""
+
+msgid "Show copy icon"
+msgstr ""
+
+msgid "Show success or error message"
+msgstr ""
+
+msgid "Support UA FREE"
+msgstr ""
+
+msgid "Support development"
+msgstr ""
+
+msgid "Target decoration"
+msgstr ""
+
+msgid "Visual feedback"
+msgstr ""
+
+msgid "Whitespace"
+msgstr ""
+

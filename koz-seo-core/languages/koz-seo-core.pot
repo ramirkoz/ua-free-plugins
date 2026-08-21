@@ -1,0 +1,7 @@
+# KOZ SEO Core translation template.
+msgid ""
+msgstr ""
+"Project-Id-Version: KOZ SEO Core 2.1.12\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Domain: koz-seo-core\n"

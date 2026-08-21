@@ -1,0 +1,6 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: KOZ URL-Only Comment Spam 1.1.11\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Domain: koz-url-only-comment-spam\n"

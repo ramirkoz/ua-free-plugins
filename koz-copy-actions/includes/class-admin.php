@@ -60,6 +60,7 @@ final class KOZCOAC_Admin {
 			self::PAGE,
 			array( __CLASS__, 'page' )
 		);
+
 	}
 
 	public static function register_settings(): void {

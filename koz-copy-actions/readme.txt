@@ -2,9 +2,9 @@
 Contributors: ramirkz
 Tags: clipboard, copy, accessibility, privacy, tools
 Requires at least: 6.2
-Tested up to: 7.0
+Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 1.1.12
+Stable tag: 1.1.14
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -124,7 +124,9 @@ KOZ Copy Actions can:
 
 The plugin is internationalized with the `koz-copy-actions` text domain.
 
-Admin labels and frontend messages such as **Copied**, **Could not copy** and **Copy to clipboard** use WordPress translation functions and can be translated through the standard WordPress.org translation system.
+Admin labels and frontend messages such as **Copied**, **Could not copy** and **Copy to clipboard** use WordPress translation functions and remain compatible with the standard WordPress.org translation system.
+
+Version 1.1.13 also includes the KOZ Suite runtime language baseline: Ukrainian, Chinese, Spanish, Arabic, Indonesian, Portuguese, French, Japanese, German and Hindi, with English fallback. The WordPress user locale controls the administration interface. On the frontend, supported language-prefixed routes use the matching bundled copy feedback language.
 
 The copy logic itself is language-independent: it works with the rendered content of the current page, so the same selector configuration can be used with multilingual plugins and translated pages.
 
@@ -201,6 +203,15 @@ No. Clipboard operations are performed locally in the browser and copied values 
 Yes. Enable **Prevent navigation when a matching link is clicked** in the plugin settings.
 
 == Changelog ==
+
+= 1.1.14 =
+* Updated WordPress compatibility metadata for WordPress 7.1.
+* No changes to clipboard, selector, path, privacy or multilingual runtime behavior.
+
+= 1.1.13 =
+* Added bundled runtime interface translations for Ukrainian, Chinese, Spanish, Arabic, Indonesian, Portuguese, French, Japanese, German and Hindi, with English fallback.
+* Frontend copy feedback follows supported language-prefixed routes while WordPress user locale controls the administration interface.
+* Preserved all clipboard, selector, path, privacy and compatibility behaviour from 1.1.12.
 
 = 1.1.12 =
 * Expanded the WordPress.org documentation with a complete quick-start guide and copy examples.

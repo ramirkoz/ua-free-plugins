@@ -1,0 +1,30 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: KOZ Migration & Cleanup 0.9.5\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Domain: koz-migration-cleanup\n"
+
+msgid "Migration candidates"
+msgstr ""
+
+msgid "Read-only checks for placeholder pages, legacy attachment links and old slugs that may need a verified redirect map."
+msgstr ""
+
+msgid "Placeholder pages"
+msgstr ""
+
+msgid "Legacy attachment links"
+msgstr ""
+
+msgid "Old-slug redirect candidates"
+msgstr ""
+
+msgid "No redirects are created automatically."
+msgstr ""
+
+msgid "Export the environment snapshot and verify traffic, backlinks and destination content before applying any 301 redirect."
+msgstr ""
+
+msgid "Redirect candidates are inventory only. Verify traffic, backlinks and destination content before creating any 301 redirect."
+msgstr ""

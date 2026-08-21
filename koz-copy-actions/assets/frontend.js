@@ -33,6 +33,7 @@
 
 	function valueFromTarget(element) {
 		if (element.hasAttribute('data-copy-value')) return normalizeValue(element.getAttribute('data-copy-value'));
+
 		const targetId = element.getAttribute('data-copy-target') || '';
 		if (/^#[A-Za-z][A-Za-z0-9_\-:.]{0,99}$/.test(targetId)) {
 			const referenced = document.querySelector(targetId);
@@ -43,6 +44,7 @@
 				return normalizeValue(referenced.textContent || '');
 			}
 		}
+
 		if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement || element instanceof HTMLSelectElement) {
 			return normalizeValue(element.value);
 		}
@@ -55,6 +57,7 @@
 			await navigator.clipboard.writeText(value);
 			return;
 		}
+
 		const textarea = document.createElement('textarea');
 		textarea.value = value;
 		textarea.setAttribute('readonly', '');
@@ -81,6 +84,7 @@
 		document.dispatchEvent(new CustomEvent('kozcoac:copy-success', {
 			detail: { key: targetKey(element), plugin: 'koz-copy-actions' }
 		}));
+		// Compatibility for existing foundation integrations.
 		document.dispatchEvent(new CustomEvent('uafree:copy-success', {
 			detail: { key: targetKey(element), plugin: 'koz-copy-actions' }
 		}));
