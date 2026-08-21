@@ -1,0 +1,142 @@
+name: Publish KOZ Suite 1.0.24
+
+on:
+  push:
+    branches: [main]
+    paths: [.release-suite-1.0.24.trigger]
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Synchronize verified WordPress 7.1 source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git apply sync/sitebridge-live-0.5.5.patch
+          python3 - <<'PY'
+          from pathlib import Path
+          import json, re
+
+          V = {
+            'koz-migration-cleanup': ('0.9.6','0.9.7','koz-migration-cleanup.php'),
+            'koz-static-translate': ('0.9.16','0.9.17','koz-static-translate.php'),
+            'koz-translate-diagnostics': ('0.3.5','0.3.6','koz-translate-diagnostics.php'),
+            'koz-seo-core': ('2.1.20','2.1.22','koz-seo-core.php'),
+            'koz-404-guard': ('2.1.3','2.1.4','koz-404-guard.php'),
+            'koz-site-bridge': ('0.5.3','0.5.6','koz-site-bridge.php'),
+            'koz-consent-manager': ('0.2.11','0.2.12','koz-consent-manager.php'),
+            'koz-donate-stats': ('1.3.10','1.3.11','koz-donate-stats.php'),
+            'koz-google-ads-campaign-builder': ('1.4.12','1.4.13','koz-google-ads-campaign-builder.php'),
+            'koz-copy-actions': ('1.1.13','1.1.14','koz-copy-actions.php'),
+            'koz-url-only-comment-spam': ('1.1.10','1.1.11','koz-url-only-comment-spam.php'),
+            'koz-suite-control-center': ('0.4.6','0.4.7','koz-suite-control-center.php'),
+          }
+          descriptions = {
+            'koz-seo-core':'WordPress 7.1 compatibility plus WordPress.org JSON output remediation.',
+            'koz-site-bridge':'WordPress 7.1 compatibility preserving the live 0.5.5 read-only admin error-log diagnostics endpoint.',
+          }
+          def put(p,s): p.write_text(s,encoding='utf-8')
+          def add_after(s, marker, block, key):
+            return s if key in s or marker not in s else s.replace(marker, marker+'\n\n'+block, 1)
+
+          for slug,(old,new,main_name) in V.items():
+            root=Path(slug)
+            main=root/main_name
+            s=main.read_text(encoding='utf-8').replace(old,new)
+            put(main,s)
+            r=root/'readme.txt'
+            if r.exists():
+              s=r.read_text(encoding='utf-8')
+              s=re.sub(r'(?mi)^Tested up to:\s*.*$', 'Tested up to: 7.1', s)
+              s=re.sub(r'(?mi)^Stable tag:\s*.*$', f'Stable tag: {new}', s)
+              note=descriptions.get(slug,'WordPress 7.1 compatibility metadata update; no functional changes.')
+              s=add_after(s,'== Changelog ==',f'= {new} =\n* {note}',f'= {new} =')
+              s=add_after(s,'== Upgrade Notice ==',f'= {new} =\n{note}',f'= {new} =')
+              put(r,s)
+            c=root/'CHANGELOG.md'
+            if c.exists():
+              s=c.read_text(encoding='utf-8')
+              if f'## {new}' not in s:
+                note=descriptions.get(slug,'WordPress 7.1 compatibility metadata update; no functional changes.')
+                block=f'## {new}\n- {note}\n\n'
+                if s.startswith('# Changelog'):
+                  i=s.find('\n')+1; s=s[:i]+'\n'+block+s[i:].lstrip('\n')
+                else: s=block+s
+              put(c,s)
+            m=root/'README.md'
+            if m.exists(): put(m,m.read_text(encoding='utf-8').replace(old,new))
+            for pot in (root/'languages').glob('*.pot') if (root/'languages').is_dir() else []:
+              put(pot,pot.read_text(encoding='utf-8').replace(old,new))
+
+          p=Path('koz-seo-core/includes/class-kozseo-core.php'); s=p.read_text(encoding='utf-8')
+          s=s.replace('wp_json_encode( self::ai_manifest(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT )','wp_json_encode( self::ai_manifest(), JSON_PRETTY_PRINT )')
+          s=s.replace('wp_json_encode( self::schema( $context ), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES )','wp_json_encode( self::schema( $context ) )')
+          put(p,s)
+          p=Path('koz-seo-core/includes/class-kozseo-admin.php'); s=p.read_text(encoding='utf-8')
+          s=s.replace('wp_json_encode( $rendered_routes, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES )','wp_json_encode( $rendered_routes )')
+          s=s.replace('wp_json_encode( $report, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT )','wp_json_encode( $report, JSON_PRETTY_PRINT )')
+          put(p,s)
+
+          versions={k:v[1] for k,v in V.items()}
+          names={'koz-migration-cleanup':'KOZ Migration & Cleanup','koz-static-translate':'KOZ Static Translate','koz-translate-diagnostics':'KOZ Translate Diagnostics','koz-seo-core':'KOZ SEO Core','koz-404-guard':'KOZ 404 Guard & URL Intelligence','koz-site-bridge':'KOZ Site Bridge','koz-consent-manager':'KOZ Consent Manager','koz-donate-stats':'KOZ Donate Stats & Conversions','koz-google-ads-campaign-builder':'KOZ Google Ads Campaign Builder','koz-copy-actions':'KOZ Copy Actions','koz-url-only-comment-spam':'KOZ URL-Only Comment Spam','koz-suite-control-center':'KOZ Suite Control Center'}
+          rows='\n'.join(f'| {names[k]} | {versions[k]} |' for k in V)
+          readme=f'''# KOZ WordPress Plugin Suite\n\nA practical collection of 12 privacy-first WordPress plugins independently maintained by Tony Kozyriev (`ramirkz`).\n\n## Current release status\n\n- Suite bundle: **1.0.24**\n- Public plugins: **12**\n- Live functional baseline: **12/12 PASS**\n- WordPress Plugin Check baseline: **12/12 PASS**\n- WordPress compatibility baseline: **7.1**\n- Private Hub: **KOZ Suite Hub — Private 0.4.6** — live + Plugin Check PASS; intentionally excluded from this public repository and bundle.\n- WordPress.org: **KOZ Copy Actions 1.1.14 LIVE**; **KOZ URL-Only Comment Spam 1.1.11 RELEASED**; **KOZ SEO Core 2.1.22 review remediation complete**.\n\n## Included plugins\n\n| Plugin | Version |\n|---|---:|\n{rows}\n\n## Current bundle\n\n**KOZ Suite Bundle 1.0.24** contains the 12 verified public plugin packages. All packages were installed live and passed Plugin Check on WordPress 7.1.\n\n## Privacy and security\n\n- No suite-wide telemetry or hidden tracking.\n- No custom updater that bypasses WordPress.org.\n- Administrative actions use WordPress capabilities, nonces and sanitization.\n- KOZ Site Bridge remains read-only and includes the privacy-redacted admin error-log diagnostic preserved from live 0.5.5.\n- KOZ SEO Core uses script-safe `wp_json_encode()` output in the JSON contexts identified by WordPress.org review.\n- KOZ Suite Hub — Private remains a separate private Google Drive release and is not included here.\n\n## License\n\nGPL-2.0-or-later. See each plugin for details.\n'''
+          put(Path('README.md'),readme)
+
+          Path('releases').mkdir(exist_ok=True)
+          manifest={'suite_version':'1.0.24','date':'2026-08-21','wordpress':'7.1','public_plugin_count':12,'plugin_check':'12/12 PASS','plugins':[{'slug':k,'version':versions[k]} for k in V],'private_hub':{'version':'0.4.6','included':False}}
+          put(Path('releases/KOZ_SUITE_1.0.24_MANIFEST.json'),json.dumps(manifest,ensure_ascii=False,indent=2)+'\n')
+          put(Path('releases/KOZ_SUITE_1.0.24_TEST_REPORT.md'),'# KOZ Suite 1.0.24 Test Report\n\n- WordPress 7.1 live installation: **12/12 PASS**\n- WordPress Plugin Check: **12/12 PASS**\n- Public package metadata (`Version`, `Stable tag`, `Tested up to 7.1`): **PASS**\n- KOZ Site Bridge 0.5.6 preserves exact live 0.5.5 diagnostics delta: **PASS**\n- KOZ SEO Core 2.1.22 WordPress.org JSON remediation: **PASS**\n- Private Hub 0.4.6 is excluded from public source/bundle: **PASS**\n')
+          put(Path('releases/KOZ_SUITE_1.0.24_CHANGELOG.md'),'# KOZ Suite 1.0.24\n\n- Synchronized all 12 public plugins to the WordPress 7.1 verified live baseline.\n- Preserved KOZ Site Bridge live 0.5.5 diagnostics in 0.5.6.\n- Included KOZ SEO Core 2.1.22 WordPress.org review remediation.\n- Updated Copy Actions to 1.1.14 and URL-Only Comment Spam to 1.1.11.\n- Private Hub 0.4.6 remains private and excluded.\n')
+          PY
+          rm -f sync/sitebridge-live-0.5.5.patch
+          for p in koz-*; do [ -f "$p/readme.txt" ] || continue; grep -q '^Tested up to: 7.1$' "$p/readme.txt"; done
+          ! grep -R 'JSON_UNESCAPED_SLASHES' koz-seo-core --include='*.php'
+          grep -q "'/admin-error-log'" koz-site-bridge/includes/class-kozbridge-bridge.php
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Release KOZ Suite 1.0.24 for WordPress 7.1'
+          git push origin HEAD:main
+
+      - name: Build clean release assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist/plugins /tmp/koz-bundle
+          declare -A V=( [koz-migration-cleanup]=0.9.7 [koz-static-translate]=0.9.17 [koz-translate-diagnostics]=0.3.6 [koz-seo-core]=2.1.22 [koz-404-guard]=2.1.4 [koz-site-bridge]=0.5.6 [koz-consent-manager]=0.2.12 [koz-donate-stats]=1.3.11 [koz-google-ads-campaign-builder]=1.4.13 [koz-copy-actions]=1.1.14 [koz-url-only-comment-spam]=1.1.11 [koz-suite-control-center]=0.4.7 )
+          for slug in "${!V[@]}"; do zip -qr "dist/plugins/${slug}-${V[$slug]}.zip" "$slug" -x '*/.DS_Store'; cp "dist/plugins/${slug}-${V[$slug]}.zip" /tmp/koz-bundle/; done
+          cp releases/KOZ_SUITE_1.0.24_MANIFEST.json /tmp/koz-bundle/
+          cp releases/KOZ_SUITE_1.0.24_TEST_REPORT.md /tmp/koz-bundle/
+          cp releases/KOZ_SUITE_1.0.24_CHANGELOG.md /tmp/koz-bundle/
+          (cd /tmp/koz-bundle && zip -qr "$GITHUB_WORKSPACE/dist/KOZ_SUITE_BUNDLE_1.0.24.zip" .)
+          (cd dist && sha256sum KOZ_SUITE_BUNDLE_1.0.24.zip > KOZ_SUITE_BUNDLE_1.0.24.zip.sha256)
+          cp releases/KOZ_SUITE_1.0.24_{MANIFEST.json,TEST_REPORT.md,CHANGELOG.md} dist/
+          cat > dist/RELEASE_NOTES_v1.0.24.md <<'EOF'
+          # KOZ WordPress Plugin Suite 1.0.24
+
+          WordPress 7.1 maintenance release. All 12 public plugins are installed live and passed WordPress Plugin Check. KOZ Suite Hub — Private 0.4.6 remains outside this public release.
+          EOF
+
+      - name: Publish clean GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          assets=(dist/plugins/*.zip dist/KOZ_SUITE_BUNDLE_1.0.24.zip dist/KOZ_SUITE_BUNDLE_1.0.24.zip.sha256 dist/KOZ_SUITE_1.0.24_MANIFEST.json dist/KOZ_SUITE_1.0.24_TEST_REPORT.md dist/KOZ_SUITE_1.0.24_CHANGELOG.md)
+          if gh release view v1.0.24 >/dev/null 2>&1; then
+            gh release upload v1.0.24 "${assets[@]}" --clobber
+            gh release edit v1.0.24 --title 'KOZ WordPress Plugin Suite 1.0.24' --notes-file dist/RELEASE_NOTES_v1.0.24.md
+          else
+            gh release create v1.0.24 "${assets[@]}" --target main --title 'KOZ WordPress Plugin Suite 1.0.24' --notes-file dist/RELEASE_NOTES_v1.0.24.md
+          fi
+          gh release view v1.0.24 --json tagName,name,isDraft,isPrerelease,assets
