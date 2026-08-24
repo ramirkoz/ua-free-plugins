@@ -1,0 +1,187 @@
+name: Publish KOZ Suite 1.0.26
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .release-v1.0.26.trigger
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Apply exact tested Static Translate 0.9.36 patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > /tmp/koz-static.patch.gz.b64 <<'B64'
+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[... ELLIPSIZATION ...]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
+B64
+          base64 -d /tmp/koz-static.patch.gz.b64 | gzip -d > /tmp/koz-static.patch
+          git apply --check /tmp/koz-static.patch
+          git apply /tmp/koz-static.patch
+          grep -q 'Version: 0.9.36' koz-static-translate/koz-static-translate.php
+          grep -q 'Stable tag: 0.9.36' koz-static-translate/readme.txt
+
+      - name: Update suite metadata and release notes
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('README.md')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace('Suite bundle: **1.0.25**','Suite bundle: **1.0.26**')
+          s=s.replace('| koz-static-translate | 0.9.19 |','| koz-static-translate | 0.9.36 |')
+          s=s.replace('**KOZ Suite Bundle 1.0.25**','**KOZ Suite Bundle 1.0.26**')
+          p.write_text(s,encoding='utf-8')
+          PY
+          cat > RELEASE_NOTES_v1.0.26.md <<'MD'
+          # KOZ WordPress Plugin Suite 1.0.26
+
+          This release updates KOZ Static Translate from 0.9.19 to 0.9.36 while keeping the other 11 public plugin packages unchanged.
+
+          ## KOZ Static Translate 0.9.36
+
+          - Production safety mode prevents heavy activation, automatic worker, cron, bulk rebuild and Azure work during readiness recovery.
+          - Priority Core detection is universal and derived dynamically from WordPress navigation, with external URLs excluded and no site-specific hardcoding.
+          - Bounded local readiness tools use existing Translation Memory without Azure requests.
+          - Description metadata and image alt text are non-blocking for page readiness while remaining available for later translation.
+          - Live functional verification, WordPress Plugin Check and WordPress 7.1 compatibility: PASS.
+          - Google Search Console live test confirmed a recovered English route is indexable.
+
+          ## Suite verification
+
+          - Public plugins: 12/12.
+          - Other 11 packages: byte-identical to KOZ Suite 1.0.25.
+          - Release bundle and component checksums are verified before publication.
+          MD
+
+      - name: Build exact tested assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf dist-build /tmp/koz-base /tmp/koz-suite
+          mkdir -p dist-build /tmp/koz-base /tmp/koz-suite
+          python3 - <<'PY'
+          from pathlib import Path
+          import zipfile, hashlib
+          src=Path('koz-static-translate')
+          out=Path('dist-build/KOZ-Static-Translate-0.9.36.zip')
+          fixed=(2026,8,24,0,0,0)
+          with zipfile.ZipFile(out,'w') as z:
+              for p in sorted(x for x in src.rglob('*') if x.is_file()):
+                  arc=f'koz-static-translate/{p.relative_to(src).as_posix()}'
+                  info=zipfile.ZipInfo(arc,fixed)
+                  info.compress_type=zipfile.ZIP_DEFLATED
+                  info.create_system=3
+                  info.external_attr=(0o100644<<16)
+                  z.writestr(info,p.read_bytes(),compress_type=zipfile.ZIP_DEFLATED,compresslevel=9)
+          h=hashlib.sha256(out.read_bytes()).hexdigest()
+          expected='de2a2190b00dfc5b176d918cff3ac9e9a61dab3e6bca2921f615b66d82fae8e9'
+          if h != expected:
+              raise SystemExit(f'Static Translate SHA mismatch: {h} != {expected}')
+          Path('dist-build/KOZ-Static-Translate-0.9.36.zip.sha256').write_text(f'{h}  KOZ-Static-Translate-0.9.36.zip\n',encoding='utf-8')
+          PY
+          gh release download v1.0.25 --pattern 'KOZ-Suite-1.0.25.zip' --dir /tmp/koz-base
+          unzip -q /tmp/koz-base/KOZ-Suite-1.0.25.zip -d /tmp/koz-suite
+          rm -f /tmp/koz-suite/packages/koz-static-translate-0.9.19.zip
+          rm -f /tmp/koz-suite/checksums/koz-static-translate-0.9.19.zip.sha256
+          cp dist-build/KOZ-Static-Translate-0.9.36.zip /tmp/koz-suite/packages/koz-static-translate-0.9.36.zip
+          python3 - <<'PY'
+          from pathlib import Path
+          import json, hashlib, zipfile
+          root=Path('/tmp/koz-suite')
+          packages=root/'packages'
+          checksums=root/'checksums'
+          static=packages/'koz-static-translate-0.9.36.zip'
+          def sha(p): return hashlib.sha256(p.read_bytes()).hexdigest()
+          static_sha=sha(static)
+          (checksums/'koz-static-translate-0.9.36.zip.sha256').write_text(f'{static_sha}  packages/koz-static-translate-0.9.36.zip\n',encoding='utf-8')
+          mp=root/'manifest.json'
+          m=json.loads(mp.read_text(encoding='utf-8'))
+          m['version']='1.0.26'; m['suite_version']='1.0.26'; m['created']='2026-08-24'; m['release_date']='2026-08-24'
+          m['status']='CURRENT LIBRARY — 12/12 LIVE + PLUGIN CHECK PASS — WORDPRESS 7.1'
+          for item in m.get('changed_components',[]):
+              if item.get('name')=='KOZ Static Translate':
+                  item.update(version='0.9.36',sha256=static_sha,live='PASS',plugin_check='PASS',wordpress_7_1='PASS')
+          for item in m.get('packages',[]):
+              if item.get('slug')=='koz-static-translate':
+                  item.update(version='0.9.36',file='packages/koz-static-translate-0.9.36.zip',sha256=static_sha,size=static.stat().st_size,strict_re_audit='PASS',live_functional='PASS',plugin_check='PASS',wordpress_org_ready='YES',wordpress_core_tested='7.1 PASS',wordpress_org_status='0.9.36 READY FOR PENDING WORDPRESS.ORG APPLICATION UPDATE')
+          m.setdefault('wordpress_org',{})['koz-static-translate']='0.9.36 READY FOR PENDING APPLICATION UPDATE'
+          m.pop('changes_from_1_0_24',None)
+          m['changes_from_1_0_25']=[
+              'KOZ Static Translate updated from 0.9.19 to 0.9.36.',
+              'Production safety mode prevents heavy activation, automatic worker, cron, bulk rebuild and Azure work during readiness recovery.',
+              'Priority Core detection is universal and derived dynamically from WordPress navigation, with external URLs excluded and no UA FREE-specific hardcoding.',
+              'Local bounded readiness tools use existing Translation Memory without Azure requests; verified live on priority core routes.',
+              'Readiness no longer blocks on universal ancillary metadata types such as description metadata and image alt text.',
+              'KOZ Static Translate 0.9.36 passed live functional verification and WordPress Plugin Check on WordPress 7.1.',
+              'Google Search Console live test confirmed an English ready route is indexable after readiness recovery.',
+              'All other 11 public packages remain byte-identical to KOZ Suite 1.0.25.'
+          ]
+          mp.write_text(json.dumps(m,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          lines=[]
+          for p in sorted(packages.glob('*.zip')):
+              lines.append(f'{sha(p)}  packages/{p.name}')
+          (root/'SHA256SUMS.txt').write_text('\n'.join(lines)+'\n',encoding='utf-8')
+          out=Path('dist-build/KOZ-Suite-1.0.26.zip')
+          fixed=(2026,8,24,0,0,0)
+          with zipfile.ZipFile(out,'w') as z:
+              for p in sorted(x for x in root.rglob('*') if x.is_file()):
+                  arc=p.relative_to(root).as_posix()
+                  info=zipfile.ZipInfo(arc,fixed)
+                  info.compress_type=zipfile.ZIP_DEFLATED
+                  info.create_system=3
+                  info.external_attr=(0o100644<<16)
+                  z.writestr(info,p.read_bytes(),compress_type=zipfile.ZIP_DEFLATED,compresslevel=9)
+          suite_sha=sha(out)
+          expected='b4a41f77b01d61d4fe43ebbc32a00180613dd97f9e3bd013c24b2aaa6a75c2c5'
+          if suite_sha != expected:
+              raise SystemExit(f'Suite SHA mismatch: {suite_sha} != {expected}')
+          Path('dist-build/KOZ-Suite-1.0.26.zip.sha256').write_text(f'{suite_sha}  KOZ-Suite-1.0.26.zip\n',encoding='utf-8')
+          Path('dist/manifest.json').write_bytes(mp.read_bytes())
+          PY
+          unzip -t dist-build/KOZ-Static-Translate-0.9.36.zip
+          unzip -t dist-build/KOZ-Suite-1.0.26.zip
+
+      - name: Commit synchronized source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add koz-static-translate README.md RELEASE_NOTES_v1.0.26.md dist/manifest.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'Release KOZ Suite 1.0.26 with Static Translate 0.9.36'
+            git push origin HEAD:main
+          fi
+
+      - name: Create GitHub release v1.0.26
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          target_sha="$(git rev-parse HEAD)"
+          if gh release view v1.0.26 >/dev/null 2>&1; then
+            gh release upload v1.0.26 dist-build/* --clobber
+            gh release edit v1.0.26 --title 'KOZ WordPress Plugin Suite 1.0.26' --notes-file RELEASE_NOTES_v1.0.26.md
+          else
+            gh release create v1.0.26 dist-build/* \
+              --target "$target_sha" \
+              --title 'KOZ WordPress Plugin Suite 1.0.26' \
+              --notes-file RELEASE_NOTES_v1.0.26.md
+          fi
+          gh release view v1.0.26 --json tagName,name,isDraft,isPrerelease,assets
