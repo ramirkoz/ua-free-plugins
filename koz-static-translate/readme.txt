@@ -4,7 +4,7 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=kozyr
 Tags: translation, multilingual, azure, static translation, language switcher
 Requires at least: 6.0
 Tested up to: 7.1
-Stable tag: 0.9.19
+Stable tag: 0.9.36
 Requires PHP: 8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -91,6 +91,94 @@ No. Existing settings determine whether the queue and public routes are enabled.
 No. It originated from production work for the foundation website but is independently owned and maintained by Tony Kozyriev.
 
 == Changelog ==
+
+= 0.9.36 =
+* Makes meta_description, meta_og_description and meta_twitter_description universally non-blocking for page readiness.
+* Makes image alt-text segments non-blocking for readiness while keeping them available for later translation.
+* Removes the site-specific text exceptions previously used for readiness and replaces consent/privacy handling with generic structural context detection.
+* No Azure request, scan, rebuild, cron or automatic worker is introduced.
+
+
+= 0.9.35 =
+* Adds a universal manual action that prepares exactly one pending Priority Core source per click.
+* The next page is selected from dynamically detected internal navigation; no site-specific paths, titles or slugs are used.
+* Preparation performs one local source scan and hydrates existing Translation Memory only; no Azure request, full inventory rebuild, cron or automatic loop.
+
+
+= 0.9.34 =
+* Adds a read-only Priority Core discovery diagnostic showing each detected internal navigation path and whether it exists in source inventory and core queue.
+* Diagnostic performs no writes, scans, rebuilds, cron work or Azure requests.
+* Priority Core processing behavior remains unchanged from 0.9.33.
+
+
+= 0.9.33 =
+* Priority Core now merges internal links from all assigned primary/main/header navigation locations, the richest unassigned classic-menu fallback, and block-theme Navigation.
+* External URLs are discarded and duplicate internal paths are removed.
+* No site-specific page names, titles or URL paths are used.
+
+
+= 0.9.32 =
+* Expands universal Priority Core menu detection for page builders and block themes.
+* Detection now checks assigned classic menu locations, unassigned classic nav menus and block-theme wp_navigation menus, then selects the strongest internal navigation set.
+* No site-specific page names, titles or URL paths are used.
+
+
+= 0.9.31 =
+* Removes all site-specific Priority Core page names, titles and URL paths.
+* Priority Core is now detected universally from the WordPress home page plus the active primary/main navigation menu.
+* Matching uses exact internal URL paths only, preventing legacy pages from entering Priority Core because of similar titles.
+* Processing remains manual, local-only and limited to 4 pages per click.
+
+
+= 0.9.30 =
+* Replaces broad core batching with an explicit Priority Core set: Home, Projects, Donate, Reports, About, Gallery, Partners and Financial report.
+* Secondary/legacy core URLs and report posts are excluded from this batch entirely.
+* Batch output now shows the Priority Core label and the maximum number of source segments still missing for an incomplete page.
+* Processing remains manual, local-only and limited to 4 pages per click.
+
+
+= 0.9.29 =
+* Core readiness batches now use explicit page priority instead of source/database ID order.
+* First wave: Home, UA FREE, Donate, About and Reports landing; then remaining top-level core pages; nested core pages last.
+* Reports remain excluded from the core batch. Processing stays manual and limited to 4 pages per click.
+
+
+= 0.9.28 =
+* Adds a manual bounded core-readiness batch: maximum 4 core pages per click.
+* Uses only existing local translations and Translation Memory; no Azure, scan, rebuild, cron or automatic loop.
+* Incomplete pages remain pending and are reported without being forced ready.
+
+
+= 0.9.27 =
+* Treats two consent-component descriptions and the UA FREE logo alt text as non-blocking readiness segments.
+* One-page reconcile safely promotes only those matching segments to protected status, then recalculates readiness from existing local translations/Translation Memory.
+* No scan, queue rebuild, automatic worker or Azure request is performed.
+
+
+= 0.9.26 =
+* Adds a read-only one-page diagnostic that lists source segments missing from Translation Memory/ready translations.
+* Diagnostic is capped at 25 rows and performs no writes, scans, rebuilds, cron work or Azure requests.
+* Safety-mode behavior remains unchanged.
+
+
+= 0.9.25 =
+* Plugin Check compliance fix for the one-page readiness action: direct nonce verification, sanitized path input, and translator comments.
+* No change to the 0.9.24 safety-mode runtime behavior.
+
+
+= 0.9.24 =
+* Adds a bounded one-page readiness reconciliation using existing Translation Memory only.
+* The reconciliation performs no source scan, queue rebuild or Azure request.
+* Admin status now accurately reports that the automatic worker is disabled in safety mode.
+* Opening the Static Translate admin screen no longer runs hidden upgrade/repair maintenance.
+
+
+= 0.9.23 =
+* Stability release: activation performs no inventory scan, rebuild, readiness repair or Azure work.
+* Automatic cron and shutdown workers are disabled.
+* Manual Run/Rebuild actions are temporarily disabled to protect production stability.
+* Existing translated routes, language switching and stored translation data remain available.
+
 
 = 0.9.19 =
 * Keep the language switcher visible on translated provisional routes.
