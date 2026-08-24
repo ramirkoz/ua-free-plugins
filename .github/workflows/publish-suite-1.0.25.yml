@@ -1,0 +1,220 @@
+name: Publish KOZ Suite 1.0.25
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .release-suite-1.0.25.trigger
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Patch Static Translate to exact 0.9.19 source
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PYCODE'
+          from pathlib import Path
+          import hashlib
+
+          root = Path('.')
+          p = root / 'koz-static-translate' / 'koz-static-translate.php'
+          s = p.read_text(encoding='utf-8')
+          if 'Version: 0.9.17' not in s or "define( 'KOZSTX_VERSION', '0.9.17' );" not in s:
+              raise SystemExit('Unexpected Static Translate baseline')
+          s = s.replace('Version: 0.9.17', 'Version: 0.9.19', 1)
+          s = s.replace("define( 'KOZSTX_VERSION', '0.9.17' );", "define( 'KOZSTX_VERSION', '0.9.19' );", 1)
+          p.write_text(s, encoding='utf-8')
+
+          p = root / 'koz-static-translate' / 'includes' / 'class-kozstx-static-translate.php'
+          s = p.read_text(encoding='utf-8')
+          old1 = """\t\t$select = $dom->createElement( 'select' );\n\t\t$select->setAttribute( 'aria-label', 'Language' );\n\t\t$select->setAttribute( 'onchange', 'if(this.value){window.location.href=this.value;}' );\n\t\t$source_info = self::source_language_info();\n\t\t$option_source = $dom->createElement( 'option', (string) $source_info['native'] );\n\t\t$option_source->setAttribute( 'value', (string) $source['source_url'] );\n\t\t$select->appendChild( $option_source );\n\t\tforeach ( self::languages() as $slug => $info ) {\n"""
+          new1 = """\t\t$select = $dom->createElement( 'select' );\n\t\t$select->setAttribute( 'aria-label', 'Language' );\n\t\t$select->setAttribute( 'onchange', 'if(this.value){window.location.href=this.value;}' );\n\t\t$ready = self::ready_languages_for_source_read_only( (int) $source['id'] );\n\t\t$current_is_ready = in_array( $current_slug, $ready, true );\n\n\t\t/*\n\t\t * A provisional route may keep the switcher for navigation back to the\n\t\t * source language, but it must not advertise any other unfinished routes.\n\t\t */\n\t\tif ( ! $current_is_ready ) {\n\t\t\tif ( ! self::language_can_render_provisional( (int) $source['id'], $current_slug ) ) {\n\t\t\t\treturn;\n\t\t\t}\n\t\t\t$ready = array( $current_slug );\n\t\t}\n\n\t\t$source_info = self::source_language_info();\n\t\t$option_source = $dom->createElement( 'option', (string) $source_info['native'] );\n\t\t$option_source->setAttribute( 'value', (string) $source['source_url'] );\n\t\t$select->appendChild( $option_source );\n\t\tforeach ( $ready as $slug ) {\n\t\t\t$info = self::languages()[ $slug ] ?? null;\n\t\t\tif ( ! is_array( $info ) ) {\n\t\t\t\tcontinue;\n\t\t\t}\n"""
+          old2 = """\t\t$ready = array_keys( self::languages() );\n\n\t\t$source_url = is_array( $source ) && ! empty( $source['source_url'] )\n\t\t\t? (string) $source['source_url']\n\t\t\t: ( is_front_page() ? home_url( '/' ) : get_permalink( $post_id ) );\n\n\t\tif ( ! is_string( $source_url ) || '' === $source_url ) {\n"""
+          new2 = """\t\t$ready = is_array( $source )\n\t\t\t? self::ready_languages_for_source_read_only( (int) $source['id'] )\n\t\t\t: array();\n\n\t\t$source_url = is_array( $source ) && ! empty( $source['source_url'] )\n\t\t\t? (string) $source['source_url']\n\t\t\t: ( is_front_page() ? home_url( '/' ) : get_permalink( $post_id ) );\n\n\t\tif ( empty( $ready ) || ! is_string( $source_url ) || '' === $source_url ) {\n"""
+          if old1 not in s or old2 not in s:
+              raise SystemExit('Static Translate switcher patch anchors not found')
+          s = s.replace(old1, new1, 1).replace(old2, new2, 1)
+          p.write_text(s, encoding='utf-8')
+
+          p = root / 'koz-static-translate' / 'readme.txt'
+          s = p.read_text(encoding='utf-8')
+          s = s.replace('Stable tag: 0.9.17', 'Stable tag: 0.9.19', 1)
+          suite = """= Part of the KOZ Suite =\n\nKOZ Static Translate is **one focused module of the broader KOZ Suite**, a family of WordPress plugins that share a common KOZ administration experience and visual identity.\n\nEach KOZ plugin remains independent, so site owners can install only the modules they need or combine several modules into one toolkit.\n\nCurrent public KOZ plugins:\n\n* [KOZ SEO Core](https://wordpress.org/plugins/koz-seo-core/) — technical SEO, schema, sitemaps, AI discovery and OpenAI Vision image ALT.\n* [KOZ Copy Actions](https://wordpress.org/plugins/koz-copy-actions/) — accessible copy-to-clipboard actions for selected WordPress content.\n* [KOZ URL-Only Comment Spam](https://wordpress.org/plugins/koz-url-only-comment-spam/) — privacy-first local moderation for URL-only comment spam.\n\nAdditional KOZ Suite modules are used in production and may be published separately as they are prepared for public distribution.\n\n"""
+          if '= Part of the KOZ Suite =' not in s:
+              s = s.replace('= Main features =', suite + '= Main features =', 1)
+          external = """== External services ==\n\nKOZ Static Translate optionally uses Microsoft Azure Translator when the site administrator configures Azure Translator credentials and enables translation processing.\n\nWhen translation processing runs, text segments selected from published WordPress content are sent to the configured Azure Translator endpoint so Microsoft can return translated text. The plugin does not send visitor analytics or advertising telemetry to the developer. Azure Translator credentials are stored in the WordPress database in encrypted form using keys derived from WordPress salts.\n\nThe external service is not required for WordPress administration, cleanup tools, translation-memory storage, language routing logic or KOZ Suite navigation, but new machine translations cannot be produced without a configured translation provider.\n\nAzure Translator:\nhttps://azure.microsoft.com/products/ai-services/ai-translator/\n\nMicrosoft Azure Translator data, privacy and security information:\nhttps://learn.microsoft.com/en-us/azure/foundry/responsible-ai/translator/data-privacy-security\n\nMicrosoft Privacy Statement:\nhttps://privacy.microsoft.com/en-us/privacystatement\n\nMicrosoft Azure legal information:\nhttps://azure.microsoft.com/support/legal/\n\n"""
+          if '== External services ==' not in s:
+              s = s.replace('== Installation ==', external + '== Installation ==', 1)
+          if '= 0.9.19 =' not in s:
+              s = s.replace('== Changelog ==\n', "== Changelog ==\n\n= 0.9.19 =\n* Keep the language switcher visible on translated provisional routes.\n* Provisional routes show only the source language and the current language, without advertising other unfinished translations.\n\n\n= 0.9.18 =\n* The floating language switcher now advertises only fully translated routes for the current page and stays hidden when none are ready.\n* Provisional translated routes no longer render the language switcher, preventing unfinished language URLs from being exposed through navigation.\n* No changes to Azure budget limits, translation memory, queue contents or public URL structure.\n", 1)
+          if '= 0.9.18 =\nThe language switcher now exposes only fully translated routes' not in s:
+              s = s.replace('== Upgrade Notice ==\n', '== Upgrade Notice ==\n\n= 0.9.18 =\nThe language switcher now exposes only fully translated routes for each page; unfinished routes are no longer advertised through navigation.\n', 1)
+          p.write_text(s, encoding='utf-8')
+
+          p = root / 'koz-static-translate' / 'CHANGELOG.md'
+          s = p.read_text(encoding='utf-8')
+          if not s.startswith('## 0.9.19'):
+              s = '## 0.9.19\n\n- Keep the language switcher visible on provisional translated routes without advertising unfinished translations.\n\n' + s
+          if '## 0.9.18' not in s:
+              s = s.replace('# Changelog\n', '# Changelog\n\n## 0.9.18\n- The floating language switcher now lists only fully translated routes for the current source page and stays hidden when none are ready.\n- Provisional translated routes no longer render the language switcher, so unfinished language URLs are not advertised through navigation.\n- No changes to Azure budget limits, translation memory, queue contents or public URL structure.\n', 1)
+          p.write_text(s, encoding='utf-8')
+
+          p = root / 'koz-static-translate' / 'README.md'
+          s = p.read_text(encoding='utf-8').replace('Version 0.9.17.', 'Version 0.9.19.', 1)
+          p.write_text(s, encoding='utf-8')
+
+          expected = {
+              'koz-static-translate/CHANGELOG.md':'8943f7e0aeac3297343ba32a4fcc7678aef5a1eb8444e87508f40d4b5a4f079e',
+              'koz-static-translate/README.md':'d6f1f3669fe374f0c568b7575cf032dcabfd70df09c12d0bac9f0ac2244fd69d',
+              'koz-static-translate/koz-static-translate.php':'46a4d1cb00376a0ff3585a9c5f7d4e303d2bd53cc016efe5a31146a469460b9d',
+              'koz-static-translate/readme.txt':'328c67906fbaa499ced9554577ce83f5dc5c1d62604afee7b078b98ed44b24eb',
+              'koz-static-translate/includes/class-kozstx-static-translate.php':'019c998d8c22e3daa8e3ae7690f23fe6fadebe71b05f0ac978c9f7986c7c49c1',
+          }
+          for name, want in expected.items():
+              got = hashlib.sha256(Path(name).read_bytes()).hexdigest()
+              if got != want:
+                  raise SystemExit(f'Exact-source hash mismatch: {name}: {got} != {want}')
+          PYCODE
+
+      - name: Build exact Static Translate package and Suite 1.0.25 bundle
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/koz125 /tmp/koz125-release /tmp/prev124
+          mkdir -p /tmp/koz125 /tmp/koz125-release /tmp/prev124
+          gh release download v1.0.24 --pattern 'KOZ_SUITE_BUNDLE_1.0.24.zip' --dir /tmp/prev124
+          unzip -q /tmp/prev124/KOZ_SUITE_BUNDLE_1.0.24.zip -d /tmp/koz125
+          python3 - <<'PYCODE'
+          from pathlib import Path
+          import json, hashlib, zipfile, shutil
+
+          root = Path('.')
+          base = Path('/tmp/koz125')
+          FIXED_DT=(2026,8,24,0,0,0)
+
+          def sha256(p):
+              h=hashlib.sha256()
+              with open(p,'rb') as f:
+                  for chunk in iter(lambda:f.read(1024*1024),b''): h.update(chunk)
+              return h.hexdigest()
+
+          def write_file(zf, arcname, data):
+              zi=zipfile.ZipInfo(arcname,FIXED_DT)
+              zi.compress_type=zipfile.ZIP_DEFLATED
+              zi.create_system=3
+              zi.external_attr=(0o100644 << 16)
+              zf.writestr(zi,data,compress_type=zipfile.ZIP_DEFLATED,compresslevel=9)
+
+          plugin=Path('/tmp/koz125-release/koz-static-translate-0.9.19.zip')
+          with zipfile.ZipFile(plugin,'w') as z:
+              src=root/'koz-static-translate'
+              for p in sorted(x for x in src.rglob('*') if x.is_file()):
+                  write_file(z,f'koz-static-translate/{p.relative_to(src).as_posix()}',p.read_bytes())
+          static_sha=sha256(plugin)
+          if static_sha!='76c9e08b821d005dc631e685d553e4dd0759902d01f0763823d92445d66e0958':
+              raise SystemExit(f'Static package SHA mismatch: {static_sha}')
+
+          old=base/'packages'/'koz-static-translate-0.9.17.zip'
+          if old.exists(): old.unlink()
+          shutil.copy2(plugin,base/'packages'/'koz-static-translate-0.9.19.zip')
+          oldc=base/'checksums'/'koz-static-translate-0.9.17.zip.sha256'
+          if oldc.exists(): oldc.unlink()
+          (base/'checksums'/'koz-static-translate-0.9.19.zip.sha256').write_text(f'{static_sha}  koz-static-translate-0.9.19.zip\n',encoding='utf-8')
+
+          m=json.loads((base/'manifest.json').read_text(encoding='utf-8'))
+          m['version']=m['suite_version']='1.0.25'
+          m['created']=m['release_date']='2026-08-24'
+          m['status']='CURRENT LIBRARY — 12/12 LIVE + PLUGIN CHECK PASS — WORDPRESS 7.1'
+          for c in m['changed_components']:
+              if c['name']=='KOZ Static Translate':
+                  c.update(version='0.9.19',sha256=static_sha,live='PASS',plugin_check='PASS',wordpress_7_1='PASS')
+          target=base/'packages'/'koz-static-translate-0.9.19.zip'
+          for p in m['packages']:
+              if p['slug']=='koz-static-translate':
+                  p.update(version='0.9.19',file='packages/koz-static-translate-0.9.19.zip',sha256=static_sha,size=target.stat().st_size,strict_re_audit='PASS',live_functional='PASS',plugin_check='PASS',wordpress_org_ready='YES',wordpress_core_tested='7.1 PASS',wordpress_org_status='0.9.19 READY FOR WORDPRESS.ORG SUBMISSION')
+          m['wordpress_org']={'koz-copy-actions':'1.1.14 LIVE','koz-url-only-comment-spam':'1.1.11 LIVE','koz-seo-core':'2.1.22 LIVE','koz-static-translate':'0.9.19 READY FOR SUBMISSION'}
+          m.pop('changes_from_1_0_23',None)
+          m['changes_from_1_0_24']=[
+              'KOZ Static Translate updated from 0.9.17 to 0.9.19.',
+              'Source-page language switchers now expose only fully ready translated routes.',
+              'Provisional translated routes retain navigation to the source language without advertising other unfinished translations.',
+              'KOZ Static Translate 0.9.19 passed live functional verification and WordPress Plugin Check on WordPress 7.1.',
+              'All other 11 public packages remain byte-identical to KOZ Suite 1.0.24.'
+          ]
+          (base/'manifest.json').write_text(json.dumps(m,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          packages=sorted((base/'packages').glob('*.zip'))
+          (base/'SHA256SUMS.txt').write_text(''.join(f'{sha256(p)}  packages/{p.name}\n' for p in packages),encoding='utf-8')
+          for p in packages:
+              c=base/'checksums'/f'{p.name}.sha256'
+              if c.read_text(encoding='utf-8').split()[0] != sha256(p): raise SystemExit(f'Checksum mismatch: {p.name}')
+
+          bundle=Path('/tmp/koz125-release/KOZ-Suite-1.0.25.zip')
+          with zipfile.ZipFile(bundle,'w') as z:
+              for p in sorted(x for x in base.rglob('*') if x.is_file()):
+                  write_file(z,p.relative_to(base).as_posix(),p.read_bytes())
+          bundle_sha=sha256(bundle)
+          if bundle_sha!='192e70982ae9788f217c0ce6bb071a479719710cced27f73ccbbce5525b33c40':
+              raise SystemExit(f'Bundle SHA mismatch: {bundle_sha}')
+          for p in packages:
+              shutil.copy2(p,Path('/tmp/koz125-release')/p.name)
+          shutil.copy2(base/'manifest.json',Path('/tmp/koz125-release/manifest.json'))
+          shutil.copy2(base/'SHA256SUMS.txt',Path('/tmp/koz125-release/SHA256SUMS.txt'))
+          Path('/tmp/koz125-release/KOZ-Suite-1.0.25.zip.sha256').write_text(f'{bundle_sha}  KOZ-Suite-1.0.25.zip\n',encoding='utf-8')
+          PYCODE
+
+      - name: Update repository release metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PYCODE'
+          from pathlib import Path
+          p=Path('README.md')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace('Suite bundle: **1.0.24**','Suite bundle: **1.0.25**')
+          s=s.replace('| koz-static-translate | 0.9.17 |','| koz-static-translate | 0.9.19 |')
+          s=s.replace('**KOZ Suite Bundle 1.0.24**','**KOZ Suite Bundle 1.0.25**')
+          p.write_text(s,encoding='utf-8')
+          notes = ('# KOZ WordPress Plugin Suite 1.0.25\n\n'
+                   'Maintenance release centered on KOZ Static Translate 0.9.19.\n\n'
+                   '- KOZ Static Translate updated from 0.9.17 to 0.9.19.\n'
+                   '- Source-page switchers expose only fully ready translated routes.\n'
+                   '- Provisional translated routes retain navigation to the source language without advertising unfinished translations.\n'
+                   '- KOZ Static Translate 0.9.19: live functional PASS, WordPress Plugin Check PASS, WordPress 7.1 PASS.\n'
+                   '- Other 11 public plugin packages remain unchanged from Suite 1.0.24.\n')
+          Path('RELEASE_NOTES_v1.0.25.md').write_text(notes,encoding='utf-8')
+          rel=Path('releases'); rel.mkdir(exist_ok=True)
+          rel.joinpath('KOZ-Suite-1.0.25-manifest.json').write_bytes(Path('/tmp/koz125/manifest.json').read_bytes())
+          rel.joinpath('KOZ-Suite-1.0.25-sha256.txt').write_bytes(Path('/tmp/koz125/SHA256SUMS.txt').read_bytes())
+          Path('.release-suite-1.0.25.trigger').unlink(missing_ok=True)
+          Path('.github/workflows/publish-suite-1.0.25.yml').unlink(missing_ok=True)
+          PYCODE
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Release KOZ Suite 1.0.25 with Static Translate 0.9.19'
+          git push origin HEAD:main
+
+      - name: Publish GitHub release v1.0.25
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh release create v1.0.25 /tmp/koz125-release/* \
+            --target main \
+            --title 'KOZ WordPress Plugin Suite 1.0.25' \
+            --notes-file RELEASE_NOTES_v1.0.25.md
+          gh release view v1.0.25 --json tagName,name,isDraft,isPrerelease,assets
