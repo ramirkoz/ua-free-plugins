@@ -1,3 +1,92 @@
+## 0.9.36
+
+- Universal readiness rule: description metadata does not block a translated page from becoming ready.
+- Image alt text is also non-blocking for readiness.
+- Removes site-specific readiness text matching and uses generic consent/privacy component context instead.
+- Existing safety mode remains unchanged; Azure usage stays zero for local reconcile actions.
+
+## 0.9.35
+
+- Adds one-click preparation of the next pending dynamically detected Priority Core source.
+- Can register one missing internal WordPress page into inventory, then scan only that page.
+- Uses local rendered HTML and Translation Memory only; Azure usage remains zero.
+- No site-specific rules, bulk rebuilds or background loops.
+
+## 0.9.34
+
+- Adds read-only Priority Core discovery diagnostics: menu path, source match, scan status and queue state.
+- No writes or external API calls.
+- No change to batch processing semantics.
+
+## 0.9.33
+
+- Merges internal links from multiple active navigation sources instead of selecting only one menu set.
+- Keeps only the richest unassigned classic-menu fallback to avoid footer/menu noise.
+- External URLs are filtered automatically and duplicates are removed by exact path.
+- No UA FREE-specific logic is present.
+
+## 0.9.32
+
+- Universal Priority Core discovery now supports builders/themes that keep the main classic menu unassigned to a WordPress menu location.
+- Adds block-theme wp_navigation fallback.
+- Still uses exact internal URL paths only and contains no UA FREE-specific rules.
+
+## 0.9.31
+
+- Removes UA FREE-specific Priority Core hardcoding.
+- Detects Priority Core from WordPress home + the active primary/main navigation menu.
+- Uses exact internal path matching only; no page-title fallback.
+- Keeps reports, secondary core, Azure, scans, rebuilds, cron and automatic loops out of the batch.
+
+## 0.9.30
+
+- Introduces explicit Priority Core classification for the eight main navigation areas.
+- Secondary and legacy core URLs are no longer processed by the Priority Core batch.
+- Adds per-page missing source-segment count to batch output.
+- Zero Azure calls, scans, rebuilds, cron jobs or automatic loops.
+
+## 0.9.29
+
+- Replaces source-ID ordering with stable editorial priority for core readiness batches.
+- Pinned core pages run first, then other top-level core URLs, then nested core URLs.
+- Reports remain excluded; batch size remains four pages per manual click.
+
+## 0.9.28
+
+- Adds manual bounded reconciliation for four core pages per click.
+- Cursor advances within the current admin session so incomplete pages cannot trap the batch on the same records.
+- Zero Azure calls, scans, rebuilds, cron jobs or automatic batch loops.
+
+## 0.9.27
+
+- Adds narrow non-blocking readiness rules for the two consent descriptions and UA FREE logo alt text identified by diagnostics.
+- The one-page reconcile action updates only matching segment flags and queue readiness for the selected page.
+- Zero Azure requests, scans, rebuilds or background worker activity.
+
+## 0.9.26
+
+- Adds read-only missing-segment diagnostics for one selected source page.
+- No database writes, scans, rebuilds, background workers or Azure calls.
+- Diagnostic output is capped at 25 rows.
+
+## 0.9.25
+
+- Plugin Check compliance fixes for the one-page readiness endpoint.
+- Safety-mode behavior remains unchanged from 0.9.24.
+
+## 0.9.24
+
+- Adds targeted one-page Translation Memory readiness reconciliation.
+- Zero Azure calls, zero source scans, zero queue rebuilds.
+- Removes hidden maintenance from the admin screen and makes safety-mode status explicit.
+
+## 0.9.23
+
+- Production stability release.
+- Activation is constant-time and does not scan or rebuild translation inventory.
+- Automatic and manual background translation processing is temporarily disabled.
+- Existing translated routes and stored data remain available.
+
 ## 0.9.19
 
 - Keep the language switcher visible on provisional translated routes without advertising unfinished translations.
