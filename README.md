@@ -4,7 +4,7 @@ A practical collection of 12 privacy-first WordPress plugins independently maint
 
 ## Current release status
 
-- Suite bundle: **1.0.24**
+- Suite bundle: **1.0.25**
 - Public plugins: **12**
 - Live functional baseline: **12/12 PASS**
 - WordPress Plugin Check baseline: **12/12 PASS**
@@ -16,7 +16,7 @@ A practical collection of 12 privacy-first WordPress plugins independently maint
 | Plugin slug | Version |
 |---|---:|
 | koz-migration-cleanup | 0.9.7 |
-| koz-static-translate | 0.9.17 |
+| koz-static-translate | 0.9.19 |
 | koz-translate-diagnostics | 0.3.6 |
 | koz-seo-core | 2.1.22 |
 | koz-404-guard | 2.1.4 |
@@ -30,7 +30,7 @@ A practical collection of 12 privacy-first WordPress plugins independently maint
 
 ## Current bundle
 
-**KOZ Suite Bundle 1.0.24** contains the exact 12 verified public plugin ZIP packages.
+**KOZ Suite Bundle 1.0.25** contains the exact 12 verified public plugin ZIP packages.
 
 ## License
 

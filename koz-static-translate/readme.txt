@@ -4,7 +4,7 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=kozyr
 Tags: translation, multilingual, azure, static translation, language switcher
 Requires at least: 6.0
 Tested up to: 7.1
-Stable tag: 0.9.17
+Stable tag: 0.9.19
 Requires PHP: 8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -19,6 +19,20 @@ The plugin preserves the proven database schema, queue, cron hooks, public URLs 
 
 The plugin was originally developed for the UA FREE charitable foundation website, which remains its primary production environment. The software is independently owned and maintained by Tony Kozyriev (`ramirkz`).
 
+= Part of the KOZ Suite =
+
+KOZ Static Translate is **one focused module of the broader KOZ Suite**, a family of WordPress plugins that share a common KOZ administration experience and visual identity.
+
+Each KOZ plugin remains independent, so site owners can install only the modules they need or combine several modules into one toolkit.
+
+Current public KOZ plugins:
+
+* [KOZ SEO Core](https://wordpress.org/plugins/koz-seo-core/) — technical SEO, schema, sitemaps, AI discovery and OpenAI Vision image ALT.
+* [KOZ Copy Actions](https://wordpress.org/plugins/koz-copy-actions/) — accessible copy-to-clipboard actions for selected WordPress content.
+* [KOZ URL-Only Comment Spam](https://wordpress.org/plugins/koz-url-only-comment-spam/) — privacy-first local moderation for URL-only comment spam.
+
+Additional KOZ Suite modules are used in production and may be published separately as they are prepared for public distribution.
+
 = Main features =
 
 * Queued Azure Translator processing with monthly character controls.
@@ -32,6 +46,26 @@ The plugin was originally developed for the UA FREE charitable foundation websit
 = Privacy =
 
 The plugin does not add analytics or advertising telemetry. Content selected for translation is sent to the configured Azure Translator endpoint. Azure credentials are encrypted in the WordPress database using keys derived from WordPress salts.
+
+== External services ==
+
+KOZ Static Translate optionally uses Microsoft Azure Translator when the site administrator configures Azure Translator credentials and enables translation processing.
+
+When translation processing runs, text segments selected from published WordPress content are sent to the configured Azure Translator endpoint so Microsoft can return translated text. The plugin does not send visitor analytics or advertising telemetry to the developer. Azure Translator credentials are stored in the WordPress database in encrypted form using keys derived from WordPress salts.
+
+The external service is not required for WordPress administration, cleanup tools, translation-memory storage, language routing logic or KOZ Suite navigation, but new machine translations cannot be produced without a configured translation provider.
+
+Azure Translator:
+https://azure.microsoft.com/products/ai-services/ai-translator/
+
+Microsoft Azure Translator data, privacy and security information:
+https://learn.microsoft.com/en-us/azure/foundry/responsible-ai/translator/data-privacy-security
+
+Microsoft Privacy Statement:
+https://privacy.microsoft.com/en-us/privacystatement
+
+Microsoft Azure legal information:
+https://azure.microsoft.com/support/legal/
 
 == Installation ==
 
@@ -57,6 +91,16 @@ No. Existing settings determine whether the queue and public routes are enabled.
 No. It originated from production work for the foundation website but is independently owned and maintained by Tony Kozyriev.
 
 == Changelog ==
+
+= 0.9.19 =
+* Keep the language switcher visible on translated provisional routes.
+* Provisional routes show only the source language and the current language, without advertising other unfinished translations.
+
+
+= 0.9.18 =
+* The floating language switcher now advertises only fully translated routes for the current page and stays hidden when none are ready.
+* Provisional translated routes no longer render the language switcher, preventing unfinished language URLs from being exposed through navigation.
+* No changes to Azure budget limits, translation memory, queue contents or public URL structure.
 
 = 0.9.17 =
 * Updated WordPress compatibility metadata for WordPress 7.1.
@@ -134,6 +178,9 @@ No. It originated from production work for the foundation website but is indepen
 * Last stable release under the former UA FREE public branding.
 
 == Upgrade Notice ==
+
+= 0.9.18 =
+The language switcher now exposes only fully translated routes for each page; unfinished routes are no longer advertised through navigation.
 
 = 0.9.17 =
 WordPress 7.1 compatibility metadata update; plugin behavior remains unchanged.

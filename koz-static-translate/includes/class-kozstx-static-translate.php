@@ -6845,11 +6845,29 @@ JS;
 		$select = $dom->createElement( 'select' );
 		$select->setAttribute( 'aria-label', 'Language' );
 		$select->setAttribute( 'onchange', 'if(this.value){window.location.href=this.value;}' );
+		$ready = self::ready_languages_for_source_read_only( (int) $source['id'] );
+		$current_is_ready = in_array( $current_slug, $ready, true );
+
+		/*
+		 * A provisional route may keep the switcher for navigation back to the
+		 * source language, but it must not advertise any other unfinished routes.
+		 */
+		if ( ! $current_is_ready ) {
+			if ( ! self::language_can_render_provisional( (int) $source['id'], $current_slug ) ) {
+				return;
+			}
+			$ready = array( $current_slug );
+		}
+
 		$source_info = self::source_language_info();
 		$option_source = $dom->createElement( 'option', (string) $source_info['native'] );
 		$option_source->setAttribute( 'value', (string) $source['source_url'] );
 		$select->appendChild( $option_source );
-		foreach ( self::languages() as $slug => $info ) {
+		foreach ( $ready as $slug ) {
+			$info = self::languages()[ $slug ] ?? null;
+			if ( ! is_array( $info ) ) {
+				continue;
+			}
 			$option = $dom->createElement(
 				'option',
 				(string) $info['native']
@@ -6991,13 +7009,15 @@ JS;
 			$source = self::source_by_post_id( $post_id );
 		}
 
-		$ready = array_keys( self::languages() );
+		$ready = is_array( $source )
+			? self::ready_languages_for_source_read_only( (int) $source['id'] )
+			: array();
 
 		$source_url = is_array( $source ) && ! empty( $source['source_url'] )
 			? (string) $source['source_url']
 			: ( is_front_page() ? home_url( '/' ) : get_permalink( $post_id ) );
 
-		if ( ! is_string( $source_url ) || '' === $source_url ) {
+		if ( empty( $ready ) || ! is_string( $source_url ) || '' === $source_url ) {
 			return;
 		}
 

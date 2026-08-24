@@ -1,4 +1,13 @@
+## 0.9.19
+
+- Keep the language switcher visible on provisional translated routes without advertising unfinished translations.
+
 # Changelog
+
+## 0.9.18
+- The floating language switcher now lists only fully translated routes for the current source page and stays hidden when none are ready.
+- Provisional translated routes no longer render the language switcher, so unfinished language URLs are not advertised through navigation.
+- No changes to Azure budget limits, translation memory, queue contents or public URL structure.
 
 ## 0.9.17
 - Updated WordPress compatibility metadata for WordPress 7.1.
