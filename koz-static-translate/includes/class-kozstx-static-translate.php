@@ -121,13 +121,12 @@ final class KOZSTX_Static_Translate {
 	}
 
 	public static function init(): void {
-		add_action( 'plugins_loaded', array( __CLASS__, 'maybe_upgrade' ), 5 );
+		/* 0.9.23 safety: no automatic upgrade/repair work on normal requests. */
 		add_action( 'admin_init', array( __CLASS__, 'register_settings' ) );
 		add_action( 'rest_api_init', array( __CLASS__, 'register_dynamic_rest_route' ) );
 		add_action( 'admin_menu', array( __CLASS__, 'admin_menu' ) );
 		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'enqueue_admin_assets' ) );
-		add_filter( 'cron_schedules', array( __CLASS__, 'cron_schedules' ) );
-		add_action( self::CRON_HOOK, array( __CLASS__, 'cron_tick' ) );
+		/* 0.9.23 safety: automatic translation worker is intentionally disabled. */
 		add_action( 'init', array( __CLASS__, 'add_rewrite_rules' ), 1 );
 		add_filter( 'query_vars', array( __CLASS__, 'query_vars' ) );
 		add_action( 'template_redirect', array( __CLASS__, 'template_router' ), -1000 );
@@ -137,7 +136,6 @@ final class KOZSTX_Static_Translate {
 		add_filter( 'kozseo_translation_contract', array( __CLASS__, 'seo_translation_contract' ), 20, 1 );
 		add_action( 'wp_body_open', array( __CLASS__, 'source_language_switcher' ), 100 );
 		add_action( 'wp_footer', array( __CLASS__, 'source_language_switcher' ), 100 );
-		add_action( 'shutdown', array( __CLASS__, 'maybe_spawn_internal_worker' ), 100 );
 		add_action( 'save_post', array( __CLASS__, 'on_save_post' ), 100, 3 );
 		add_action( 'trashed_post', array( __CLASS__, 'on_trashed_post' ) );
 		add_action( 'before_delete_post', array( __CLASS__, 'on_trashed_post' ) );
@@ -145,21 +143,22 @@ final class KOZSTX_Static_Translate {
 		add_action( 'wp_ajax_kozstx_run', array( __CLASS__, 'ajax_run' ) );
 		add_action( 'wp_ajax_kozstx_rebuild', array( __CLASS__, 'ajax_rebuild' ) );
 		add_action( 'wp_ajax_kozstx_pause', array( __CLASS__, 'ajax_pause' ) );
+		add_action( 'wp_ajax_kozstx_reconcile_page', array( __CLASS__, 'ajax_reconcile_page' ) );
+		add_action( 'wp_ajax_kozstx_diagnose_page', array( __CLASS__, 'ajax_diagnose_page' ) );
+		add_action( 'wp_ajax_kozstx_reconcile_core_batch', array( __CLASS__, 'ajax_reconcile_core_batch' ) );
+		add_action( 'wp_ajax_kozstx_priority_core_discovery', array( __CLASS__, 'ajax_priority_core_discovery' ) );
+		add_action( 'wp_ajax_kozstx_prepare_priority_core_source', array( __CLASS__, 'ajax_prepare_priority_core_source' ) );
 		add_action( 'kozstx_admin_cleanup_section', array( KOZSTX_Cleanup::class, 'render_section' ) );
-		self::ensure_cron();
 	}
 
 	public static function activate(): void {
-		self::migrate_legacy_options();
-		self::install_schema();
-		self::migrate_legacy_tables();
-		self::ensure_cron();
-		self::add_rewrite_rules();
-		flush_rewrite_rules( false );
-		update_option( self::REWRITE_OPTION, self::ROUTE_SCHEMA_VERSION, false );
-		self::purge_forbidden_language_data();
-		self::reconcile_source_language_change();
-		self::bootstrap_core_pages();
+		/*
+		 * Stability activation path.
+		 * Do not scan posts, rebuild inventory, migrate translation rows,
+		 * run readiness repairs, or start a worker during activation.
+		 */
+		wp_clear_scheduled_hook( self::CRON_HOOK );
+		delete_transient( self::LOCK_KEY );
 	}
 
 	public static function deactivate(): void {
@@ -705,22 +704,8 @@ final class KOZSTX_Static_Translate {
 	}
 
 	public static function maybe_spawn_internal_worker(): void {
-		if ( wp_doing_cron() || wp_doing_ajax() ) {
-			return;
-		}
-		$settings = self::settings();
-		if ( empty( $settings['auto_enabled'] ) || get_transient( 'kozstx_internal_cron_spawn' ) ) {
-			return;
-		}
-		set_transient( 'kozstx_internal_cron_spawn', 1, 5 * MINUTE_IN_SECONDS );
-		wp_remote_post(
-			site_url( '/wp-cron.php?doing_wp_cron=' . rawurlencode( sprintf( '%.22F', microtime( true ) ) ) ),
-			array(
-				'timeout' => 0.01,
-				'blocking' => false,
-				'sslverify' => apply_filters( 'https_local_ssl_verify', false ), // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Core WordPress filter.
-			)
-		);
+		/* 0.9.23 safety: no internal cron spawning. */
+		return;
 	}
 
 	private static function purge_forbidden_language_data(): void {
@@ -777,39 +762,8 @@ final class KOZSTX_Static_Translate {
 	}
 
 	public static function cron_tick(): void {
-		if ( get_transient( self::LOCK_KEY ) ) {
-			return;
-		}
-
-		set_transient( self::LOCK_KEY, 1, 55 );
-
-		try {
-			self::release_stale_jobs();
-			self::purge_forbidden_language_data();
-			self::reconcile_source_language_change();
-			self::maybe_resume_for_new_cycle();
-			self::bootstrap_core_pages();
-			self::bootstrap_reports_step( 20 );
-			self::maybe_rescan_core_pages();
-			self::reconcile_recent_reports();
-
-			$settings = self::settings();
-			$runtime = self::runtime();
-
-			if ( ! empty( $settings['auto_enabled'] ) && empty( $runtime['manual_paused'] ) ) {
-				self::process_one_step();
-			}
-
-			self::cleanup_old_logs();
-		} catch ( Throwable $throwable ) {
-			$runtime = self::runtime();
-			$runtime['last_error'] = self::short_text( $throwable->getMessage(), 1000 );
-			$runtime['last_run_at'] = current_time( 'mysql', true );
-			self::save_runtime( $runtime );
-			self::log_event( 0, 0, '', 'error', 'worker_exception', 0, $throwable->getMessage() );
-		} finally {
-			delete_transient( self::LOCK_KEY );
-		}
+		/* 0.9.23 safety: background processing is disabled in this stability release. */
+		return;
 	}
 
 	private static function cycle_info(): array {
@@ -1757,6 +1711,46 @@ final class KOZSTX_Static_Translate {
 		return (bool) preg_match( '/[\p{L}]/u', $text );
 	}
 
+
+
+	private static function is_readiness_nonblocking_segment(
+		string $text,
+		string $type
+	): bool {
+		unset( $text );
+
+		/*
+		 * Universal readiness policy:
+		 * SEO/social description metadata may remain pending without keeping
+		 * an otherwise translated page provisional/noindex. Those segments
+		 * remain available for later translation when the provider budget
+		 * resumes.
+		 */
+		if (
+			in_array(
+				$type,
+				array(
+					'meta_description',
+					'meta_og_description',
+					'meta_twitter_description',
+				),
+				true
+			)
+		) {
+			return true;
+		}
+
+		/*
+		 * Image alt text is accessibility/ancillary metadata. It should be
+		 * translated when possible, but must not block page readiness.
+		 */
+		if ( 'attribute_alt' === $type ) {
+			return true;
+		}
+
+		return false;
+	}
+
 	private static function is_protected_segment(
 		string $text,
 		array $context,
@@ -1775,6 +1769,19 @@ final class KOZSTX_Static_Translate {
 			'/[\x{0400}-\x{04FF}]/u',
 			$normalized
 		);
+
+		if ( self::is_readiness_nonblocking_segment( $normalized, $type ) ) {
+			return true;
+		}
+
+		$context_id = strtolower( (string) ( $context['id'] ?? '' ) );
+		$context_hint = trim( $class . ' ' . $context_id );
+		if (
+			'' !== $context_hint
+			&& preg_match( '/(?:^|[\s_-])(consent|cookie|privacy|cmp)(?:$|[\s_-])/i', $context_hint )
+		) {
+			return true;
+		}
 
 		if (
 			false !== strpos( $class, '__cf_email__' )
@@ -7461,6 +7468,17 @@ JS;
 			return false;
 		}
 
+		$queue_status = (string) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT status FROM {$tables['queue']} WHERE source_id = %d AND language = %s LIMIT 1",
+				$source_id,
+				$slug
+			)
+		);
+		if ( 'done' === $queue_status ) {
+			return true;
+		}
+
 		$counts = $wpdb->get_row(
 			$wpdb->prepare(
 				"SELECT
@@ -7619,7 +7637,7 @@ JS;
 		if ( ! current_user_can( 'manage_options' ) ) {
 			return;
 		}
-		self::maybe_upgrade();
+		/* 0.9.24 safety: opening this screen must never run migrations, scans, repairs or cron setup. */
 		$settings     = self::settings();
 		$runtime      = self::runtime();
 		$credentials  = self::credentials();
@@ -7649,7 +7667,7 @@ JS;
 			<div class="koz-st-panel">
 				<h2><?php echo esc_html__( 'Runtime status', 'koz-static-translate' ); ?></h2>
 				<table class="widefat striped"><tbody>
-					<tr><th><?php echo esc_html__( 'Automatic worker', 'koz-static-translate' ); ?></th><td><?php echo ! empty( $settings['auto_enabled'] ) ? esc_html__( 'Enabled', 'koz-static-translate' ) : esc_html__( 'Disabled', 'koz-static-translate' ); ?></td></tr>
+					<tr><th><?php echo esc_html__( 'Automatic worker', 'koz-static-translate' ); ?></th><td><strong><?php echo esc_html__( 'Disabled (safety mode)', 'koz-static-translate' ); ?></strong></td></tr>
 					<tr><th><?php echo esc_html__( 'Public language routes', 'koz-static-translate' ); ?></th><td><?php echo ! empty( $settings['routes_enabled'] ) ? esc_html__( 'Enabled when a page is ready', 'koz-static-translate' ) : esc_html__( 'Disabled', 'koz-static-translate' ); ?></td></tr>
 					<tr><th><?php echo esc_html__( 'Floating language switcher', 'koz-static-translate' ); ?></th><td><?php echo ! empty( $settings['switcher_enabled'] ) ? esc_html__( 'Enabled', 'koz-static-translate' ) : esc_html__( 'Disabled', 'koz-static-translate' ); ?></td></tr>
 					<tr><th><?php echo esc_html__( 'Manual pause', 'koz-static-translate' ); ?></th><td><?php echo ! empty( $runtime['manual_paused'] ) ? esc_html__( 'Yes', 'koz-static-translate' ) : esc_html__( 'No', 'koz-static-translate' ); ?></td></tr>
@@ -7659,12 +7677,35 @@ JS;
 					<tr><th><?php echo esc_html__( 'Last error', 'koz-static-translate' ); ?></th><td><?php echo esc_html( (string) $runtime['last_error'] ?: __( 'None', 'koz-static-translate' ) ); ?></td></tr>
 				</tbody></table>
 				<div class="koz-st-actions">
-					<button class="button" id="kozstx-auto-test" <?php disabled( ! $credentials['configured'] ); ?>><?php echo esc_html__( 'Test Azure API', 'koz-static-translate' ); ?></button>
-					<button class="button button-primary" id="kozstx-auto-run" <?php disabled( ! $credentials['configured'] ); ?>><?php echo esc_html__( 'Run one step now', 'koz-static-translate' ); ?></button>
-					<button class="button" id="kozstx-auto-rebuild"><?php echo esc_html__( 'Rebuild inventory and queue', 'koz-static-translate' ); ?></button>
-					<button class="button" id="kozstx-auto-pause"><?php echo ! empty( $runtime['manual_paused'] ) ? esc_html__( 'Resume automatic queue', 'koz-static-translate' ) : esc_html__( 'Pause automatic queue', 'koz-static-translate' ); ?></button>
+					<button class="button" disabled><?php echo esc_html__( 'Azure actions disabled (safety mode)', 'koz-static-translate' ); ?></button>
+					<button class="button" disabled><?php echo esc_html__( 'Rebuild disabled (safety mode)', 'koz-static-translate' ); ?></button>
+				</div>
+				<div class="koz-st-actions" style="margin-top:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+					<label for="kozstx-reconcile-path"><strong><?php echo esc_html__( 'One-page readiness check', 'koz-static-translate' ); ?></strong></label>
+					<input type="text" id="kozstx-reconcile-path" class="regular-text" value="/ua-free/" placeholder="/ua-free/" />
+					<button class="button button-primary" id="kozstx-reconcile-page"><?php echo esc_html__( 'Reconcile this page from Translation Memory', 'koz-static-translate' ); ?></button>
+					<button class="button" id="kozstx-diagnose-page"><?php echo esc_html__( 'Show missing source segments', 'koz-static-translate' ); ?></button>
+					<span><?php echo esc_html__( 'Local database only. No scan, no rebuild, no Azure.', 'koz-static-translate' ); ?></span>
 				</div>
 				<div id="kozstx-auto-status"></div>
+				<div id="kozstx-diagnostic-results" style="margin-top:12px"></div>
+				<hr style="margin:18px 0">
+				<div class="koz-st-actions" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+					<strong><?php echo esc_html__( 'Priority Core readiness', 'koz-static-translate' ); ?></strong>
+					<button class="button button-primary" id="kozstx-reconcile-core-batch"><?php echo esc_html__( 'Reconcile next 4 Priority Core pages', 'koz-static-translate' ); ?></button>
+					<span><?php echo esc_html__( 'Priority Core is detected automatically from Home + merged internal navigation sources: all assigned primary/main/header menus, the richest unassigned classic menu fallback, and block-theme Navigation. External URLs are discarded, duplicates removed, exact paths only. Secondary/legacy core and report posts are excluded. 4 pages per click. No Azure, scan, rebuild or automatic loop.', 'koz-static-translate' ); ?></span>
+				</div>
+				<div id="kozstx-core-batch-results" style="margin-top:10px"></div>
+				<div class="koz-st-actions" style="margin-top:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+					<button class="button" id="kozstx-priority-core-discovery"><?php echo esc_html__( 'Show Priority Core discovery', 'koz-static-translate' ); ?></button>
+					<span><?php echo esc_html__( 'Read-only diagnostic: menu path → source inventory → core queue. No writes, no Azure.', 'koz-static-translate' ); ?></span>
+				</div>
+				<div id="kozstx-priority-core-discovery-results" style="margin-top:10px"></div>
+				<div class="koz-st-actions" style="margin-top:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+					<button class="button button-primary" id="kozstx-prepare-priority-core-source"><?php echo esc_html__( 'Prepare next pending Priority Core source', 'koz-static-translate' ); ?></button>
+					<span><?php echo esc_html__( 'Universal and bounded: one detected internal Priority Core page per click. Local source scan + Translation Memory hydration only. No Azure, no full inventory rebuild, no automatic loop.', 'koz-static-translate' ); ?></span>
+				</div>
+				<div id="kozstx-prepare-priority-core-results" style="margin-top:10px"></div>
 			</div>
 
 			<div class="koz-st-two-columns">
@@ -7893,30 +7934,18 @@ JS;
 
 	public static function ajax_run(): void {
 		self::ajax_guard();
-		if ( get_transient( self::LOCK_KEY ) ) {
-			wp_send_json_error( array( 'message' => __( 'The worker is already running.', 'koz-static-translate' ) ), 409 );
-		}
-		set_transient( self::LOCK_KEY, 1, 55 );
-		try {
-			$result = self::process_one_step();
-		} finally {
-			delete_transient( self::LOCK_KEY );
-		}
-		wp_send_json_success( array( 'message' => (string) $result['message'] ) );
+		wp_send_json_error(
+			array( 'message' => __( 'Background translation processing is temporarily disabled in version 0.9.36.', 'koz-static-translate' ) ),
+			409
+		);
 	}
 
 	public static function ajax_rebuild(): void {
 		self::ajax_guard();
-		$runtime = self::runtime();
-		$runtime['report_cursor_date'] = '9999-12-31 23:59:59';
-		$runtime['report_cursor_id'] = PHP_INT_MAX;
-		$runtime['report_bootstrap_complete'] = 0;
-		$runtime['last_recent_reports_at'] = '';
-		$runtime['last_inventory_at'] = '';
-		self::save_runtime( $runtime );
-		self::bootstrap_core_pages();
-		self::bootstrap_reports_step( 50 );
-		wp_send_json_success( array( 'message' => __( 'Inventory updated. Report backfill will continue automatically.', 'koz-static-translate' ) ) );
+		wp_send_json_error(
+			array( 'message' => __( 'Inventory rebuild is temporarily disabled in version 0.9.36.', 'koz-static-translate' ) ),
+			409
+		);
 	}
 
 	public static function ajax_pause(): void {
@@ -7925,6 +7954,1112 @@ JS;
 		$runtime['manual_paused'] = empty( $runtime['manual_paused'] ) ? 1 : 0;
 		self::save_runtime( $runtime );
 		wp_send_json_success( array( 'message' => ! empty( $runtime['manual_paused'] ) ? __( 'The automatic queue is paused.', 'koz-static-translate' ) : __( 'The automatic queue is active.', 'koz-static-translate' ) ) );
+	}
+
+
+	public static function ajax_reconcile_page(): void {
+		self::ajax_guard();
+		check_ajax_referer( self::AJAX_NONCE );
+
+		$raw_path = isset( $_POST['path'] ) ? sanitize_text_field( wp_unslash( $_POST['path'] ) ) : '';
+		$raw_path = is_string( $raw_path ) ? trim( $raw_path ) : '';
+		if ( '' === $raw_path ) {
+			wp_send_json_error( array( 'message' => __( 'Enter a source page path, for example /ua-free/.', 'koz-static-translate' ) ), 400 );
+		}
+
+		$parsed_path = (string) wp_parse_url( $raw_path, PHP_URL_PATH );
+		$path = '' !== $parsed_path ? $parsed_path : $raw_path;
+		$path = '/' . ltrim( $path, '/' );
+		if ( '/' !== $path ) {
+			$path = trailingslashit( $path );
+		}
+
+		global $wpdb;
+		$tables = self::tables();
+
+		$source = $wpdb->get_row(
+			$wpdb->prepare(
+				"SELECT id, post_id, source_path, source_title, local_hash, scan_status, is_report, report_date
+				FROM {$tables['sources']}
+				WHERE source_path = %s
+				LIMIT 1",
+				$path
+			),
+			ARRAY_A
+		);
+
+		if ( ! is_array( $source ) ) {
+			wp_send_json_error(
+				array(
+					'message' => sprintf(
+						/* translators: %s: source page path. */
+						__( 'Source %s is not present in the current inventory. No scan was started.', 'koz-static-translate' ),
+						$path
+					),
+				),
+				404
+			);
+		}
+
+		if ( 'ready' !== (string) $source['scan_status'] ) {
+			wp_send_json_error(
+				array(
+					'message' => sprintf(
+						/* translators: %s: source page path. */
+						__( 'Source %s is not scan-ready. No scan, rebuild or Azure request was started.', 'koz-static-translate' ),
+						$path
+					),
+				),
+				409
+			);
+		}
+
+		$ready_languages = array();
+		$details = array();
+		$now = current_time( 'mysql', true );
+		$nonblocking_promoted = 0;
+
+		$segment_rows = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT id, segment_type, source_text, is_protected
+				FROM {$tables['segments']}
+				WHERE source_id = %d
+				ORDER BY segment_order ASC, id ASC",
+				(int) $source['id']
+			),
+			ARRAY_A
+		);
+
+		foreach ( is_array( $segment_rows ) ? $segment_rows : array() as $segment_row ) {
+			if ( ! empty( $segment_row['is_protected'] ) ) {
+				continue;
+			}
+			if (
+				! self::is_readiness_nonblocking_segment(
+					(string) $segment_row['source_text'],
+					(string) $segment_row['segment_type']
+				)
+			) {
+				continue;
+			}
+
+			$updated = $wpdb->update(
+				$tables['segments'],
+				array(
+					'is_protected' => 1,
+					'updated_at' => $now,
+				),
+				array( 'id' => (int) $segment_row['id'] )
+			);
+			if ( false !== $updated ) {
+				$nonblocking_promoted++;
+			}
+		}
+
+		foreach ( self::languages() as $slug => $language ) {
+			$counts = $wpdb->get_row(
+				$wpdb->prepare(
+					"SELECT
+						COUNT(*) AS total,
+						SUM(
+							CASE
+								WHEN s.is_protected = 1 THEN 1
+								WHEN (
+									t.id IS NOT NULL
+									AND t.status = 'ready'
+									AND t.source_hash = s.source_hash
+									AND t.translated_text <> ''
+								) THEN 1
+								WHEN (
+									m.id IS NOT NULL
+									AND m.translated_text <> ''
+								) THEN 1
+								ELSE 0
+							END
+						) AS ready
+					FROM {$tables['segments']} s
+					LEFT JOIN {$tables['translations']} t
+						ON t.source_id = s.source_id
+						AND t.language = %s
+						AND t.segment_key = s.segment_key
+					LEFT JOIN {$tables['memory']} m
+						ON m.language = %s
+						AND m.source_hash = s.source_hash
+					WHERE s.source_id = %d",
+					$slug,
+					$slug,
+					(int) $source['id']
+				),
+				ARRAY_A
+			);
+
+			$total = (int) ( $counts['total'] ?? 0 );
+			$ready = (int) ( $counts['ready'] ?? 0 );
+			$complete = $total > 0 && $ready >= $total;
+
+			$details[] = sprintf(
+				'%s %d/%d',
+				$slug,
+				$ready,
+				$total
+			);
+
+			if ( ! $complete ) {
+				continue;
+			}
+
+			$ready_languages[] = $slug;
+			$wpdb->update(
+				$tables['queue'],
+				array(
+					'post_id' => (int) $source['post_id'],
+					'language_order' => (int) $language['order'],
+					'category' => ! empty( $source['is_report'] ) ? 'report' : 'core',
+					'report_date' => $source['report_date'],
+					'source_hash' => (string) $source['local_hash'],
+					'status' => 'done',
+					'processed_segments' => $ready,
+					'total_segments' => $total,
+					'last_error' => '',
+					'next_run_at' => null,
+					'locked_at' => null,
+					'finished_at' => $now,
+					'updated_at' => $now,
+				),
+				array(
+					'source_id' => (int) $source['id'],
+					'language' => $slug,
+				)
+			);
+		}
+
+		wp_send_json_success(
+			array(
+				'message' => sprintf(
+					/* translators: 1: source path, 2: ready language count, 3: total language count, 4: non-blocking segments promoted, 5: per-language readiness details. */
+					__( '%1$s checked locally. Fully ready languages: %2$d/%3$d. Non-blocking segments fixed: %4$d. Azure: 0. %5$s', 'koz-static-translate' ),
+					$path,
+					count( $ready_languages ),
+					count( self::languages() ),
+					$nonblocking_promoted,
+					implode( ' · ', $details )
+				),
+				'ready_languages' => $ready_languages,
+				'path' => $path,
+			)
+		);
+	}
+
+
+	public static function ajax_diagnose_page(): void {
+		self::ajax_guard();
+		check_ajax_referer( self::AJAX_NONCE );
+
+		$raw_path = isset( $_POST['path'] ) ? sanitize_text_field( wp_unslash( $_POST['path'] ) ) : '';
+		$raw_path = is_string( $raw_path ) ? trim( $raw_path ) : '';
+		if ( '' === $raw_path ) {
+			wp_send_json_error(
+				array( 'message' => __( 'Enter a source page path, for example /ua-free/.', 'koz-static-translate' ) ),
+				400
+			);
+		}
+
+		$parsed_path = (string) wp_parse_url( $raw_path, PHP_URL_PATH );
+		$path = '' !== $parsed_path ? $parsed_path : $raw_path;
+		$path = '/' . ltrim( $path, '/' );
+		if ( '/' !== $path ) {
+			$path = trailingslashit( $path );
+		}
+
+		global $wpdb;
+		$tables = self::tables();
+
+		$source = $wpdb->get_row(
+			$wpdb->prepare(
+				"SELECT id, source_path, source_title, scan_status
+				FROM {$tables['sources']}
+				WHERE source_path = %s
+				LIMIT 1",
+				$path
+			),
+			ARRAY_A
+		);
+
+		if ( ! is_array( $source ) ) {
+			wp_send_json_error(
+				array(
+					'message' => sprintf(
+						/* translators: %s: source page path. */
+						__( 'Source %s is not present in the current inventory. No scan was started.', 'koz-static-translate' ),
+						$path
+					),
+				),
+				404
+			);
+		}
+
+		$segments = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT
+					id,
+					segment_key,
+					segment_order,
+					segment_type,
+					source_text,
+					source_hash,
+					is_protected,
+					occurrence_count
+				FROM {$tables['segments']}
+				WHERE source_id = %d
+				ORDER BY segment_order ASC, id ASC",
+				(int) $source['id']
+			),
+			ARRAY_A
+		);
+
+		$languages = self::languages();
+		$missing_by_segment = array();
+
+		foreach ( $languages as $slug => $language ) {
+			$missing_rows = $wpdb->get_results(
+				$wpdb->prepare(
+					"SELECT
+						s.segment_key
+					FROM {$tables['segments']} s
+					LEFT JOIN {$tables['translations']} t
+						ON t.source_id = s.source_id
+						AND t.language = %s
+						AND t.segment_key = s.segment_key
+					LEFT JOIN {$tables['memory']} m
+						ON m.language = %s
+						AND m.source_hash = s.source_hash
+					WHERE s.source_id = %d
+						AND s.is_protected = 0
+						AND NOT (
+							(
+								t.id IS NOT NULL
+								AND t.status = 'ready'
+								AND t.source_hash = s.source_hash
+								AND t.translated_text <> ''
+							)
+							OR (
+								m.id IS NOT NULL
+								AND m.translated_text <> ''
+							)
+						)",
+					$slug,
+					$slug,
+					(int) $source['id']
+				),
+				ARRAY_A
+			);
+
+			foreach ( is_array( $missing_rows ) ? $missing_rows : array() as $missing_row ) {
+				$key = (string) $missing_row['segment_key'];
+				if ( ! isset( $missing_by_segment[ $key ] ) ) {
+					$missing_by_segment[ $key ] = array();
+				}
+				$missing_by_segment[ $key ][] = $slug;
+			}
+		}
+
+		$rows = array();
+		foreach ( is_array( $segments ) ? $segments : array() as $segment ) {
+			$key = (string) $segment['segment_key'];
+			if ( empty( $missing_by_segment[ $key ] ) ) {
+				continue;
+			}
+
+			$rows[] = array(
+				'order' => (int) $segment['segment_order'],
+				'type' => sanitize_key( (string) $segment['segment_type'] ),
+				'text' => self::short_text( wp_strip_all_tags( (string) $segment['source_text'] ), 500 ),
+				'occurrences' => (int) $segment['occurrence_count'],
+				'missing_languages' => array_values( $missing_by_segment[ $key ] ),
+				'missing_count' => count( $missing_by_segment[ $key ] ),
+				'segment_key' => substr( $key, 0, 12 ),
+			);
+
+			if ( count( $rows ) >= 25 ) {
+				break;
+			}
+		}
+
+		wp_send_json_success(
+			array(
+				'message' => sprintf(
+					/* translators: 1: source path, 2: number of missing source segments shown. */
+					__( '%1$s diagnostic complete. Missing source segments shown: %2$d. Read-only. Azure: 0.', 'koz-static-translate' ),
+					$path,
+					count( $rows )
+				),
+				'path' => $path,
+				'scan_status' => (string) $source['scan_status'],
+				'total_segments' => is_array( $segments ) ? count( $segments ) : 0,
+				'rows' => $rows,
+			)
+		);
+	}
+
+
+
+
+
+	private static function priority_core_normalized_path( array $source ): string {
+		$path = isset( $source['source_path'] ) ? (string) $source['source_path'] : '/';
+		$path = '/' . ltrim( $path, '/' );
+		return '/' === $path ? '/' : trailingslashit( $path );
+	}
+
+	private static function priority_core_path_from_url( string $url ): string {
+		$relative = wp_make_link_relative( $url );
+		$path = (string) wp_parse_url( $relative, PHP_URL_PATH );
+		$path = '/' . ltrim( $path, '/' );
+		return '/' === $path ? '/' : trailingslashit( $path );
+	}
+
+
+	private static function priority_core_collect_internal_menu_items( array $items, string $home_host ): array {
+		$entries = array();
+
+		foreach ( $items as $item ) {
+			if ( ! is_object( $item ) || empty( $item->url ) ) {
+				continue;
+			}
+
+			$item_url = (string) $item->url;
+			$item_host = (string) wp_parse_url( $item_url, PHP_URL_HOST );
+			if ( '' !== $item_host && '' !== $home_host && 0 !== strcasecmp( $item_host, $home_host ) ) {
+				continue;
+			}
+
+			$path = self::priority_core_path_from_url( $item_url );
+			$entries[] = array(
+				'path' => $path,
+				'label' => ! empty( $item->title ) ? wp_strip_all_tags( (string) $item->title ) : $path,
+			);
+		}
+
+		return $entries;
+	}
+
+	private static function priority_core_block_navigation_entries( string $home_host ): array {
+		$best = array();
+
+		$navigation_posts = get_posts(
+			array(
+				'post_type' => 'wp_navigation',
+				'post_status' => 'publish',
+				'numberposts' => 20,
+				'orderby' => 'modified',
+				'order' => 'DESC',
+				'no_found_rows' => true,
+			)
+		);
+
+		foreach ( is_array( $navigation_posts ) ? $navigation_posts : array() as $navigation_post ) {
+			if ( ! is_object( $navigation_post ) || empty( $navigation_post->post_content ) ) {
+				continue;
+			}
+
+			$blocks = parse_blocks( (string) $navigation_post->post_content );
+			$entries = array();
+
+			$walk = static function ( array $nodes ) use ( &$walk, &$entries, $home_host ): void {
+				foreach ( $nodes as $block ) {
+					if ( ! is_array( $block ) ) {
+						continue;
+					}
+
+					$name = isset( $block['blockName'] ) ? (string) $block['blockName'] : '';
+					$attrs = isset( $block['attrs'] ) && is_array( $block['attrs'] ) ? $block['attrs'] : array();
+
+					if ( in_array( $name, array( 'core/navigation-link', 'core/navigation-submenu' ), true ) ) {
+						$url = isset( $attrs['url'] ) ? (string) $attrs['url'] : '';
+						if ( '' !== $url ) {
+							$item_host = (string) wp_parse_url( $url, PHP_URL_HOST );
+							if ( '' === $item_host || '' === $home_host || 0 === strcasecmp( $item_host, $home_host ) ) {
+								$path = self::priority_core_path_from_url( $url );
+								$label = isset( $attrs['label'] ) ? wp_strip_all_tags( (string) $attrs['label'] ) : $path;
+								$entries[] = array(
+									'path' => $path,
+									'label' => $label,
+								);
+							}
+						}
+					}
+
+					if ( ! empty( $block['innerBlocks'] ) && is_array( $block['innerBlocks'] ) ) {
+						$walk( $block['innerBlocks'] );
+					}
+				}
+			};
+
+			$walk( $blocks );
+
+			if ( count( $entries ) > count( $best ) ) {
+				$best = $entries;
+			}
+		}
+
+		return $best;
+	}
+
+
+	private static function priority_core_menu_entries(): array {
+		$home_host = (string) wp_parse_url( home_url( '/' ), PHP_URL_HOST );
+		$home_path = self::priority_core_path_from_url( home_url( '/' ) );
+
+		/*
+		 * Build one universal navigation set from the strongest available
+		 * WordPress navigation sources. Internal URLs only, exact paths only.
+		 * No site-specific titles, slugs or page names.
+		 */
+		$merged = array();
+		$seen = array();
+		$source_rank = 0;
+
+		$append_entries = static function ( array $entries ) use ( &$merged, &$seen, &$source_rank ): void {
+			foreach ( $entries as $entry ) {
+				$path = isset( $entry['path'] ) ? (string) $entry['path'] : '';
+				if ( '' === $path || isset( $seen[ $path ] ) ) {
+					continue;
+				}
+
+				$merged[] = array(
+					'path' => $path,
+					'label' => isset( $entry['label'] ) ? (string) $entry['label'] : $path,
+					'source_rank' => $source_rank,
+				);
+				$seen[ $path ] = true;
+			}
+			$source_rank++;
+		};
+
+		$locations = get_nav_menu_locations();
+		$registered = get_registered_nav_menus();
+		$assigned_menu_ids = array();
+
+		/*
+		 * 1) Merge all assigned locations that look like primary/main/header
+		 * navigation. This supports themes with split desktop/mobile menus.
+		 */
+		foreach ( is_array( $locations ) ? $locations : array() as $location => $menu_id ) {
+			$menu_id = absint( $menu_id );
+			if ( $menu_id <= 0 ) {
+				continue;
+			}
+
+			$location_label = isset( $registered[ $location ] ) ? (string) $registered[ $location ] : '';
+			$haystack = strtolower( (string) $location . ' ' . $location_label );
+			$is_navigation_location = false;
+
+			foreach ( array( 'primary', 'main', 'header', 'top', 'navigation', 'nav' ) as $keyword ) {
+				if ( false !== strpos( $haystack, $keyword ) ) {
+					$is_navigation_location = true;
+					break;
+				}
+			}
+
+			if ( ! $is_navigation_location ) {
+				continue;
+			}
+
+			$assigned_menu_ids[ $menu_id ] = true;
+			$items = wp_get_nav_menu_items(
+				$menu_id,
+				array( 'update_post_term_cache' => false )
+			);
+			$append_entries(
+				self::priority_core_collect_internal_menu_items(
+					is_array( $items ) ? $items : array(),
+					$home_host
+				)
+			);
+		}
+
+		/*
+		 * 2) Add the richest unassigned classic menu as a builder fallback.
+		 * Builders often render a classic menu without a registered theme
+		 * location. Only one richest menu is merged to avoid footer/menu noise.
+		 */
+		$best_unassigned = array();
+		foreach ( wp_get_nav_menus() as $menu ) {
+			if ( ! is_object( $menu ) || empty( $menu->term_id ) ) {
+				continue;
+			}
+
+			$menu_id = (int) $menu->term_id;
+			if ( isset( $assigned_menu_ids[ $menu_id ] ) ) {
+				continue;
+			}
+
+			$items = wp_get_nav_menu_items(
+				$menu_id,
+				array( 'update_post_term_cache' => false )
+			);
+			$entries = self::priority_core_collect_internal_menu_items(
+				is_array( $items ) ? $items : array(),
+				$home_host
+			);
+
+			if ( count( $entries ) > count( $best_unassigned ) ) {
+				$best_unassigned = $entries;
+			}
+		}
+		if ( ! empty( $best_unassigned ) ) {
+			$append_entries( $best_unassigned );
+		}
+
+		/*
+		 * 3) Merge the richest block-theme Navigation source.
+		 */
+		$block_entries = self::priority_core_block_navigation_entries( $home_host );
+		if ( ! empty( $block_entries ) ) {
+			$append_entries( $block_entries );
+		}
+
+		/*
+		 * If no navigation source was discovered, Home remains the only
+		 * Priority Core entry. Otherwise, preserve first-seen navigation order.
+		 */
+		$entries = array(
+			array(
+				'path' => $home_path,
+				'label' => __( 'Home', 'koz-static-translate' ),
+				'rank' => 0,
+			),
+		);
+		$final_seen = array( $home_path => true );
+		$rank = 1;
+
+		foreach ( $merged as $entry ) {
+			$path = (string) $entry['path'];
+			if ( isset( $final_seen[ $path ] ) ) {
+				continue;
+			}
+
+			$entries[] = array(
+				'path' => $path,
+				'label' => (string) $entry['label'],
+				'rank' => $rank,
+			);
+			$final_seen[ $path ] = true;
+			$rank++;
+		}
+
+		return $entries;
+	}
+
+	private static function priority_core_meta( array $source ): array {
+		$path = self::priority_core_normalized_path( $source );
+
+		foreach ( self::priority_core_menu_entries() as $entry ) {
+			if ( $path !== (string) $entry['path'] ) {
+				continue;
+			}
+
+			return array(
+				'is_priority' => true,
+				'rank' => (int) $entry['rank'],
+				'label' => (string) $entry['label'],
+			);
+		}
+
+		return array(
+			'is_priority' => false,
+			'rank' => 999,
+			'label' => '',
+		);
+	}
+
+	private static function compare_priority_core( array $a, array $b ): int {
+		$meta_a = self::priority_core_meta( $a );
+		$meta_b = self::priority_core_meta( $b );
+
+		if ( $meta_a['rank'] !== $meta_b['rank'] ) {
+			return $meta_a['rank'] <=> $meta_b['rank'];
+		}
+
+		return (int) $a['id'] <=> (int) $b['id'];
+	}
+
+	public static function ajax_reconcile_core_batch(): void {
+		self::ajax_guard();
+		check_ajax_referer( self::AJAX_NONCE );
+
+		$cursor = isset( $_POST['cursor'] ) ? absint( wp_unslash( $_POST['cursor'] ) ) : 0;
+		$limit = 4;
+
+		global $wpdb;
+		$tables = self::tables();
+
+		/*
+		 * Read only the small non-report core inventory, then keep ONLY the
+		 * explicit Priority Core set. Secondary/legacy core URLs are ignored
+		 * completely by this endpoint.
+		 */
+		$sources = $wpdb->get_results(
+			"SELECT
+				s.id,
+				s.post_id,
+				s.source_path,
+				s.source_title,
+				s.local_hash,
+				s.scan_status,
+				s.is_report,
+				s.report_date
+			FROM {$tables['sources']} s
+			WHERE s.scan_status = 'ready'
+				AND s.is_report = 0
+				AND EXISTS (
+					SELECT 1
+					FROM {$tables['queue']} q
+					WHERE q.source_id = s.id
+						AND q.category = 'core'
+				)
+			ORDER BY s.id ASC",
+			ARRAY_A
+		);
+
+		$all_core = array();
+		foreach ( is_array( $sources ) ? $sources : array() as $candidate ) {
+			$meta = self::priority_core_meta( $candidate );
+			if ( empty( $meta['is_priority'] ) ) {
+				continue;
+			}
+			$all_core[] = $candidate;
+		}
+
+		usort( $all_core, array( __CLASS__, 'compare_priority_core' ) );
+
+		$total_core = count( $all_core );
+		$rows = array_slice( $all_core, $cursor, $limit );
+
+		if ( empty( $rows ) ) {
+			wp_send_json_success(
+				array(
+					'message' => __( 'Priority Core pass reached the end. Only Home and pages linked from the merged internal navigation sources were checked. Secondary core and reports were not touched.', 'koz-static-translate' ),
+					'next_cursor' => 0,
+					'pass_complete' => true,
+					'processed_sources' => 0,
+					'queue_jobs_completed' => 0,
+					'results' => array(),
+				)
+			);
+		}
+
+		$processed_sources = 0;
+		$queue_jobs_completed = 0;
+		$next_cursor = $cursor + count( $rows );
+		$results = array();
+		$now = current_time( 'mysql', true );
+
+		foreach ( $rows as $source ) {
+			$source_id = (int) $source['id'];
+			$processed_sources++;
+
+			$nonblocking_promoted = 0;
+			$segment_rows = $wpdb->get_results(
+				$wpdb->prepare(
+					"SELECT id, segment_type, source_text, is_protected
+					FROM {$tables['segments']}
+					WHERE source_id = %d
+					ORDER BY segment_order ASC, id ASC",
+					$source_id
+				),
+				ARRAY_A
+			);
+
+			foreach ( is_array( $segment_rows ) ? $segment_rows : array() as $segment_row ) {
+				if ( ! empty( $segment_row['is_protected'] ) ) {
+					continue;
+				}
+				if (
+					! self::is_readiness_nonblocking_segment(
+						(string) $segment_row['source_text'],
+						(string) $segment_row['segment_type']
+					)
+				) {
+					continue;
+				}
+
+				$updated = $wpdb->update(
+					$tables['segments'],
+					array(
+						'is_protected' => 1,
+						'updated_at' => $now,
+					),
+					array( 'id' => (int) $segment_row['id'] )
+				);
+				if ( false !== $updated ) {
+					$nonblocking_promoted++;
+				}
+			}
+
+			$ready_languages = 0;
+			$incomplete_languages = array();
+
+			foreach ( self::languages() as $slug => $language ) {
+				$counts = $wpdb->get_row(
+					$wpdb->prepare(
+						"SELECT
+							COUNT(*) AS total,
+							SUM(
+								CASE
+									WHEN s.is_protected = 1 THEN 1
+									WHEN (
+										t.id IS NOT NULL
+										AND t.status = 'ready'
+										AND t.source_hash = s.source_hash
+										AND t.translated_text <> ''
+									) THEN 1
+									WHEN (
+										m.id IS NOT NULL
+										AND m.translated_text <> ''
+									) THEN 1
+									ELSE 0
+								END
+							) AS ready
+						FROM {$tables['segments']} s
+						LEFT JOIN {$tables['translations']} t
+							ON t.source_id = s.source_id
+							AND t.language = %s
+							AND t.segment_key = s.segment_key
+						LEFT JOIN {$tables['memory']} m
+							ON m.language = %s
+							AND m.source_hash = s.source_hash
+						WHERE s.source_id = %d",
+						$slug,
+						$slug,
+						$source_id
+					),
+					ARRAY_A
+				);
+
+				$total = (int) ( $counts['total'] ?? 0 );
+				$ready = (int) ( $counts['ready'] ?? 0 );
+				$complete = $total > 0 && $ready >= $total;
+
+				if ( ! $complete ) {
+					$incomplete_languages[] = sprintf( '%s %d/%d', $slug, $ready, $total );
+					continue;
+				}
+
+				$ready_languages++;
+				$previous_status = (string) $wpdb->get_var(
+					$wpdb->prepare(
+						"SELECT status
+						FROM {$tables['queue']}
+						WHERE source_id = %d
+							AND language = %s
+						LIMIT 1",
+						$source_id,
+						$slug
+					)
+				);
+
+				$wpdb->update(
+					$tables['queue'],
+					array(
+						'post_id' => (int) $source['post_id'],
+						'language_order' => (int) $language['order'],
+						'category' => 'core',
+						'report_date' => $source['report_date'],
+						'source_hash' => (string) $source['local_hash'],
+						'status' => 'done',
+						'processed_segments' => $ready,
+						'total_segments' => $total,
+						'last_error' => '',
+						'next_run_at' => null,
+						'locked_at' => null,
+						'finished_at' => $now,
+						'updated_at' => $now,
+					),
+					array(
+						'source_id' => $source_id,
+						'language' => $slug,
+					)
+				);
+
+				if ( 'done' !== $previous_status ) {
+					$queue_jobs_completed++;
+				}
+			}
+
+			$priority_meta = self::priority_core_meta( $source );
+			$missing_segments_max = 0;
+			foreach ( $incomplete_languages as $item ) {
+				if ( preg_match( '/\s(\d+)\/(\d+)$/', $item, $matches ) ) {
+					$missing_segments_max = max(
+						$missing_segments_max,
+						max( 0, (int) $matches[2] - (int) $matches[1] )
+					);
+				}
+			}
+
+			$results[] = array(
+				'path' => (string) $source['source_path'],
+				'priority_label' => (string) $priority_meta['label'],
+				'priority_rank' => (int) $priority_meta['rank'] + 1,
+				'ready_languages' => $ready_languages,
+				'total_languages' => count( self::languages() ),
+				'nonblocking_fixed' => $nonblocking_promoted,
+				'missing_segments_max' => $missing_segments_max,
+				'incomplete' => array_slice( $incomplete_languages, 0, 3 ),
+			);
+		}
+
+		wp_send_json_success(
+			array(
+				'message' => sprintf(
+					/* translators: 1: number of core sources checked, 2: newly completed queue jobs. */
+					__( 'Priority Core batch complete: %1$d page(s) checked, %2$d queue job(s) newly marked ready. Azure: 0.', 'koz-static-translate' ),
+					$processed_sources,
+					$queue_jobs_completed
+				),
+				'next_cursor' => $next_cursor,
+				'pass_complete' => $next_cursor >= $total_core,
+				'processed_sources' => $processed_sources,
+				'queue_jobs_completed' => $queue_jobs_completed,
+				'results' => $results,
+			)
+		);
+	}
+
+
+	public static function ajax_priority_core_discovery(): void {
+		self::ajax_guard();
+		check_ajax_referer( self::AJAX_NONCE );
+
+		global $wpdb;
+		$tables = self::tables();
+
+		$entries = self::priority_core_menu_entries();
+		$rows = array();
+
+		foreach ( $entries as $entry ) {
+			$path = isset( $entry['path'] ) ? (string) $entry['path'] : '';
+			if ( '' === $path ) {
+				continue;
+			}
+
+			$source = $wpdb->get_row(
+				$wpdb->prepare(
+					"SELECT id, source_path, source_title, scan_status, is_report
+					FROM {$tables['sources']}
+					WHERE source_path = %s
+					LIMIT 1",
+					$path
+				),
+				ARRAY_A
+			);
+
+			$queue_category = '';
+			$queue_statuses = array();
+
+			if ( is_array( $source ) ) {
+				$queue_rows = $wpdb->get_results(
+					$wpdb->prepare(
+						"SELECT category, status, COUNT(*) AS jobs
+						FROM {$tables['queue']}
+						WHERE source_id = %d
+						GROUP BY category, status
+						ORDER BY category ASC, status ASC",
+						(int) $source['id']
+					),
+					ARRAY_A
+				);
+
+				foreach ( is_array( $queue_rows ) ? $queue_rows : array() as $queue_row ) {
+					$category = isset( $queue_row['category'] ) ? (string) $queue_row['category'] : '';
+					if ( '' === $queue_category && '' !== $category ) {
+						$queue_category = $category;
+					}
+					$queue_statuses[] = sprintf(
+						'%s:%s=%d',
+						$category,
+						isset( $queue_row['status'] ) ? (string) $queue_row['status'] : '',
+						isset( $queue_row['jobs'] ) ? (int) $queue_row['jobs'] : 0
+					);
+				}
+			}
+
+			$rows[] = array(
+				'rank' => isset( $entry['rank'] ) ? (int) $entry['rank'] + 1 : 0,
+				'label' => isset( $entry['label'] ) ? (string) $entry['label'] : $path,
+				'path' => $path,
+				'source_found' => is_array( $source ),
+				'source_id' => is_array( $source ) ? (int) $source['id'] : 0,
+				'scan_status' => is_array( $source ) ? (string) $source['scan_status'] : '',
+				'is_report' => is_array( $source ) ? (int) $source['is_report'] : 0,
+				'queue_category' => $queue_category,
+				'queue_statuses' => $queue_statuses,
+			);
+		}
+
+		wp_send_json_success(
+			array(
+				'message' => sprintf(
+					/* translators: %d: number of detected Priority Core navigation entries. */
+					__( 'Priority Core discovery complete: %d internal navigation entries detected. Read-only. Azure: 0.', 'koz-static-translate' ),
+					count( $rows )
+				),
+				'rows' => $rows,
+			)
+		);
+	}
+
+
+	public static function ajax_prepare_priority_core_source(): void {
+		self::ajax_guard();
+		check_ajax_referer( self::AJAX_NONCE );
+
+		if ( self::migration_freeze_active() ) {
+			wp_send_json_error(
+				array( 'message' => __( 'Source preparation is unavailable while migration freeze is active.', 'koz-static-translate' ) ),
+				409
+			);
+		}
+
+		global $wpdb;
+		$tables = self::tables();
+		$entries = self::priority_core_menu_entries();
+		$selected = null;
+		$source = null;
+
+		foreach ( $entries as $entry ) {
+			$path = isset( $entry['path'] ) ? (string) $entry['path'] : '';
+			if ( '' === $path ) {
+				continue;
+			}
+
+			$candidate = $wpdb->get_row(
+				$wpdb->prepare(
+					"SELECT *
+					FROM {$tables['sources']}
+					WHERE source_path = %s
+					LIMIT 1",
+					$path
+				),
+				ARRAY_A
+			);
+
+			/*
+			 * Universal one-page inventory recovery: if a detected internal
+			 * navigation URL is a real WordPress page but has no source row,
+			 * register that one page only. No site-specific slugs/titles.
+			 */
+			if ( ! is_array( $candidate ) ) {
+				$url = home_url( ltrim( $path, '/' ) );
+				$post_id = (int) url_to_postid( $url );
+				if ( $post_id > 0 ) {
+					$source_id = self::upsert_source_post( $post_id, true );
+					if ( $source_id > 0 ) {
+						$candidate = self::source_row( $source_id );
+					}
+				}
+			}
+
+			if (
+				! is_array( $candidate )
+				|| ! empty( $candidate['is_report'] )
+			) {
+				continue;
+			}
+
+			$has_core_queue = (int) $wpdb->get_var(
+				$wpdb->prepare(
+					"SELECT COUNT(*)
+					FROM {$tables['queue']}
+					WHERE source_id = %d
+						AND category = 'core'",
+					(int) $candidate['id']
+				)
+			);
+			if ( $has_core_queue <= 0 ) {
+				continue;
+			}
+
+			if ( 'ready' === (string) $candidate['scan_status'] ) {
+				continue;
+			}
+
+			$selected = $entry;
+			$source = $candidate;
+			break;
+		}
+
+		if ( ! is_array( $source ) || ! is_array( $selected ) ) {
+			wp_send_json_success(
+				array(
+					'message' => __( 'No pending Priority Core source needs preparation. Readiness reconciliation may continue for already scanned pages.', 'koz-static-translate' ),
+					'prepared' => false,
+					'azure_requests' => 0,
+				)
+			);
+		}
+
+		$before_status = (string) $source['scan_status'];
+		$scan_ok = self::scan_source( $source );
+		$source = self::source_row( (int) $source['id'] );
+
+		if ( ! $scan_ok || ! is_array( $source ) || 'ready' !== (string) $source['scan_status'] ) {
+			wp_send_json_error(
+				array(
+					'message' => sprintf(
+						/* translators: 1: Priority Core label, 2: source path. */
+						__( 'Could not prepare Priority Core source %1$s (%2$s). No Azure request was made.', 'koz-static-translate' ),
+						isset( $selected['label'] ) ? (string) $selected['label'] : '',
+						isset( $selected['path'] ) ? (string) $selected['path'] : ''
+					),
+					'prepared' => false,
+					'azure_requests' => 0,
+				),
+				500
+			);
+		}
+
+		$done_jobs = (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(*)
+				FROM {$tables['queue']}
+				WHERE source_id = %d
+					AND category = 'core'
+					AND status = 'done'",
+				(int) $source['id']
+			)
+		);
+		$total_jobs = (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(*)
+				FROM {$tables['queue']}
+				WHERE source_id = %d
+					AND category = 'core'",
+				(int) $source['id']
+			)
+		);
+
+		wp_send_json_success(
+			array(
+				'message' => sprintf(
+					/* translators: 1: Priority Core label, 2: source path, 3: previous scan status, 4: completed core jobs, 5: total core jobs. */
+					__( '%1$s (%2$s) prepared: scan %3$s → ready; local readiness %4$d/%5$d. Azure: 0.', 'koz-static-translate' ),
+					isset( $selected['label'] ) ? (string) $selected['label'] : '',
+					isset( $selected['path'] ) ? (string) $selected['path'] : '',
+					$before_status,
+					$done_jobs,
+					$total_jobs
+				),
+				'prepared' => true,
+				'path' => isset( $selected['path'] ) ? (string) $selected['path'] : '',
+				'label' => isset( $selected['label'] ) ? (string) $selected['label'] : '',
+				'scan_status' => (string) $source['scan_status'],
+				'done_jobs' => $done_jobs,
+				'total_jobs' => $total_jobs,
+				'azure_requests' => 0,
+			)
+		);
 	}
 
 	private static function ajax_guard(): void {
@@ -7947,7 +9082,7 @@ JS;
 			'target_languages' => array_keys( self::languages() ),
 			'content_post_types' => self::content_post_types(),
 			'content_scope' => self::content_scope(),
-			'auto_enabled' => ! empty( $settings['auto_enabled'] ),
+			'auto_enabled' => false,
 			'routes_enabled' => ! empty( $settings['routes_enabled'] ),
 			'switcher_enabled' => ! empty( $settings['switcher_enabled'] ),
 			'dynamic_content_enabled' => ! empty( $settings['dynamic_content_enabled'] ),
