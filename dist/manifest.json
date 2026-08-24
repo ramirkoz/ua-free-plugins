@@ -1,203 +1,306 @@
 {
-  "format": "UA FREE Hub Release Library",
-  "version": "3.0",
-  "created": "2026-08-02",
-  "status": "FINAL — 12 OF 12 SUPPORT PANEL V2.1 UPDATES VERIFIED",
-  "packages": [
+  "format": "KOZ Suite Release Library",
+  "version": "1.0.26",
+  "created": "2026-08-24",
+  "status": "CURRENT LIBRARY — 12/12 LIVE + PLUGIN CHECK PASS — WORDPRESS 7.1",
+  "suite_version": "1.0.26",
+  "release_date": "2026-08-24",
+  "changed_components": [
     {
-      "slug": "ua-free-migration-cleanup",
-      "wporg_slug": "ua-free-migration-cleanup",
-      "name": "UA FREE Migration & Cleanup",
-      "version": "0.8.10",
-      "file": "packages/ua-free-migration-cleanup-v0.8.10.zip",
-      "release_asset": "ua-free-migration-cleanup-0.8.10.zip",
-      "sha256": "0eab48c4a900b16b4f8bc86dbf9aabf4fbf1ba6cf586644f71bf543a9659d0ec",
-      "size": 32648
+      "name": "KOZ Migration & Cleanup",
+      "version": "0.9.7",
+      "sha256": "93417bec5ceb43a1fd8909619d32d3c22b725c280d89518897788c9ba6fff9e9",
+      "live": "PASS",
+      "plugin_check": "PASS",
+      "wordpress_7_1": "PASS"
     },
     {
-      "slug": "ua-free-static-translate",
-      "wporg_slug": "ua-free-static-translate",
-      "name": "UA FREE Static Translate",
-      "version": "0.8.7",
-      "file": "packages/ua-free-static-translate-v0.8.7.zip",
-      "release_asset": "ua-free-static-translate-0.8.7.zip",
-      "sha256": "67a0db2b66af062b1846337f8ddd5f80286cb3e0203a337757eed320b8eea1e2",
-      "size": 79094
+      "name": "KOZ Static Translate",
+      "version": "0.9.36",
+      "sha256": "de2a2190b00dfc5b176d918cff3ac9e9a61dab3e6bca2921f615b66d82fae8e9",
+      "live": "PASS",
+      "plugin_check": "PASS",
+      "wordpress_7_1": "PASS"
     },
     {
-      "slug": "ua-free-translate-diagnostics",
-      "wporg_slug": "ua-free-translate-diagnostics",
-      "name": "UA FREE Translate Diagnostics",
-      "version": "0.2.14",
-      "file": "packages/ua-free-translate-diagnostics-v0.2.14.zip",
-      "release_asset": "ua-free-translate-diagnostics-0.2.14.zip",
-      "sha256": "9de40cff079a125f17846e775d2d31fba843a0fbe4d1d2e9a26f9ad0e67b700e",
-      "size": 34175
+      "name": "KOZ Translate Diagnostics",
+      "version": "0.3.6",
+      "sha256": "40985f6894dfc14cd1f6a3cd5762858cdcba78ad288625eaefa18f437fbf642a",
+      "live": "PASS",
+      "plugin_check": "PASS",
+      "wordpress_7_1": "PASS"
     },
     {
-      "slug": "ua-free-seo-core",
-      "wporg_slug": "ua-free-seo-core",
-      "name": "UA FREE SEO Core",
-      "version": "2.0.8",
-      "file": "packages/ua-free-seo-core-v2.0.8.zip",
-      "release_asset": "ua-free-seo-core-2.0.8.zip",
-      "sha256": "e0f80012a8606987158e52734909cab66459ce6ddab7dc16a626450c2f1d4cce",
-      "size": 33000
+      "name": "KOZ SEO Core",
+      "version": "2.1.22",
+      "sha256": "1937631515df06971ada9de5ff0c2b26ccd9e3573a9d41d51314d1d427b8553e",
+      "live": "PASS",
+      "plugin_check": "PASS",
+      "wordpress_7_1": "PASS"
     },
     {
-      "slug": "ua-free-404-guard",
-      "wporg_slug": "ua-free-404-guard",
-      "name": "UA FREE 404 Guard & URL Intelligence",
-      "version": "2.0.8",
-      "file": "packages/ua-free-404-guard-v2.0.8.zip",
-      "release_asset": "ua-free-404-guard-2.0.8.zip",
-      "sha256": "7d92422fbf5208e4e8562ec92b4a3a4743e03da5be3a0a19d4f67aef996d8587",
-      "size": 40873
+      "name": "KOZ 404 Guard & URL Intelligence",
+      "version": "2.1.4",
+      "sha256": "3f190917b7f298033a093119f99434f7e5dbf3650cc8785c31f7baaf05410a57",
+      "live": "PASS",
+      "plugin_check": "PASS",
+      "wordpress_7_1": "PASS"
     },
     {
-      "slug": "ua-free-site-bridge",
-      "wporg_slug": "ua-free-site-bridge",
-      "name": "UA FREE Site Bridge",
-      "version": "0.4.10",
-      "file": "packages/ua-free-site-bridge-v0.4.10.zip",
-      "release_asset": "ua-free-site-bridge-0.4.10.zip",
-      "sha256": "ceaeecd87831f99d587fe76667aed6260aa9824c3d48d285f00b916bf4685193",
-      "size": 23599
+      "name": "KOZ Site Bridge",
+      "version": "0.5.6",
+      "sha256": "bc51fb891501962929d171cb8c031900e795b963d02a41a0994e3aa823303b86",
+      "live": "PASS",
+      "plugin_check": "PASS",
+      "wordpress_7_1": "PASS"
     },
     {
-      "slug": "ua-free-consent-manager",
-      "wporg_slug": "ua-free-consent-manager",
-      "name": "UA FREE Consent Manager",
-      "version": "0.1.6",
-      "file": "packages/ua-free-consent-manager-v0.1.6.zip",
-      "release_asset": "ua-free-consent-manager-0.1.6.zip",
-      "sha256": "78afdd49b7592aee9cb91adbd6d9ff6d4f44dc203d18aaa1eadf0951317b941d",
-      "size": 23004
+      "name": "KOZ Consent Manager",
+      "version": "0.2.12",
+      "sha256": "d0e784ee0c2f14de5dbd2c1bc3a6127cba06d388a1ca6e633104bfc68e8ddee1",
+      "live": "PASS",
+      "plugin_check": "PASS",
+      "wordpress_7_1": "PASS"
     },
     {
-      "slug": "ua-free-donate-stats",
-      "wporg_slug": "ua-free-donate-stats",
-      "name": "UA FREE Donate Stats & Conversions",
-      "version": "1.2.8",
-      "file": "packages/ua-free-donate-stats-v1.2.8.zip",
-      "release_asset": "ua-free-donate-stats-1.2.8.zip",
-      "sha256": "5d58a71ca93b10901cdafb9bc4a62b16ba6cea5d55bfe039e4ec52c2c7a7ad75",
-      "size": 52745
+      "name": "KOZ Donate Stats & Conversions",
+      "version": "1.3.11",
+      "sha256": "035fabb41afbc0d5cec91f95bf571bc797c47b649905dad9d784638bdbb01fe4",
+      "live": "PASS",
+      "plugin_check": "PASS",
+      "wordpress_7_1": "PASS"
     },
     {
-      "slug": "ua-free-google-ads-campaign-builder",
-      "wporg_slug": "ua-free-google-ads-campaign-builder",
-      "name": "UA FREE Google Ads Campaign Builder",
-      "version": "1.3.7",
-      "file": "packages/ua-free-google-ads-campaign-builder-v1.3.7.zip",
-      "release_asset": "ua-free-google-ads-campaign-builder-1.3.7.zip",
-      "sha256": "cc9f997c84d9f594009113cddc9fdedbda22e55564b291fa9e7800a7a1a4531c",
-      "size": 48459
+      "name": "KOZ Google Ads Campaign Builder",
+      "version": "1.4.13",
+      "sha256": "6b52abac52557c6b0c5ce6320e866d8ada9c787434e9d7084ed4ffb84d7b598d",
+      "live": "PASS",
+      "plugin_check": "PASS",
+      "wordpress_7_1": "PASS"
     },
     {
-      "slug": "ua-free-copy",
-      "wporg_slug": "ua-free-copy",
-      "name": "UA FREE Copy",
-      "version": "1.0.7",
-      "file": "packages/ua-free-copy-v1.0.7.zip",
-      "release_asset": "ua-free-copy-1.0.7.zip",
-      "sha256": "c5f7aa76b3f1e511dc07fb91c2409e4e248e2deccc639aac4fd068e6f9da2b5c",
-      "size": 26324
+      "name": "KOZ Copy Actions",
+      "version": "1.1.14",
+      "sha256": "14a370ec6f0eb3dfce583a88cf490dc79fa0eab09cc8d0b0e1cd314abe95257c",
+      "live": "PASS",
+      "plugin_check": "PASS",
+      "wordpress_7_1": "PASS"
     },
     {
-      "slug": "ua-free-url-only-comment-spam",
-      "wporg_slug": "ua-free-url-only-comment-spam",
-      "name": "UA FREE URL-Only Comment Spam",
-      "version": "1.0.7",
-      "file": "packages/ua-free-url-only-comment-spam-v1.0.7.zip",
-      "release_asset": "ua-free-url-only-comment-spam-1.0.7.zip",
-      "sha256": "a17c07eb8f6d1bb4185cf7582d807bfacd58f9ac66e24bba7c70946b0fb87144",
-      "size": 27195
+      "name": "KOZ URL-Only Comment Spam",
+      "version": "1.1.11",
+      "sha256": "006a1d17a0e43ae089292249472c62b3693bd7c16032b00e73bce3f17b2a1925",
+      "live": "PASS",
+      "plugin_check": "PASS",
+      "wordpress_7_1": "PASS"
     },
     {
-      "slug": "ua-free-suite-control-center",
-      "wporg_slug": "ua-free-analytics-dashboard",
-      "name": "UA FREE Suite Control Center",
-      "version": "0.3.13",
-      "file": "packages/ua-free-suite-control-center-v0.3.13.zip",
-      "release_asset": "ua-free-suite-control-center-0.3.13.zip",
-      "sha256": "fbdee50420ab075732fb04f84a51d642c655ba4508a88627be71cbf7ce8e806c",
-      "size": 26172
+      "name": "KOZ Suite Control Center",
+      "version": "0.4.7",
+      "sha256": "12c73fddbbefbbdf049780177caff1de33b3f0cb02c32aae9950341c591ff4fb",
+      "live": "PASS",
+      "plugin_check": "PASS",
+      "wordpress_7_1": "PASS"
     }
   ],
-  "update_policy": "No custom updater. Public releases will use WordPress.org updates after directory approval.",
-  "verified_packages": [
+  "packages": [
     {
-      "slug": "ua-free-migration-cleanup",
-      "version": "0.8.10",
+      "slug": "koz-migration-cleanup",
+      "name": "KOZ Migration & Cleanup",
+      "version": "0.9.7",
+      "canonical_prefix": "kozmig / KOZMIG",
+      "file": "packages/koz-migration-cleanup-0.9.7.zip",
+      "sha256": "93417bec5ceb43a1fd8909619d32d3c22b725c280d89518897788c9ba6fff9e9",
+      "size": 64023,
+      "strict_re_audit": "PASS",
+      "live_functional": "PASS",
       "plugin_check": "PASS",
-      "live_visual_check": "PASS"
+      "wordpress_org_ready": "YES",
+      "wordpress_core_tested": "7.1 PASS"
     },
     {
-      "slug": "ua-free-static-translate",
-      "version": "0.8.7",
+      "slug": "koz-static-translate",
+      "name": "KOZ Static Translate",
+      "version": "0.9.36",
+      "canonical_prefix": "kozstx / KOZSTX",
+      "file": "packages/koz-static-translate-0.9.36.zip",
+      "sha256": "de2a2190b00dfc5b176d918cff3ac9e9a61dab3e6bca2921f615b66d82fae8e9",
+      "size": 147536,
+      "strict_re_audit": "PASS",
+      "live_functional": "PASS",
       "plugin_check": "PASS",
-      "live_visual_check": "PASS"
+      "wordpress_org_ready": "YES",
+      "wordpress_core_tested": "7.1 PASS",
+      "wordpress_org_status": "0.9.36 READY FOR PENDING WORDPRESS.ORG APPLICATION UPDATE"
     },
     {
-      "slug": "ua-free-translate-diagnostics",
-      "version": "0.2.14",
+      "slug": "koz-translate-diagnostics",
+      "name": "KOZ Translate Diagnostics",
+      "version": "0.3.6",
+      "canonical_prefix": "koztdiag / KOZTDIAG",
+      "file": "packages/koz-translate-diagnostics-0.3.6.zip",
+      "sha256": "40985f6894dfc14cd1f6a3cd5762858cdcba78ad288625eaefa18f437fbf642a",
+      "size": 111879,
+      "strict_re_audit": "PASS",
+      "live_functional": "PASS",
       "plugin_check": "PASS",
-      "live_visual_check": "PASS"
+      "wordpress_org_ready": "YES",
+      "wordpress_core_tested": "7.1 PASS"
     },
     {
-      "slug": "ua-free-seo-core",
-      "version": "2.0.8",
+      "slug": "koz-seo-core",
+      "name": "KOZ SEO Core",
+      "version": "2.1.22",
+      "canonical_prefix": "kozseo / KOZSEO",
+      "file": "packages/koz-seo-core-2.1.22.zip",
+      "sha256": "1937631515df06971ada9de5ff0c2b26ccd9e3573a9d41d51314d1d427b8553e",
+      "size": 87136,
+      "strict_re_audit": "PASS",
+      "live_functional": "PASS",
       "plugin_check": "PASS",
-      "live_visual_check": "PASS"
+      "wordpress_org_ready": "YES",
+      "wordpress_core_tested": "7.1 PASS",
+      "wordpress_org_status": "WORDPRESS.ORG REVIEW REMEDIATION PASS — 2.1.22"
     },
     {
-      "slug": "ua-free-404-guard",
-      "version": "2.0.8",
+      "slug": "koz-404-guard",
+      "name": "KOZ 404 Guard & URL Intelligence",
+      "version": "2.1.4",
+      "canonical_prefix": "koz404 / KOZ404",
+      "file": "packages/koz-404-guard-2.1.4.zip",
+      "sha256": "3f190917b7f298033a093119f99434f7e5dbf3650cc8785c31f7baaf05410a57",
+      "size": 102153,
+      "strict_re_audit": "PASS",
+      "live_functional": "PASS",
       "plugin_check": "PASS",
-      "live_visual_check": "PASS"
+      "wordpress_org_ready": "YES",
+      "wordpress_core_tested": "7.1 PASS"
     },
     {
-      "slug": "ua-free-site-bridge",
-      "version": "0.4.10",
+      "slug": "koz-site-bridge",
+      "name": "KOZ Site Bridge",
+      "version": "0.5.6",
+      "canonical_prefix": "kozbridge / KOZBRIDGE",
+      "file": "packages/koz-site-bridge-0.5.6.zip",
+      "sha256": "bc51fb891501962929d171cb8c031900e795b963d02a41a0994e3aa823303b86",
+      "size": 116270,
+      "strict_re_audit": "PASS",
+      "live_functional": "PASS",
       "plugin_check": "PASS",
-      "live_visual_check": "PASS"
+      "wordpress_org_ready": "YES",
+      "wordpress_core_tested": "7.1 PASS"
     },
     {
-      "slug": "ua-free-consent-manager",
-      "version": "0.1.6",
+      "slug": "koz-consent-manager",
+      "name": "KOZ Consent Manager",
+      "version": "0.2.12",
+      "canonical_prefix": "kozconsent / KOZCONSENT",
+      "file": "packages/koz-consent-manager-0.2.12.zip",
+      "sha256": "d0e784ee0c2f14de5dbd2c1bc3a6127cba06d388a1ca6e633104bfc68e8ddee1",
+      "size": 58685,
+      "strict_re_audit": "PASS",
+      "live_functional": "PASS",
       "plugin_check": "PASS",
-      "live_visual_check": "PASS"
+      "wordpress_org_ready": "YES",
+      "wordpress_core_tested": "7.1 PASS"
     },
     {
-      "slug": "ua-free-donate-stats",
-      "version": "1.2.8",
+      "slug": "koz-donate-stats",
+      "name": "KOZ Donate Stats & Conversions",
+      "version": "1.3.11",
+      "canonical_prefix": "kozdonate / KOZDONATE",
+      "file": "packages/koz-donate-stats-1.3.11.zip",
+      "sha256": "035fabb41afbc0d5cec91f95bf571bc797c47b649905dad9d784638bdbb01fe4",
+      "size": 122453,
+      "strict_re_audit": "PASS",
+      "live_functional": "PASS",
       "plugin_check": "PASS",
-      "live_visual_check": "PASS"
+      "wordpress_org_ready": "YES",
+      "wordpress_core_tested": "7.1 PASS"
     },
     {
-      "slug": "ua-free-google-ads-campaign-builder",
-      "version": "1.3.7",
+      "slug": "koz-google-ads-campaign-builder",
+      "name": "KOZ Google Ads Campaign Builder",
+      "version": "1.4.13",
+      "canonical_prefix": "kozgads / KOZGADS",
+      "file": "packages/koz-google-ads-campaign-builder-1.4.13.zip",
+      "sha256": "6b52abac52557c6b0c5ce6320e866d8ada9c787434e9d7084ed4ffb84d7b598d",
+      "size": 135934,
+      "strict_re_audit": "PASS",
+      "live_functional": "PASS",
       "plugin_check": "PASS",
-      "live_visual_check": "PASS"
+      "wordpress_org_ready": "YES",
+      "wordpress_core_tested": "7.1 PASS"
     },
     {
-      "slug": "ua-free-copy",
-      "version": "1.0.7",
+      "slug": "koz-copy-actions",
+      "name": "KOZ Copy Actions",
+      "version": "1.1.14",
+      "canonical_prefix": "kozcoac / KOZCOAC",
+      "file": "packages/koz-copy-actions-1.1.14.zip",
+      "sha256": "14a370ec6f0eb3dfce583a88cf490dc79fa0eab09cc8d0b0e1cd314abe95257c",
+      "size": 40627,
+      "strict_re_audit": "PASS",
+      "live_functional": "PASS",
       "plugin_check": "PASS",
-      "live_visual_check": "PASS"
+      "wordpress_org_ready": "YES",
+      "wordpress_core_tested": "7.1 PASS",
+      "wordpress_org_status": "WORDPRESS.ORG LIVE — 1.1.14"
     },
     {
-      "slug": "ua-free-url-only-comment-spam",
-      "version": "1.0.7",
+      "slug": "koz-url-only-comment-spam",
+      "name": "KOZ URL-Only Comment Spam",
+      "version": "1.1.11",
+      "canonical_prefix": "kozurlspam / KOZURLSPAM",
+      "file": "packages/koz-url-only-comment-spam-1.1.11.zip",
+      "sha256": "006a1d17a0e43ae089292249472c62b3693bd7c16032b00e73bce3f17b2a1925",
+      "size": 72575,
+      "strict_re_audit": "PASS",
+      "live_functional": "PASS",
       "plugin_check": "PASS",
-      "live_visual_check": "PASS"
+      "wordpress_org_ready": "YES",
+      "wordpress_core_tested": "7.1 PASS",
+      "wordpress_org_status": "WORDPRESS.ORG 1.1.11 — RELEASED, PLATFORM DISTRIBUTION DELAY ACTIVE"
     },
     {
-      "slug": "ua-free-suite-control-center",
-      "version": "0.3.13",
+      "slug": "koz-suite-control-center",
+      "name": "KOZ Suite Control Center",
+      "version": "0.4.7",
+      "canonical_prefix": "kozsuitecc / KOZSUITECC",
+      "file": "packages/koz-suite-control-center-0.4.7.zip",
+      "sha256": "12c73fddbbefbbdf049780177caff1de33b3f0cb02c32aae9950341c591ff4fb",
+      "size": 27231,
+      "strict_re_audit": "PASS",
+      "live_functional": "PASS",
       "plugin_check": "PASS",
-      "live_visual_check": "PASS"
+      "wordpress_org_ready": "YES",
+      "wordpress_core_tested": "7.1 PASS"
     }
+  ],
+  "private_components": [
+    {
+      "slug": "koz-suite-hub-private",
+      "name": "KOZ Suite Hub — Private",
+      "version": "0.4.6",
+      "included_in_public_bundle": false,
+      "status": "LIVE + PLUGIN CHECK PASS — WORDPRESS 7.1",
+      "sha256": "75f4dac56169069e7399280749ddc0a07c7453febb3f3aa0505b72ecac233392"
+    }
+  ],
+  "wordpress_org": {
+    "koz-copy-actions": "1.1.14 LIVE",
+    "koz-url-only-comment-spam": "1.1.11 LIVE",
+    "koz-seo-core": "2.1.22 LIVE",
+    "koz-static-translate": "0.9.36 READY FOR PENDING APPLICATION UPDATE"
+  },
+  "changes_from_1_0_25": [
+    "KOZ Static Translate updated from 0.9.19 to 0.9.36.",
+    "Production safety mode prevents heavy activation, automatic worker, cron, bulk rebuild and Azure work during readiness recovery.",
+    "Priority Core detection is universal and derived dynamically from WordPress navigation, with external URLs excluded and no UA FREE-specific hardcoding.",
+    "Local bounded readiness tools use existing Translation Memory without Azure requests; verified live on priority core routes.",
+    "Readiness no longer blocks on universal ancillary metadata types such as description metadata and image alt text.",
+    "KOZ Static Translate 0.9.36 passed live functional verification and WordPress Plugin Check on WordPress 7.1.",
+    "Google Search Console live test confirmed an English ready route is indexable after readiness recovery.",
+    "All other 11 public packages remain byte-identical to KOZ Suite 1.0.25."
   ]
 }
