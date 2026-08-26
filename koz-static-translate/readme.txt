@@ -4,7 +4,7 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=kozyr
 Tags: translation, multilingual, azure, static translation, language switcher
 Requires at least: 6.0
 Tested up to: 7.1
-Stable tag: 0.9.36
+Stable tag: 0.9.37
 Requires PHP: 8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -43,6 +43,14 @@ Additional KOZ Suite modules are used in production and may be published separat
 * Backup-first cleanup and reset tools.
 * Ten bundled administration languages with English fallback.
 
+
+= Source code =
+
+The complete human-readable source for this plugin is included in the plugin package and is maintained publicly at:
+https://github.com/ramirkoz/ua-free-plugins/tree/main/koz-static-translate
+
+The JavaScript files in `assets/` are shipped as human-readable source files. No npm, webpack or other build step is required to regenerate the distributed JavaScript.
+
 = Privacy =
 
 The plugin does not add analytics or advertising telemetry. Content selected for translation is sent to the configured Azure Translator endpoint. Azure credentials are encrypted in the WordPress database using keys derived from WordPress salts.
@@ -55,17 +63,26 @@ When translation processing runs, text segments selected from published WordPres
 
 The external service is not required for WordPress administration, cleanup tools, translation-memory storage, language routing logic or KOZ Suite navigation, but new machine translations cannot be produced without a configured translation provider.
 
-Azure Translator:
+Service provider: Microsoft Azure Translator / Azure AI Translator.
+Default API endpoint: https://api.cognitive.microsofttranslator.com
+
+What is sent: only text segments selected for translation, together with the source and target language codes required by the Translator API. Site visitor analytics, advertising identifiers and WordPress user passwords are not sent by this plugin.
+
+When it is sent: only when an authorized site administrator explicitly runs translation processing or an administrator-only dynamic translation request while Azure credentials are configured. The automatic background worker remains disabled in this release.
+
+Why it is sent: to receive machine-translated text that is stored in the site's translation memory and translation tables.
+
+Azure Translator product information:
 https://azure.microsoft.com/products/ai-services/ai-translator/
 
-Microsoft Azure Translator data, privacy and security information:
+Azure Translator data, privacy and security information:
 https://learn.microsoft.com/en-us/azure/foundry/responsible-ai/translator/data-privacy-security
 
 Microsoft Privacy Statement:
 https://privacy.microsoft.com/en-us/privacystatement
 
-Microsoft Azure legal information:
-https://azure.microsoft.com/support/legal/
+Microsoft Product Terms for Azure services:
+https://www.microsoft.com/licensing/terms/productoffering/MicrosoftAzureServices/MCA
 
 == Installation ==
 
@@ -91,6 +108,14 @@ No. Existing settings determine whether the queue and public routes are enabled.
 No. It originated from production work for the foundation website but is independently owned and maintained by Tony Kozyriev.
 
 == Changelog ==
+
+= 0.9.37 =
+* Uses WordPress enqueue APIs for plugin-owned frontend CSS and JavaScript instead of printing raw style/script tags.
+* Makes the dynamic translation REST endpoint administrator-only with capability checks and WordPress REST nonce authentication; public HMAC tokens are removed.
+* Stops automatically deactivating the former UA FREE plugin and shows a manual-action notice instead.
+* Documents the public source repository and Microsoft Azure Translator external-service data flow, privacy and product terms.
+* Ships the admin JavaScript in human-readable form; translation/readiness behavior is otherwise unchanged.
+
 
 = 0.9.36 =
 * Makes meta_description, meta_og_description and meta_twitter_description universally non-blocking for page readiness.
