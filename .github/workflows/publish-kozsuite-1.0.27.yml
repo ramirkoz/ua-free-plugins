@@ -6,6 +6,11 @@ on:
       - main
     paths:
       - .release/kozsuite-1.0.27.trigger
+  pull_request:
+    branches:
+      - main
+    paths:
+      - .release/pr-trigger
 
 permissions:
   contents: write
@@ -14,9 +19,10 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out repository
+      - name: Check out main
         uses: actions/checkout@v4
         with:
+          ref: main
           fetch-depth: 0
 
       - name: Publish verified 0.9.37
@@ -64,7 +70,6 @@ jobs:
           data['created'] = '2026-08-26'
           data['release_date'] = '2026-08-26'
           data['status'] = 'CURRENT LIBRARY — 12/12 LIVE + PLUGIN CHECK PASS — WORDPRESS 7.1'
-
           for item in data.get('changed_components', []):
               if item.get('name') == 'KOZ Static Translate':
                   item['version'] = '0.9.37'
@@ -72,7 +77,6 @@ jobs:
                   item['live'] = 'PASS'
                   item['plugin_check'] = 'PASS'
                   item['wordpress_7_1'] = 'PASS'
-
           for item in data.get('packages', []):
               if item.get('slug') == 'koz-static-translate':
                   item['version'] = '0.9.37'
@@ -85,14 +89,12 @@ jobs:
                   item['wordpress_org_ready'] = 'YES'
                   item['wordpress_core_tested'] = '7.1 PASS'
                   item['wordpress_org_status'] = '0.9.37 REVIEW REMEDIATION PASS — SUBMITTED FOR WORDPRESS.ORG REVIEW'
-
           for item in data.get('private_components', []):
               if item.get('slug') == 'koz-suite-hub-private':
                   item['version'] = '0.4.8'
                   item['included_in_public_bundle'] = False
                   item['status'] = 'FINAL — LIVE UI PASS — COPY ISOLATION PASS — LOCAL TEST PASS'
                   item['sha256'] = '17ae87118b09aee333cba11c4f6ba65dfe9e69c8ce2f755c74a2d6f61fdf45d6'
-
           data.setdefault('wordpress_org', {})['koz-static-translate'] = '0.9.37 SUBMITTED — REVIEW IN PROGRESS'
           data.pop('changes_from_1_0_25', None)
           data['changes_from_1_0_26'] = [
