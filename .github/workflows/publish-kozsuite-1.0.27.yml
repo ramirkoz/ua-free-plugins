@@ -1,0 +1,139 @@
+name: Publish KOZ Suite 1.0.27
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .release/kozsuite-1.0.27.trigger
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Synchronize verified release
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # A deletion of the trigger after a successful publish can schedule one
+          # harmless follow-up run. Exit cleanly when the trigger is absent.
+          if [ ! -f .release/kozsuite-1.0.27.trigger ]; then
+            exit 0
+          fi
+
+          PACKAGE='.release/KOZ-Static-Translate-0.9.37.zip'
+          EXPECTED='3719698eb7cc4015871074f4d9ddadcd45d6e80ba05818f9e14ff733a23706fb'
+          echo "$EXPECTED  $PACKAGE" | sha256sum -c -
+          unzip -t "$PACKAGE"
+
+          rm -rf /tmp/kozstx-0937
+          mkdir -p /tmp/kozstx-0937
+          unzip -q "$PACKAGE" -d /tmp/kozstx-0937
+          test -f /tmp/kozstx-0937/koz-static-translate/koz-static-translate.php
+          grep -q 'Version: 0.9.37' /tmp/kozstx-0937/koz-static-translate/koz-static-translate.php
+          grep -q 'Stable tag: 0.9.37' /tmp/kozstx-0937/koz-static-translate/readme.txt
+
+          rm -rf koz-static-translate
+          cp -a /tmp/kozstx-0937/koz-static-translate ./koz-static-translate
+
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          manifest_path = Path('dist/manifest.json')
+          data = json.loads(manifest_path.read_text(encoding='utf-8'))
+          data['version'] = '1.0.27'
+          data['suite_version'] = '1.0.27'
+          data['created'] = '2026-08-26'
+          data['release_date'] = '2026-08-26'
+          data['status'] = 'CURRENT LIBRARY — 12/12 LIVE + PLUGIN CHECK PASS — WORDPRESS 7.1'
+
+          for item in data.get('changed_components', []):
+              if item.get('name') == 'KOZ Static Translate':
+                  item['version'] = '0.9.37'
+                  item['sha256'] = '3719698eb7cc4015871074f4d9ddadcd45d6e80ba05818f9e14ff733a23706fb'
+                  item['live'] = 'PASS'
+                  item['plugin_check'] = 'PASS'
+                  item['wordpress_7_1'] = 'PASS'
+
+          for item in data.get('packages', []):
+              if item.get('slug') == 'koz-static-translate':
+                  item['version'] = '0.9.37'
+                  item['file'] = 'packages/koz-static-translate-0.9.37.zip'
+                  item['sha256'] = '3719698eb7cc4015871074f4d9ddadcd45d6e80ba05818f9e14ff733a23706fb'
+                  item['size'] = 153336
+                  item['strict_re_audit'] = 'PASS'
+                  item['live_functional'] = 'PASS'
+                  item['plugin_check'] = 'PASS'
+                  item['wordpress_org_ready'] = 'YES'
+                  item['wordpress_core_tested'] = '7.1 PASS'
+                  item['wordpress_org_status'] = '0.9.37 REVIEW REMEDIATION PASS — READY FOR WORDPRESS.ORG RESUBMISSION'
+
+          for item in data.get('private_components', []):
+              if item.get('slug') == 'koz-suite-hub-private':
+                  item['version'] = '0.4.8'
+                  item['included_in_public_bundle'] = False
+                  item['status'] = 'FINAL — LIVE UI PASS — COPY ISOLATION PASS — LOCAL TEST PASS'
+                  item['sha256'] = '17ae87118b09aee333cba11c4f6ba65dfe9e69c8ce2f755c74a2d6f61fdf45d6'
+
+          data.setdefault('wordpress_org', {})['koz-static-translate'] = '0.9.37 REVIEW REMEDIATION PASS — READY FOR RESUBMISSION'
+          data.pop('changes_from_1_0_25', None)
+          data['changes_from_1_0_26'] = [
+              'KOZ Static Translate updated from 0.9.36 to 0.9.37.',
+              'WordPress.org review remediation 5/5 complete.',
+              'Frontend plugin assets are enqueue-managed; privileged dynamic translation REST writes require manage_options and a REST nonce.',
+              'Automatic legacy plugin deactivation was removed; external Azure service/source documentation was completed.',
+              'Other 11 public plugin packages remain unchanged from KOZ Suite 1.0.26.',
+          ]
+          manifest_path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+
+          readme = Path('README.md')
+          text = readme.read_text(encoding='utf-8')
+          text = text.replace('Suite bundle: **1.0.26**', 'Suite bundle: **1.0.27**')
+          text = text.replace('| koz-static-translate | 0.9.36 |', '| koz-static-translate | 0.9.37 |')
+          text = text.replace('**KOZ Suite Bundle 1.0.26**', '**KOZ Suite Bundle 1.0.27**')
+          text = text.replace('KOZ Suite Hub — Private 0.4.6', 'KOZ Suite Hub — Private 0.4.8')
+          readme.write_text(text, encoding='utf-8')
+          PY
+
+          cat > RELEASE_NOTES_v1.0.27.md <<'MD'
+          # KOZ WordPress Plugin Suite 1.0.27
+
+          This release updates KOZ Static Translate from 0.9.36 to 0.9.37 while keeping the other 11 public plugin packages unchanged.
+
+          ## KOZ Static Translate 0.9.37
+
+          - WordPress.org review remediation: 5/5 complete.
+          - Plugin-owned frontend CSS/JS is loaded through WordPress enqueue APIs.
+          - Dynamic translation REST writes and Azure calls require an administrator capability and REST nonce.
+          - Automatic deactivation of the legacy package was removed.
+          - Public source and Azure service terms/privacy documentation were completed.
+          - Live regression, WordPress Plugin Check and WordPress 7.1 compatibility: PASS.
+
+          ## Verification
+
+          - Public plugins: 12/12.
+          - Other 11 packages: unchanged from KOZ Suite 1.0.26.
+          - KOZ Static Translate 0.9.37 SHA-256: `3719698eb7cc4015871074f4d9ddadcd45d6e80ba05818f9e14ff733a23706fb`.
+          - KOZ Suite 1.0.27 SHA-256: `1a5a1c297e3f2a124fe6ff915210abd037992e3bfa31014608e03605235eb5a8`.
+          MD
+
+          rm -f "$PACKAGE" .release/kozsuite-1.0.27.trigger
+          rmdir .release 2>/dev/null || true
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m 'Release KOZ Static Translate 0.9.37 and Suite 1.0.27'
+            git push origin HEAD:main
+          fi
