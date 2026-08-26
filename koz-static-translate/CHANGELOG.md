@@ -1,3 +1,12 @@
+# 0.9.37
+
+- WordPress.org review compliance release.
+- Moves plugin-owned frontend CSS/JavaScript to WordPress enqueue-managed assets.
+- Restricts dynamic translation REST writes/Azure calls to administrators with `manage_options` and REST nonce authentication.
+- Removes automatic deactivation of the legacy plugin.
+- Documents public source and Microsoft Azure Translator service terms/privacy.
+- Keeps translation readiness and automatic-worker safety behavior unchanged.
+
 ## 0.9.36
 
 - Universal readiness rule: description metadata does not block a translated page from becoming ready.
