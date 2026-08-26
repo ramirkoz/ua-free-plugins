@@ -24,21 +24,51 @@ jobs:
         run: |
           set -euo pipefail
 
-          # A deletion of the trigger after a successful publish can schedule one
-          # harmless follow-up run. Exit cleanly when the trigger is absent.
           if [ ! -f .release/kozsuite-1.0.27.trigger ]; then
             exit 0
           fi
 
           PACKAGE='.release/KOZ-Static-Translate-0.9.37.zip'
-          EXPECTED='3719698eb7cc4015871074f4d9ddadcd45d6e80ba05818f9e14ff733a23706fb'
-          echo "$EXPECTED  $PACKAGE" | sha256sum -c -
+          test -f "$PACKAGE"
           unzip -t "$PACKAGE"
 
           rm -rf /tmp/kozstx-0937
           mkdir -p /tmp/kozstx-0937
           unzip -q "$PACKAGE" -d /tmp/kozstx-0937
-          test -f /tmp/kozstx-0937/koz-static-translate/koz-static-translate.php
+
+          cat > /tmp/kozstx-0937.sha256 <<'SUMS'
+          282e9dd33191e738dea5437a5f460f37a6d50536eeb367425280814b6ba6ac16 koz-static-translate/CHANGELOG.md
+          d7a199d061d58b9b50adf9ba08775c468c6ec1c60df7ad98dfff74bd54d5f67d koz-static-translate/README.md
+          d527ce96084bad2d564a2752031dabf9108ad8f89b4796804514830f58cde234 koz-static-translate/assets/admin.css
+          2bc3e9ac297d2179ea9dca060aeaf4fe2a1be6da2df9d14178185967cbcae3ba koz-static-translate/assets/admin.js
+          fd4596ac783565d3caf87e49f51173e806a9ee130943943943fb143c9e78e988 koz-static-translate/assets/dynamic-translator.js
+          b0d92de5537bb4411b14dafd5185391b89e6de8347e7336becaae4c78df20959 koz-static-translate/assets/gallery-compat.js
+          9097cf5f5a14ebc341f6e5f38cc13185bacce59ebbab04c2f0411ecbf98e76ba koz-static-translate/assets/i18n/ar.json
+          47a1ce36bbf67cfd88fbb857afa275fbd3dfbc5ef4e98d3d6d3b717eea93fe3e koz-static-translate/assets/i18n/de.json
+          06b3f99695f0e06064d902493f14bc35e8114df5f13dcc82e17e58aa28bc4922 koz-static-translate/assets/i18n/es.json
+          6f83bed9f43032c7d783b077a6ee665411e17634bd838a42aa4e9dd142706ddd koz-static-translate/assets/i18n/fr.json
+          fd0efa1f40ed11eac332dacb3f6ca5270c87fd7c2fdb425efa0b309a14c19de9 koz-static-translate/assets/i18n/hi.json
+          a65ca695af63c3a02bf64e661f28272cc1fcc106eb10b10e93964ba2c90d3b51 koz-static-translate/assets/i18n/id.json
+          ce765dc77ecac23b8a51de807c116b2e07a87e45529bf540712928c74ecbb64b koz-static-translate/assets/i18n/ja.json
+          ba0f4c39b0832ed6acf3b60e2bb0e9846b5a16e5abea9258a5e9ce0dc2dcd13b koz-static-translate/assets/i18n/pt.json
+          b61923fd6f48e98f3ff9b95c9f6d9b6c87ca38c974eba6b0c51872ccd30d5cfc koz-static-translate/assets/i18n/uk.json
+          dc2ebe22b722d4a2f71a9631494fc335d054a8221c8bf295dcea07d31bec0c55 koz-static-translate/assets/i18n/zh.json
+          d8ee080403deb6dbbc0d11d6d8d047495d087db64bd26fac1dd3225d4d4901a7 koz-static-translate/assets/koz-admin-support-panel.css
+          6f1ffdce2670b2d587c7d506dcc0612d65013b6779b12000246a7afe977de4d2 koz-static-translate/assets/koz-admin-support-panel.js
+          55c17a62353f7dd208cfc579ed02d79648a3781e432708b7c6d4bf340d9a3b6a koz-static-translate/assets/language-link-guard.js
+          93eeb03820b4991394d38192309be7b4a47b6d331acab4dee5ea220ff23f8b70 koz-static-translate/assets/wait.css
+          c69070e8cbba7e8d4f6286cc3fbfdc81898da5e5c3201cca50455607d25433b8 koz-static-translate/assets/wait.js
+          a4fbf24a6f9a3549250650241f7f9fae7d574030d834d7523eb3b0ee0dc74193 koz-static-translate/includes/class-kozstx-admin-support-panel.php
+          e1df8e3280b30dd28ba0ec76db7f3ff8c70cbc8226207687cc0b3371a76f1e02 koz-static-translate/includes/class-kozstx-cleanup.php
+          ebc7be7192edaa8f9f93f3b144361ae712210d28b8dbc8cb65ff41cf06568fb9 koz-static-translate/includes/class-kozstx-static-translate.php
+          1ab391cdc6b0b2683074c187b8045cfae5a1e8acf4b8ed7415cf9abf27f3ce25 koz-static-translate/includes/class-kozstx-suite-registry.php
+          3f70bb937fabae605d8bf17c29cb1773aee701c9a42c3ef396d91df5d0aa4c90 koz-static-translate/koz-static-translate.php
+          6c3f86989d8fcb70c653a86c62ffcf778e5d0f3752e4997a94ffce9c217725f3 koz-static-translate/languages/koz-static-translate.pot
+          9cf44d6154847cd8a0a6bf1c4777fa6492ed67f7a7adec08b451e6b2516a5905 koz-static-translate/readme.txt
+          SUMS
+
+          test "$(find /tmp/kozstx-0937/koz-static-translate -type f | wc -l)" -eq 28
+          (cd /tmp/kozstx-0937 && sha256sum -c /tmp/kozstx-0937.sha256)
           grep -q 'Version: 0.9.37' /tmp/kozstx-0937/koz-static-translate/koz-static-translate.php
           grep -q 'Stable tag: 0.9.37' /tmp/kozstx-0937/koz-static-translate/readme.txt
 
