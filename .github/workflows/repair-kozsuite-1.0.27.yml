@@ -1,0 +1,41 @@
+name: Repair KOZ Suite 1.0.27 release staging
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .release/fix-trigger
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Repair exact Base64 chunk and trigger release
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f .release/fix-trigger
+          shopt -s nullglob
+          BRIDGE=(.release/bridge/part-[0-9][0-9])
+          test "${#BRIDGE[@]}" -eq 19
+          cat "${BRIDGE[@]}" > .release/parts/kozstx-0.9.37.part-11
+          test "$(wc -c < .release/parts/kozstx-0.9.37.part-11)" -eq 19000
+          test "$(git hash-object .release/parts/kozstx-0.9.37.part-11)" = '7595d3517217cbff12d516a0f333b951b92b3276'
+          date -u +%Y-%m-%dT%H:%M:%SZ > .release/kozsuite-1.0.27.trigger
+          rm -f .release/fix-trigger
+          rm -f .github/workflows/repair-kozsuite-1.0.27.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Repair KOZ Suite 1.0.27 release staging'
+          git push origin HEAD:main
