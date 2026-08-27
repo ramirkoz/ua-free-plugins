@@ -3225,6 +3225,24 @@ final class KOZSTX_Static_Translate {
 			echo esc_html( $translated->get_error_message() );
 			exit;
 		}
+
+		/*
+		 * Dynamic Azure-backed translation is an administrator-only preview aid.
+		 * Inject it after render-cache reads/writes so REST nonces are never stored
+		 * in public translated HTML caches.
+		 */
+		if (
+			! self::migration_freeze_active()
+			&& ! empty( self::settings()['dynamic_content_enabled'] )
+			&& current_user_can( 'manage_options' )
+		) {
+			$translated = self::inject_dynamic_content_translator(
+				(string) $translated,
+				(int) $source['id'],
+				$slug
+			);
+		}
+
 		status_header( 200 );
 		header( 'Content-Type: text/html; charset=utf-8' );
 
@@ -3245,10 +3263,10 @@ final class KOZSTX_Static_Translate {
 		) {
 			header( 'X-KOZSTX-Gallery-Mode: verbatim-passthrough' );
 		}
-		if ( false !== strpos( $translated, 'id="kozstx-dynamic-translator"' ) ) {
+		if ( false !== strpos( $translated, 'id="kozstx-dynamic-translator-js"' ) ) {
 			header( 'X-KOZSTX-Dynamic-Translate: 1' );
 		}
-		if ( false !== strpos( $translated, 'id="kozstx-language-link-guard"' ) ) {
+		if ( false !== strpos( $translated, 'id="kozstx-language-link-guard-js"' ) ) {
 			header( 'X-KOZSTX-Link-Guard: 1' );
 		}
 		if ( ! empty( $catchup['translated'] ) ) {
@@ -3331,24 +3349,8 @@ final class KOZSTX_Static_Translate {
 		} else {
 			echo '<title>' . esc_html( $title ) . ' | ' . esc_html( $site_name ) . '</title>';
 		}
-		echo '<style>
-			:root{color-scheme:light}
-			*{box-sizing:border-box}
-			html,body{margin:0;min-height:100%;font-family:Arial,Helvetica,sans-serif;background:#f6f7f7;color:#1d2327}
-			body{display:grid;place-items:center;padding:24px}
-			.kozstx-wait{width:min(680px,100%);background:#fff;border:1px solid #dcdcde;border-radius:22px;padding:34px;box-shadow:0 18px 55px rgba(0,0,0,.10);text-align:center}
-			.kozstx-logo{display:inline-flex;align-items:center;justify-content:center;min-width:150px;padding:14px 18px;margin-bottom:24px;border-radius:16px;background:#111;color:#fff;font-size:34px;font-weight:800;letter-spacing:-1px}
-			h1{font-size:clamp(28px,5vw,46px);line-height:1.08;margin:0 0 16px}
-			p{font-size:18px;line-height:1.6;margin:8px 0;color:#50575e}
-			.kozstx-requested{display:inline-block;margin:12px 0 20px;padding:7px 12px;border-radius:999px;background:#eef6ff;color:#0a4b78;font-weight:700}
-			.kozstx-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:26px}
-			.kozstx-actions a,.kozstx-actions select{min-height:44px;border-radius:10px;border:1px solid #8c8f94;padding:10px 14px;font:600 15px/1.2 Arial,Helvetica,sans-serif}
-			.kozstx-actions a{display:inline-flex;align-items:center;text-decoration:none;background:#2271b1;color:#fff;border-color:#2271b1}
-			.kozstx-actions select{background:#fff;color:#1d2327}
-			.kozstx-refresh{font-size:14px;color:#646970}
-			.kozstx-code{margin-top:24px;font-size:13px;color:#787c82}
-			@media(max-width:520px){.kozstx-wait{padding:26px 20px}.kozstx-actions>*{width:100%}}
-		</style>';
+		wp_enqueue_style( 'kozstx-wait', KOZSTX_URL . 'assets/wait.css', array(), KOZSTX_VERSION );
+		wp_print_styles( 'kozstx-wait' );
 		echo '</head><body>';
 		echo '<main class="kozstx-wait">';
 		echo '<div class="kozstx-logo" aria-label="' . esc_attr( $site_name ) . '">' . esc_html( $site_name ) . '</div>';
@@ -3361,7 +3363,7 @@ final class KOZSTX_Static_Translate {
 		echo '<a href="' . esc_url( $source_url ) . '">View source page</a>';
 
 		if ( ! empty( $ready ) ) {
-			echo '<select aria-label="Language" onchange="if(this.value){window.location.href=this.value;}">';
+			echo '<select id="kozstx-wait-language" aria-label="Language">';
 			echo '<option value="">Other ready languages</option>';
 			foreach ( $ready as $ready_slug ) {
 				if ( ! isset( self::languages()[ $ready_slug ] ) ) {
@@ -3376,7 +3378,8 @@ final class KOZSTX_Static_Translate {
 		echo '</div>';
 		echo '<div class="kozstx-code">' . esc_html( (string) $status ) . ' · translation is finishing · KOZ Static Translate ' . esc_html( KOZSTX_VERSION ) . '</div>';
 		echo '</main>';
-		echo '<script>(function(){var n=10,e=document.getElementById("kozstx-countdown");window.setInterval(function(){n=Math.max(0,n-1);if(e){e.textContent=String(n);}if(n===0){window.location.reload();}},1000);}());</script>';
+		wp_enqueue_script( 'kozstx-wait', KOZSTX_URL . 'assets/wait.js', array(), KOZSTX_VERSION, true );
+		wp_print_scripts( 'kozstx-wait' );
 		echo '</body></html>';
 		exit;
 	}
@@ -4174,18 +4177,47 @@ final class KOZSTX_Static_Translate {
 			$localized_route_map
 		);
 
-		if ( ! self::migration_freeze_active() && ! empty( self::settings()['dynamic_content_enabled'] ) ) {
-			$output = self::inject_dynamic_content_translator(
-				(string) $output,
-				(int) $source['id'],
-				$slug
-			);
-		}
-
 		return $output;
 	}
 
 
+
+
+	private static function script_asset_markup(
+		string $handle,
+		string $relative_path,
+		string $config_name = '',
+		array $config = array()
+	): string {
+		wp_register_script(
+			$handle,
+			KOZSTX_URL . ltrim( $relative_path, '/' ),
+			array(),
+			KOZSTX_VERSION,
+			false
+		);
+		wp_enqueue_script( $handle );
+
+		if ( '' !== $config_name ) {
+			$config_json = wp_json_encode(
+				$config,
+				JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
+			);
+			wp_add_inline_script(
+				$handle,
+				'window.' . $config_name . ' = ' . (string) $config_json . ';',
+				'before'
+			);
+		}
+
+		ob_start();
+		wp_print_scripts( $handle );
+		$markup = (string) ob_get_clean();
+		wp_dequeue_script( $handle );
+		wp_deregister_script( $handle );
+
+		return $markup;
+	}
 
 	private static function inject_language_link_guard(
 		string $html,
@@ -4231,331 +4263,14 @@ final class KOZSTX_Static_Translate {
 			'version' => KOZSTX_VERSION,
 		);
 
-		$config_json = wp_json_encode(
-			$config,
-			JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
+
+		$script = self::script_asset_markup(
+			'kozstx-language-link-guard',
+			'assets/language-link-guard.js',
+			'KOZSTXLanguageLinkGuard',
+			$config
 		);
 
-		$script = <<<'JS'
-<script id="kozstx-language-link-guard">
-(function(){
-	'use strict';
-
-	var CONFIG = __CONFIG__;
-	var ATTRIBUTE_NAMES = [
-		'href',
-		'action',
-		'data-href',
-		'data-url',
-		'data-link',
-		'data-target-url'
-	];
-	var SELECTOR = [
-		'a[href]',
-		'area[href]',
-		'form[action]',
-		'[data-href]',
-		'[data-url]',
-		'[data-link]',
-		'[data-target-url]',
-		'[onclick]'
-	].join(',');
-
-	function normalizePath(pathname){
-		var path = String(pathname || '/');
-
-		try {
-			path = decodeURIComponent(path);
-		} catch (error) {}
-
-		path = '/' + path.replace(/^\/+|\/+$/g, '');
-
-		if (path === '/') {
-			return '/';
-		}
-
-		var parts = path.split('/').filter(Boolean);
-
-		if (
-			parts.length > 0
-			&& Array.isArray(CONFIG.languageSlugs)
-			&& CONFIG.languageSlugs.indexOf(parts[0].toLowerCase()) !== -1
-		) {
-			parts.shift();
-		}
-
-		return '/' + parts.join('/').toLowerCase() + '/';
-	}
-
-	function localizedUrl(value){
-		if (
-			!value
-			|| /^(?:#|mailto:|tel:|javascript:|data:|blob:)/i.test(value)
-		) {
-			return '';
-		}
-
-		try {
-			var url = new URL(value, window.location.href);
-
-			if (url.origin !== window.location.origin) {
-				return '';
-			}
-
-			var path = normalizePath(url.pathname);
-			var targetValue = CONFIG.routeMap[path];
-
-			if (!targetValue) {
-				return '';
-			}
-
-			var target = new URL(targetValue, window.location.origin);
-			target.search = url.search;
-			target.hash = url.hash;
-
-			return target.href;
-		} catch (error) {
-			return '';
-		}
-	}
-
-	function rewriteAttribute(element, attribute){
-		if (
-			!(element instanceof Element)
-			|| !element.hasAttribute(attribute)
-		) {
-			return false;
-		}
-
-		var current = String(
-			element.getAttribute(attribute) || ''
-		);
-		var target = localizedUrl(current);
-
-		if (!target || current === target) {
-			return false;
-		}
-
-		element.setAttribute(attribute, target);
-		element.setAttribute(
-			'data-kozstx-localized-route',
-			CONFIG.language
-		);
-		return true;
-	}
-
-	function onclickTarget(element){
-		if (
-			!(element instanceof Element)
-			|| !element.hasAttribute('onclick')
-		) {
-			return '';
-		}
-
-		var source = String(
-			element.getAttribute('onclick') || ''
-		);
-		var candidates = source.match(
-			/(?:https?:\/\/[^'"\s)]+|\/[^'"\s)]+)/gi
-		) || [];
-
-		for (var i = 0; i < candidates.length; i++) {
-			var target = localizedUrl(candidates[i]);
-
-			if (target) {
-				return target;
-			}
-		}
-
-		return '';
-	}
-
-	function rewriteElement(element){
-		if (!(element instanceof Element)) {
-			return;
-		}
-
-		ATTRIBUTE_NAMES.forEach(function(attribute){
-			rewriteAttribute(element, attribute);
-		});
-
-		var onclick = onclickTarget(element);
-
-		if (onclick) {
-			element.setAttribute(
-				'data-kozstx-localized-onclick',
-				onclick
-			);
-		}
-	}
-
-	function scan(root){
-		if (!root) {
-			return;
-		}
-
-		if (
-			root instanceof Element
-			&& root.matches(SELECTOR)
-		) {
-			rewriteElement(root);
-		}
-
-		if (root.querySelectorAll) {
-			root.querySelectorAll(SELECTOR).forEach(
-				rewriteElement
-			);
-		}
-	}
-
-	function closestActionTarget(node){
-		return node instanceof Element
-			? node.closest(SELECTOR)
-			: null;
-	}
-
-	function modifiedClick(event){
-		return Boolean(
-			event.metaKey
-			|| event.ctrlKey
-			|| event.shiftKey
-			|| event.altKey
-			|| (
-				typeof event.button === 'number'
-				&& event.button !== 0
-			)
-		);
-	}
-
-	function forceCorrectNavigation(event){
-		if (
-			event.type === 'click'
-			&& modifiedClick(event)
-		) {
-			return;
-		}
-
-		var element = closestActionTarget(event.target);
-
-		if (!element) {
-			return;
-		}
-
-		var target = '';
-
-		for (var i = 0; i < ATTRIBUTE_NAMES.length; i++) {
-			var attribute = ATTRIBUTE_NAMES[i];
-
-			if (element.hasAttribute(attribute)) {
-				target = localizedUrl(
-					String(
-						element.getAttribute(attribute) || ''
-					)
-				);
-
-				if (target) {
-					element.setAttribute(attribute, target);
-					break;
-				}
-			}
-		}
-
-		if (!target) {
-			target = String(
-				element.getAttribute(
-					'data-kozstx-localized-onclick'
-				) || ''
-			);
-		}
-
-		if (!target) {
-			return;
-		}
-
-		/*
-		 * Own ordinary navigation in capture phase because PageLayer can keep
-		 * an older source-language URL in a later click handler.
-		 */
-		event.preventDefault();
-		event.stopPropagation();
-
-		if (
-			typeof event.stopImmediatePropagation === 'function'
-		) {
-			event.stopImmediatePropagation();
-		}
-
-		window.location.assign(target);
-	}
-
-	function start(){
-		scan(document.documentElement);
-
-		[100, 400, 1000, 2500, 5000].forEach(
-			function(delay){
-				window.setTimeout(function(){
-					scan(document.documentElement);
-				}, delay);
-			}
-		);
-
-		document.addEventListener(
-			'click',
-			forceCorrectNavigation,
-			true
-		);
-		document.addEventListener(
-			'submit',
-			forceCorrectNavigation,
-			true
-		);
-
-		if ('MutationObserver' in window) {
-			new MutationObserver(function(mutations){
-				mutations.forEach(function(mutation){
-					if (
-						mutation.type === 'attributes'
-						&& mutation.target instanceof Element
-					) {
-						rewriteElement(mutation.target);
-						return;
-					}
-
-					mutation.addedNodes.forEach(function(node){
-						if (node instanceof Element) {
-							scan(node);
-						}
-					});
-				});
-			}).observe(document.documentElement, {
-				childList: true,
-				subtree: true,
-				attributes: true,
-				attributeFilter: ATTRIBUTE_NAMES.concat(
-					['onclick']
-				)
-			});
-		}
-	}
-
-	if (document.readyState === 'loading') {
-		document.addEventListener(
-			'DOMContentLoaded',
-			start,
-			{once:true}
-		);
-	} else {
-		start();
-	}
-})();
-</script>
-JS;
-
-		$script = str_replace(
-			'__CONFIG__',
-			(string) $config_json,
-			$script
-		);
 
 		if ( false !== stripos( $html, '</body>' ) ) {
 			return (string) preg_replace(
@@ -4579,9 +4294,13 @@ JS;
 			array(
 				'methods' => WP_REST_Server::CREATABLE,
 				'callback' => array( __CLASS__, 'dynamic_translate_request' ),
-				'permission_callback' => '__return_true',
+				'permission_callback' => array( __CLASS__, 'dynamic_rest_permission' ),
 			)
 		);
+	}
+
+	public static function dynamic_rest_permission(): bool {
+		return current_user_can( 'manage_options' );
 	}
 
 	public static function dynamic_translate_request(
@@ -4618,15 +4337,11 @@ JS;
 		$language = sanitize_key(
 			(string) $request->get_param( 'language' )
 		);
-		$token = sanitize_text_field(
-			(string) $request->get_param( 'token' )
-		);
 		$texts = $request->get_param( 'texts' );
 
 		if (
 			$source_id <= 0
 			|| ! isset( self::languages()[ $language ] )
-			|| ! self::valid_dynamic_token( $source_id, $language, $token )
 			|| ! is_array( self::source_row( $source_id ) )
 		) {
 			return new WP_REST_Response(
@@ -4693,7 +4408,7 @@ JS;
 		}
 
 		$rate_key = 'kozstx_dyn_rate_' . substr(
-			hash( 'sha256', $token ),
+			hash( 'sha256', get_current_user_id() . '|' . $source_id . '|' . $language ),
 			0,
 			32
 		);
@@ -5013,40 +4728,6 @@ JS;
 		return true;
 	}
 
-	private static function dynamic_token(
-		int $source_id,
-		string $language,
-		?string $date = null
-	): string {
-		$date = null === $date ? gmdate( 'Y-m-d' ) : $date;
-
-		return hash_hmac(
-			'sha256',
-			$source_id . '|' . $language . '|' . $date,
-			wp_salt( 'nonce' )
-		);
-	}
-
-	private static function valid_dynamic_token(
-		int $source_id,
-		string $language,
-		string $token
-	): bool {
-		if ( '' === $token ) {
-			return false;
-		}
-
-		$today = self::dynamic_token( $source_id, $language );
-		$yesterday = self::dynamic_token(
-			$source_id,
-			$language,
-			gmdate( 'Y-m-d', time() - DAY_IN_SECONDS )
-		);
-
-		return hash_equals( $today, $token )
-			|| hash_equals( $yesterday, $token );
-	}
-
 
 	private static function dynamic_translation_dictionary(
 		int $source_id,
@@ -5120,7 +4801,7 @@ JS;
 			'sourceId' => $source_id,
 			'language' => $language,
 			'sourceLanguage' => self::source_language_slug(),
-			'token' => self::dynamic_token( $source_id, $language ),
+			'restNonce' => wp_create_nonce( 'wp_rest' ),
 			'maxBatch' => 100,
 			'dictionary' => self::dynamic_translation_dictionary(
 				$source_id,
@@ -5129,577 +4810,14 @@ JS;
 			'version' => KOZSTX_VERSION,
 		);
 
-		$config_json = wp_json_encode(
-			$config,
-			JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
+
+		$script = self::script_asset_markup(
+			'kozstx-dynamic-translator',
+			'assets/dynamic-translator.js',
+			'KOZSTXDynamicTranslator',
+			$config
 		);
 
-		$script = <<<'JS'
-<script id="kozstx-dynamic-translator">
-(function(){
-	'use strict';
-
-	var CONFIG = __CONFIG__;
-	var pending = new Map();
-	var seen = new Set();
-	var attempts = new Map();
-	var chartsToRefresh = new Set();
-	var chartSources = new WeakMap();
-	var busy = false;
-	var timer = 0;
-
-	var EXCLUDED_SELECTOR = [
-		'script',
-		'style',
-		'noscript',
-		'template',
-		'canvas',
-		'code',
-		'pre',
-		'textarea',
-		'input',
-		'select',
-		'[contenteditable="true"]',
-		'.kozstx-language-switcher',
-		'[data-kozstx-gallery-compat]',
-		'.pgc-sgb-cb',
-		'[class*="wp-block-pgcsimplygalleryblock"]',
-		'.simply-gallery-amp',
-		'.sgb-gallery'
-	].join(',');
-
-	function normalize(value){
-		return String(value || '')
-			.replace(/[\u00A0\u200B\u200C\u200D\u2060\uFEFF]/g, ' ')
-			.replace(/\s+/g, ' ')
-			.trim();
-	}
-
-	function containsSourceScript(value){
-		if (CONFIG.sourceLanguage === 'uk') {
-			return /[\u0400-\u04FF]/.test(value);
-		}
-
-		return /[A-Za-z\u00C0-\u024F\u0370-\u03FF\u0400-\u04FF\u0600-\u06FF\u0900-\u097F\u3040-\u30FF\u3400-\u9FFF]/.test(value);
-	}
-
-	function eligible(value){
-		value = normalize(value);
-
-		if (value.length < 2 || value.length > 1000) {
-			return false;
-		}
-
-		if (!containsSourceScript(value)) {
-			return false;
-		}
-
-		if (/^(?:https?:\/\/|www\.|mailto:|tel:)/i.test(value)) {
-			return false;
-		}
-
-		if (/^[\d\s.,:+\-–—\/()%$€₴₿]+$/.test(value)) {
-			return false;
-		}
-
-		return true;
-	}
-
-	function excluded(element){
-		return element instanceof Element && Boolean(element.closest(EXCLUDED_SELECTOR));
-	}
-
-	function addTarget(source, apply){
-		source = normalize(source);
-
-		if (!eligible(source)) {
-			return;
-		}
-
-		if (
-			CONFIG.dictionary
-			&& typeof CONFIG.dictionary[source] === 'string'
-			&& normalize(CONFIG.dictionary[source])
-		) {
-			try {
-				apply(normalize(CONFIG.dictionary[source]));
-			} catch (error) {}
-			return;
-		}
-
-		if (!pending.has(source)) {
-			pending.set(source, []);
-		}
-
-		pending.get(source).push(apply);
-
-		if (!seen.has(source)) {
-			seen.add(source);
-		}
-
-		schedule();
-	}
-
-	function scanText(root){
-		if (!root) {
-			return;
-		}
-
-		var walker = document.createTreeWalker(
-			root,
-			NodeFilter.SHOW_TEXT,
-			{
-				acceptNode: function(node){
-					var parent = node.parentElement;
-
-					if (!parent || excluded(parent)) {
-						return NodeFilter.FILTER_REJECT;
-					}
-
-					return eligible(node.nodeValue)
-						? NodeFilter.FILTER_ACCEPT
-						: NodeFilter.FILTER_REJECT;
-				}
-			}
-		);
-
-		var nodes = [];
-		var node;
-
-		while ((node = walker.nextNode())) {
-			nodes.push(node);
-		}
-
-		nodes.forEach(function(textNode){
-			var raw = String(textNode.nodeValue || '');
-			var source = normalize(raw);
-			var prefix = (raw.match(/^\s*/) || [''])[0];
-			var suffix = (raw.match(/\s*$/) || [''])[0];
-
-			addTarget(source, function(translated){
-				if (textNode.isConnected && normalize(textNode.nodeValue) === source) {
-					textNode.nodeValue = prefix + translated + suffix;
-				}
-			});
-		});
-	}
-
-	function scanAttributes(root){
-		if (!(root instanceof Element) && root !== document) {
-			return;
-		}
-
-		var elements = [];
-
-		if (root instanceof Element) {
-			elements.push(root);
-		}
-
-		if (root.querySelectorAll) {
-			root.querySelectorAll('[title],[aria-label],[placeholder]').forEach(
-				function(element){
-					elements.push(element);
-				}
-			);
-		}
-
-		elements.forEach(function(element){
-			if (excluded(element)) {
-				return;
-			}
-
-			['title','aria-label','placeholder'].forEach(function(attribute){
-				if (!element.hasAttribute(attribute)) {
-					return;
-				}
-
-				var source = normalize(element.getAttribute(attribute));
-
-				addTarget(source, function(translated){
-					if (
-						element.isConnected &&
-						normalize(element.getAttribute(attribute)) === source
-					) {
-						element.setAttribute(attribute, translated);
-					}
-				});
-			});
-		});
-	}
-
-	function chartInstances(){
-		var charts = [];
-
-		if (!window.Chart) {
-			return charts;
-		}
-
-		try {
-			if (window.Chart.instances) {
-				Object.keys(window.Chart.instances).forEach(function(key){
-					var chart = window.Chart.instances[key];
-
-					if (chart && charts.indexOf(chart) === -1) {
-						charts.push(chart);
-					}
-				});
-			}
-		} catch (error) {}
-
-		if (typeof window.Chart.getChart === 'function') {
-			document.querySelectorAll('canvas').forEach(function(canvas){
-				try {
-					var chart = window.Chart.getChart(canvas);
-
-					if (chart && charts.indexOf(chart) === -1) {
-						charts.push(chart);
-					}
-				} catch (error) {}
-			});
-		}
-
-		return charts;
-	}
-
-	function rememberChartSource(chart, key, value){
-		if (!chartSources.has(chart)) {
-			chartSources.set(chart, new Map());
-		}
-
-		var map = chartSources.get(chart);
-
-		if (!map.has(key)) {
-			map.set(key, value);
-		}
-
-		return map.get(key);
-	}
-
-	function addChartTarget(chart, key, source, setter){
-		source = rememberChartSource(chart, key, normalize(source));
-
-		addTarget(source, function(translated){
-			try {
-				setter(translated);
-				chartsToRefresh.add(chart);
-			} catch (error) {}
-		});
-	}
-
-	function scanCharts(){
-		chartInstances().forEach(function(chart){
-			if (!chart || !chart.data) {
-				return;
-			}
-
-			if (Array.isArray(chart.data.labels)) {
-				chart.data.labels.forEach(function(label, index){
-					if (typeof label !== 'string') {
-						return;
-					}
-
-					addChartTarget(
-						chart,
-						'label:' + index,
-						label,
-						function(translated){
-							chart.data.labels[index] = translated;
-						}
-					);
-				});
-			}
-
-			if (Array.isArray(chart.data.datasets)) {
-				chart.data.datasets.forEach(function(dataset, datasetIndex){
-					if (!dataset || typeof dataset.label !== 'string') {
-						return;
-					}
-
-					addChartTarget(
-						chart,
-						'dataset:' + datasetIndex,
-						dataset.label,
-						function(translated){
-							dataset.label = translated;
-						}
-					);
-				});
-			}
-
-			var options = chart.options || {};
-			var plugins = options.plugins || {};
-
-			['title', 'subtitle'].forEach(function(name){
-				var block = plugins[name];
-
-				if (!block || typeof block.text !== 'string') {
-					return;
-				}
-
-				addChartTarget(
-					chart,
-					'plugin:' + name,
-					block.text,
-					function(translated){
-						block.text = translated;
-					}
-				);
-			});
-
-			var scales = options.scales || {};
-
-			Object.keys(scales).forEach(function(scaleName){
-				var scale = scales[scaleName];
-
-				if (
-					!scale
-					|| !scale.title
-					|| typeof scale.title.text !== 'string'
-				) {
-					return;
-				}
-
-				addChartTarget(
-					chart,
-					'scale:' + scaleName,
-					scale.title.text,
-					function(translated){
-						scale.title.text = translated;
-					}
-				);
-			});
-		});
-	}
-
-	function refreshCharts(){
-		if (chartsToRefresh.size === 0) {
-			return;
-		}
-
-		var charts = Array.from(chartsToRefresh);
-		chartsToRefresh.clear();
-
-		window.requestAnimationFrame(function(){
-			charts.forEach(function(chart){
-				if (!chart || chart._destroyed) {
-					return;
-				}
-
-				try {
-					chart.update('none');
-					return;
-				} catch (error) {}
-
-				try {
-					chart.update(0);
-					return;
-				} catch (error) {}
-
-				try {
-					chart.render();
-				} catch (error) {}
-			});
-		});
-	}
-
-	function scan(root){
-		scanText(root);
-		scanAttributes(root);
-	}
-
-	function schedule(){
-		clearTimeout(timer);
-		timer = window.setTimeout(flush, 180);
-	}
-
-	function applyTranslations(items){
-		var completed = new Set();
-
-		if (!Array.isArray(items)) {
-			return completed;
-		}
-
-		items.forEach(function(item){
-			var source = normalize(item && item.source);
-			var translated = normalize(item && item.translated);
-
-			if (!source || !translated || !pending.has(source)) {
-				return;
-			}
-
-			var targets = pending.get(source) || [];
-			pending.delete(source);
-			attempts.delete(source);
-			completed.add(source);
-
-			targets.forEach(function(apply){
-				try {
-					apply(translated);
-				} catch (error) {}
-			});
-		});
-
-		refreshCharts();
-
-		try {
-			window.dispatchEvent(
-				new CustomEvent('kozstx:dynamic-translated')
-			);
-		} catch (error) {}
-
-		return completed;
-	}
-
-	function flush(){
-		if (busy || pending.size === 0) {
-			return;
-		}
-
-		var texts = Array.from(pending.keys()).slice(0, Number(CONFIG.maxBatch || 50));
-
-		if (texts.length === 0) {
-			return;
-		}
-
-		busy = true;
-
-		fetch(CONFIG.endpoint, {
-			method: 'POST',
-			credentials: 'same-origin',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify({
-				source_id: CONFIG.sourceId,
-				language: CONFIG.language,
-				token: CONFIG.token,
-				texts: texts
-			})
-		})
-		.then(function(response){
-			return response.json();
-		})
-		.then(function(payload){
-			var completed = applyTranslations(
-				payload && payload.translations
-			);
-			var deferred = new Set(
-				Array.isArray(payload && payload.deferred)
-					? payload.deferred.map(normalize)
-					: []
-			);
-
-			deferred.forEach(function(text){
-				if (pending.has(text)) {
-					pending.delete(text);
-					attempts.delete(text);
-				}
-			});
-
-			texts.forEach(function(text){
-				if (completed.has(text) || !pending.has(text)) {
-					return;
-				}
-
-				var count = Number(attempts.get(text) || 0) + 1;
-				attempts.set(text, count);
-
-				if (count >= 10) {
-					pending.delete(text);
-					attempts.delete(text);
-				}
-			});
-		})
-		.catch(function(){
-			texts.forEach(function(text){
-				if (!pending.has(text)) {
-					return;
-				}
-
-				var count = Number(attempts.get(text) || 0) + 1;
-				attempts.set(text, count);
-
-				if (count >= 10) {
-					pending.delete(text);
-					attempts.delete(text);
-				}
-			});
-		})
-		.finally(function(){
-			busy = false;
-
-			if (pending.size > 0) {
-				window.setTimeout(schedule, 700);
-			}
-		});
-	}
-
-	function start(){
-		scan(document.body || document.documentElement);
-
-		[
-			100,
-			300,
-			700,
-			1200,
-			2500,
-			5000,
-			8000,
-			12000,
-			20000,
-			30000
-		].forEach(function(delay){
-			window.setTimeout(function(){
-				scan(document.body || document.documentElement);
-				scanCharts();
-			}, delay);
-		});
-
-		window.addEventListener('load', function(){
-			window.setTimeout(function(){
-				scan(document.body || document.documentElement);
-				scanCharts();
-			}, 250);
-		}, {once:true});
-
-		if ('MutationObserver' in window) {
-			new MutationObserver(function(mutations){
-				mutations.forEach(function(mutation){
-					if (mutation.type === 'characterData') {
-						scanText(mutation.target.parentNode);
-						return;
-					}
-
-					mutation.addedNodes.forEach(function(node){
-						if (node.nodeType === Node.TEXT_NODE) {
-							scanText(node.parentNode);
-						} else if (node instanceof Element) {
-							scan(node);
-						}
-					});
-				});
-			}).observe(document.documentElement, {
-				childList: true,
-				subtree: true,
-				characterData: true
-			});
-		}
-	}
-
-	if (document.readyState === 'loading') {
-		document.addEventListener('DOMContentLoaded', start, {once:true});
-	} else {
-		start();
-	}
-})();
-</script>
-JS;
-
-		$script = str_replace(
-			'__CONFIG__',
-			(string) $config_json,
-			$script
-		);
 
 		if ( false !== stripos( $html, '</body>' ) ) {
 			return (string) preg_replace(
@@ -6182,176 +5300,14 @@ JS;
 		string $html,
 		string $source_url
 	): string {
-		$source_json = wp_json_encode(
-			$source_url,
-			JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
+
+		$script = self::script_asset_markup(
+			'kozstx-gallery-compat',
+			'assets/gallery-compat.js',
+			'KOZSTXGalleryCompat',
+			array( 'sourceBase' => $source_url )
 		);
 
-		$script = <<<'JS'
-<script id="kozstx-gallery-compat">
-(function(){
-	'use strict';
-
-	var SOURCE_BASE = __SOURCE_BASE__;
-	var ROOT_SELECTOR = '[data-kozstx-gallery-compat="1"],.pgc-sgb-cb,[class*="wp-block-pgcsimplygalleryblock"],.simply-gallery-amp,.sgb-gallery';
-	var URL_ATTRS = [
-		'data-src',
-		'data-lazy-src',
-		'data-original',
-		'data-image',
-		'data-full',
-		'data-large',
-		'data-thumb',
-		'data-thumbnail'
-	];
-	var SRCSET_ATTRS = ['data-srcset','data-lazy-srcset'];
-
-	function absolute(value){
-		value = String(value || '').trim();
-
-		if (!value || /^(?:data:|blob:|mailto:|tel:|javascript:|#)/i.test(value)) {
-			return value;
-		}
-
-		try {
-			return new URL(value, SOURCE_BASE).href;
-		} catch (error) {
-			return value;
-		}
-	}
-
-	function looksLikePlaceholder(value){
-		value = String(value || '');
-
-		return !value ||
-			/^data:image\//i.test(value) ||
-			/about:blank/i.test(value) ||
-			/placeholder|preloader|transparent/i.test(value);
-	}
-
-	function candidate(img){
-		for (var i = 0; i < URL_ATTRS.length; i++) {
-			var value = img.getAttribute(URL_ATTRS[i]);
-
-			if (value && !looksLikePlaceholder(value)) {
-				return absolute(value);
-			}
-		}
-
-		return '';
-	}
-
-	function repairImage(img, index){
-		if (!(img instanceof HTMLImageElement)) {
-			return;
-		}
-
-		for (var i = 0; i < SRCSET_ATTRS.length; i++) {
-			var srcset = img.getAttribute(SRCSET_ATTRS[i]);
-
-			if (srcset && !img.getAttribute('srcset')) {
-				img.setAttribute('srcset', srcset);
-			}
-		}
-
-		var fallback = candidate(img);
-		var current = img.getAttribute('src');
-
-		if (fallback && (looksLikePlaceholder(current) || (img.complete && img.naturalWidth === 0))) {
-			img.setAttribute('src', fallback);
-		}
-
-		if (index < 12) {
-			img.loading = 'eager';
-		} else if (!img.loading) {
-			img.loading = 'lazy';
-		}
-
-		img.decoding = 'async';
-
-		if (!img.dataset.uafreeGalleryRepair) {
-			img.dataset.uafreeGalleryRepair = '1';
-			img.addEventListener('error', function(){
-				var retry = candidate(img);
-
-				if (retry && img.getAttribute('src') !== retry) {
-					img.setAttribute('src', retry);
-				}
-			}, {passive:true});
-		}
-	}
-
-	function repair(root){
-		var scope = root && root.querySelectorAll ? root : document;
-		var galleries = [];
-
-		if (root instanceof Element && root.matches(ROOT_SELECTOR)) {
-			galleries.push(root);
-		}
-
-		scope.querySelectorAll(ROOT_SELECTOR).forEach(function(gallery){
-			galleries.push(gallery);
-		});
-
-		galleries.forEach(function(gallery){
-			gallery.querySelectorAll('img').forEach(repairImage);
-
-			gallery.querySelectorAll('source').forEach(function(source){
-				SRCSET_ATTRS.forEach(function(attribute){
-					var value = source.getAttribute(attribute);
-
-					if (value && !source.getAttribute('srcset')) {
-						source.setAttribute('srcset', value);
-					}
-				});
-			});
-		});
-	}
-
-	function start(){
-		repair(document);
-
-		setTimeout(function(){
-			repair(document);
-			window.dispatchEvent(new Event('resize'));
-			window.dispatchEvent(new Event('scroll'));
-		}, 800);
-
-		setTimeout(function(){
-			repair(document);
-			window.dispatchEvent(new Event('resize'));
-		}, 2500);
-
-		if ('MutationObserver' in window) {
-			new MutationObserver(function(mutations){
-				mutations.forEach(function(mutation){
-					mutation.addedNodes.forEach(function(node){
-						if (node instanceof Element) {
-							repair(node);
-						}
-					});
-				});
-			}).observe(document.documentElement, {
-				childList: true,
-				subtree: true
-			});
-		}
-	}
-
-	if (document.readyState === 'loading') {
-		document.addEventListener('DOMContentLoaded', start, {once:true});
-	} else {
-		start();
-	}
-})();
-</script>
-JS;
-
-		$script = str_replace(
-			'__SOURCE_BASE__',
-			(string) $source_json,
-			$script
-		);
 
 		if ( false !== stripos( $html, '</body>' ) ) {
 			return (string) preg_replace(
@@ -7037,7 +5993,7 @@ JS;
 
 		echo '<div class="kozstx-language-switcher" data-kozstx-language-switcher="1" style="position:fixed;' . esc_attr( $side ) . ':14px;bottom:14px;z-index:2147483000;background:#fff;border:1px solid #c3c4c7;border-radius:999px;padding:8px 10px;box-shadow:0 4px 18px rgba(0,0,0,.2);font:14px/1.3 Arial,sans-serif;display:flex;align-items:center;gap:6px">';
 		echo '<span aria-hidden="true">🌐</span>';
-		echo '<select aria-label="Language" onchange="if(this.value){window.location.href=this.value;}">';
+		echo '<select id="kozstx-wait-language" aria-label="Language">';
 		echo '<option value="' . esc_url( $source_url ) . '" selected>' . esc_html( (string) $source_info['native'] ) . '</option>';
 
 		foreach ( $ready as $slug ) {
@@ -7935,7 +6891,7 @@ JS;
 	public static function ajax_run(): void {
 		self::ajax_guard();
 		wp_send_json_error(
-			array( 'message' => __( 'Background translation processing is temporarily disabled in version 0.9.36.', 'koz-static-translate' ) ),
+			array( 'message' => __( 'Background translation processing is temporarily disabled in version 0.9.37.', 'koz-static-translate' ) ),
 			409
 		);
 	}
@@ -7943,7 +6899,7 @@ JS;
 	public static function ajax_rebuild(): void {
 		self::ajax_guard();
 		wp_send_json_error(
-			array( 'message' => __( 'Inventory rebuild is temporarily disabled in version 0.9.36.', 'koz-static-translate' ) ),
+			array( 'message' => __( 'Inventory rebuild is temporarily disabled in version 0.9.37.', 'koz-static-translate' ) ),
 			409
 		);
 	}
