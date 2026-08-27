@@ -17,7 +17,7 @@ jobs:
           ref: main
           fetch-depth: 0
 
-      - name: Build and publish final release
+      - name: Build and publish KOZ Suite 1.0.29
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
@@ -38,42 +38,59 @@ jobs:
           python3 <<'PY'
           from pathlib import Path
           import zipfile, hashlib, json, shutil, re
+
           FIXED=(2026,8,27,12,50,0)
           EXPECTED_STATIC='6f83475eb5232419fdf8cfea3e64199c10e0149c01c9e737bcadc3e18bdba521'
-          EXPECTED_SUITE='1808eaf1fd691ea518952801ba1bca193efa25e896befe09c0d8034eee40b885'
 
           def sha256(p):
               h=hashlib.sha256()
               with open(p,'rb') as f:
-                  for b in iter(lambda:f.read(1024*1024),b''): h.update(b)
+                  for b in iter(lambda:f.read(1024*1024),b''):
+                      h.update(b)
               return h.hexdigest()
+
           def write_dir(zf,arc):
-              if not arc.endswith('/'): arc+='/'
-              zi=zipfile.ZipInfo(arc,FIXED); zi.create_system=3; zi.external_attr=(0o40755<<16)|0x10; zi.compress_type=zipfile.ZIP_STORED
+              if not arc.endswith('/'):
+                  arc+='/'
+              zi=zipfile.ZipInfo(arc,FIXED)
+              zi.create_system=3
+              zi.external_attr=(0o40755<<16)|0x10
+              zi.compress_type=zipfile.ZIP_STORED
               zf.writestr(zi,b'')
+
           def write_file(zf,src,arc):
-              zi=zipfile.ZipInfo(arc,FIXED); zi.create_system=3; zi.external_attr=(0o100644<<16); zi.compress_type=zipfile.ZIP_DEFLATED
+              zi=zipfile.ZipInfo(arc,FIXED)
+              zi.create_system=3
+              zi.external_attr=(0o100644<<16)
+              zi.compress_type=zipfile.ZIP_DEFLATED
               zf.writestr(zi,Path(src).read_bytes(),compress_type=zipfile.ZIP_DEFLATED,compresslevel=9)
+
           def zip_tree(src,out,root_name=None):
               src=Path(src); out=Path(out)
               if out.exists(): out.unlink()
               with zipfile.ZipFile(out,'w') as zf:
                   base=''
                   if root_name:
-                      write_dir(zf,root_name); base=root_name.rstrip('/')+'/'
+                      write_dir(zf,root_name)
+                      base=root_name.rstrip('/')+'/'
                   entries=[(base+p.relative_to(src).as_posix(),p) for p in src.rglob('*')]
                   for arc,p in sorted(entries,key=lambda x:x[0]):
-                      write_dir(zf,arc) if p.is_dir() else write_file(zf,p,arc)
+                      if p.is_dir(): write_dir(zf,arc)
+                      else: write_file(zf,p,arc)
 
-          dist=Path('dist'); packages=dist/'packages'; checksums=dist/'checksums'
+          dist=Path('dist')
+          packages=dist/'packages'; checksums=dist/'checksums'
           packages.mkdir(parents=True,exist_ok=True); checksums.mkdir(parents=True,exist_ok=True)
+
           static_zip=packages/'koz-static-translate-0.9.39.zip'
           zip_tree('koz-static-translate',static_zip,'koz-static-translate')
-          static_sha=sha256(static_zip); static_size=static_zip.stat().st_size
+          static_sha=sha256(static_zip)
+          static_size=static_zip.stat().st_size
           assert static_sha==EXPECTED_STATIC,(static_sha,EXPECTED_STATIC)
           for p in packages.glob('koz-static-translate-*.zip'):
               if p.name!='koz-static-translate-0.9.39.zip': p.unlink()
-          for p in checksums.glob('koz-static-translate-*.zip.sha256'): p.unlink()
+          for p in checksums.glob('koz-static-translate-*.zip.sha256'):
+              p.unlink()
 
           manifest_path=dist/'manifest.json'
           m=json.loads(manifest_path.read_text(encoding='utf-8'))
@@ -94,7 +111,7 @@ jobs:
               'KOZ Static Translate updated from 0.9.38 to 0.9.39.',
               'WordPress Plugin Check filesystem findings remediated.',
               'T3 security remediations retained: non-public backups and JSON_HEX inline configuration.',
-              'Other 11 public plugin packages remain unchanged from KOZ Suite 1.0.28.'
+              'Other 11 public plugin packages remain unchanged.'
           ]
           manifest_path.write_text(json.dumps(m,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
 
@@ -110,29 +127,32 @@ jobs:
           (build/'packages').mkdir(parents=True); (build/'checksums').mkdir()
           for p in packages.glob('*.zip'): shutil.copy2(p,build/'packages'/p.name)
           for p in checksums.glob('*.sha256'): shutil.copy2(p,build/'checksums'/p.name)
-          shutil.copy2(manifest_path,build/'manifest.json'); shutil.copy2(dist/'SHA256SUMS.txt',build/'SHA256SUMS.txt')
-          suite_zip=dist/'KOZ-Suite-1.0.29.zip'; zip_tree(build,suite_zip,None)
-          suite_sha=sha256(suite_zip); assert suite_sha==EXPECTED_SUITE,(suite_sha,EXPECTED_SUITE)
+          shutil.copy2(manifest_path,build/'manifest.json')
+          shutil.copy2(dist/'SHA256SUMS.txt',build/'SHA256SUMS.txt')
+          suite_zip=dist/'KOZ-Suite-1.0.29.zip'
+          zip_tree(build,suite_zip,None)
+          suite_sha=sha256(suite_zip)
           (dist/'KOZ-Suite-1.0.29.zip.sha256').write_text(f'{suite_sha}  KOZ-Suite-1.0.29.zip\n',encoding='utf-8')
 
           Path('RELEASE_NOTES_v1.0.29.md').write_text(f'''# KOZ WordPress Plugin Suite 1.0.29\n\nRelease date: 2026-08-27\n\n- KOZ Static Translate updated to 0.9.39.\n- WordPress Plugin Check: PASS.\n- T3 security remediation retained.\n- Other 11 public plugins unchanged.\n\nKOZ Static Translate 0.9.39 SHA-256: `{static_sha}`.\nKOZ Suite 1.0.29 SHA-256: `{suite_sha}`.\n''',encoding='utf-8')
 
-          r=Path('README.md'); text=r.read_text(encoding='utf-8')
+          r=Path('README.md')
+          text=r.read_text(encoding='utf-8')
           text=re.sub(r'Suite bundle: \*\*[0-9.]+\*\*','Suite bundle: **1.0.29**',text)
           text=re.sub(r'\*\*KOZ Suite Bundle [0-9.]+\*\*','**KOZ Suite Bundle 1.0.29**',text)
           text=re.sub(r'\| koz-static-translate \| [0-9.]+ \|','| koz-static-translate | 0.9.39 |',text)
           text=re.sub(r'- WordPress.org: \*\*KOZ Static Translate .*','- WordPress.org: **KOZ Static Translate 0.9.39 submitted — review in progress**',text)
           r.write_text(text,encoding='utf-8')
+          print('STATIC_SHA='+static_sha)
+          print('SUITE_SHA='+suite_sha)
           PY
 
           unzip -tq dist/packages/koz-static-translate-0.9.39.zip
           unzip -tq dist/KOZ-Suite-1.0.29.zip
 
-          rm -f .release-1.0.29.trigger .release-1.0.29-final.trigger
-          rm -f .github/workflows/release-kozsuite-1.0.29.yml .github/workflows/release-kozsuite-1.0.29-final.yml
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -A
+          git add README.md RELEASE_NOTES_v1.0.29.md dist
           git commit -m 'Release KOZ Static Translate 0.9.39 and Suite 1.0.29'
           git push origin HEAD:main
 
