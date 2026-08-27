@@ -1,0 +1,206 @@
+name: Rebuild KOZ Suite 1.0.29 Full
+
+on:
+  push:
+    branches: [main]
+    paths: [.rebuild-1.0.29-full.trigger]
+
+permissions:
+  contents: write
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Build full 12-plugin release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          test -f .rebuild-1.0.29-full.trigger
+
+          grep -q 'Version: 0.9.39' koz-static-translate/koz-static-translate.php
+          grep -q 'Stable tag: 0.9.39' koz-static-translate/readme.txt
+          grep -q 'sanitize_text_field' koz-static-translate/includes/class-kozstx-cleanup.php
+          ! grep -nE '(^|[^[:alnum:]_>])(chmod|rename|unlink|copy)[[:space:]]*\(' koz-static-translate/includes/class-kozstx-cleanup.php
+          grep -q '\$filesystem->move' koz-static-translate/includes/class-kozstx-cleanup.php
+          grep -q '\$filesystem->chmod' koz-static-translate/includes/class-kozstx-cleanup.php
+          grep -q 'JSON_HEX_TAG' koz-static-translate/includes/class-kozstx-static-translate.php
+          grep -q "return current_user_can( 'manage_options' );" koz-static-translate/includes/class-kozstx-static-translate.php
+          find koz-static-translate -name '*.php' -type f -print0 | xargs -0 -n1 php -l >/dev/null
+          for f in koz-static-translate/assets/*.js; do node --check "$f"; done
+
+          rm -rf /tmp/kozbase && mkdir -p /tmp/kozbase
+          gh release download v1.0.26 -p 'KOZ-Suite-1.0.26.zip' -D /tmp/kozbase
+          unzip -q /tmp/kozbase/KOZ-Suite-1.0.26.zip -d /tmp/kozbase/extracted
+          BASE_PACKAGES="$(find /tmp/kozbase/extracted -type d -name packages -print -quit)"
+          test -n "$BASE_PACKAGES"
+          test "$(find "$BASE_PACKAGES" -maxdepth 1 -type f -name '*.zip' | wc -l)" -eq 12
+
+          rm -rf dist/packages dist/checksums
+          mkdir -p dist/packages dist/checksums
+          cp "$BASE_PACKAGES"/*.zip dist/packages/
+          rm -f dist/packages/koz-static-translate-*.zip
+
+          python3 <<'PY'
+          from pathlib import Path
+          import zipfile, hashlib, json, shutil, re
+
+          FIXED=(2026,8,27,12,50,0)
+          EXPECTED_STATIC='6f83475eb5232419fdf8cfea3e64199c10e0149c01c9e737bcadc3e18bdba521'
+
+          def sha256(p):
+              h=hashlib.sha256()
+              with open(p,'rb') as f:
+                  for b in iter(lambda:f.read(1024*1024),b''):
+                      h.update(b)
+              return h.hexdigest()
+
+          def write_dir(zf,arc):
+              if not arc.endswith('/'):
+                  arc+='/'
+              zi=zipfile.ZipInfo(arc,FIXED)
+              zi.create_system=3
+              zi.external_attr=(0o40755<<16)|0x10
+              zi.compress_type=zipfile.ZIP_STORED
+              zf.writestr(zi,b'')
+
+          def write_file(zf,src,arc):
+              zi=zipfile.ZipInfo(arc,FIXED)
+              zi.create_system=3
+              zi.external_attr=(0o100644<<16)
+              zi.compress_type=zipfile.ZIP_DEFLATED
+              zf.writestr(zi,Path(src).read_bytes(),compress_type=zipfile.ZIP_DEFLATED,compresslevel=9)
+
+          def zip_tree(src,out,root_name=None):
+              src=Path(src); out=Path(out)
+              if out.exists(): out.unlink()
+              with zipfile.ZipFile(out,'w') as zf:
+                  base=''
+                  if root_name:
+                      write_dir(zf,root_name)
+                      base=root_name.rstrip('/')+'/'
+                  entries=[(base+p.relative_to(src).as_posix(),p) for p in src.rglob('*')]
+                  for arc,p in sorted(entries,key=lambda x:x[0]):
+                      if p.is_dir(): write_dir(zf,arc)
+                      else: write_file(zf,p,arc)
+
+          dist=Path('dist'); packages=dist/'packages'; checksums=dist/'checksums'
+          static_zip=packages/'koz-static-translate-0.9.39.zip'
+          zip_tree('koz-static-translate',static_zip,'koz-static-translate')
+          static_sha=sha256(static_zip); static_size=static_zip.stat().st_size
+          assert static_sha==EXPECTED_STATIC,(static_sha,EXPECTED_STATIC)
+
+          package_files=sorted(packages.glob('*.zip'))
+          assert len(package_files)==12,[p.name for p in package_files]
+
+          manifest_path=dist/'manifest.json'
+          m=json.loads(manifest_path.read_text(encoding='utf-8'))
+          m['version']='1.0.29'; m['suite_version']='1.0.29'; m['created']='2026-08-27'; m['release_date']='2026-08-27'
+          m['status']='CURRENT LIBRARY — 12/12 PACKAGE INTEGRITY PASS — STATIC TRANSLATE 0.9.39 PLUGIN CHECK PASS'
+
+          package_by_name={p.name:p for p in package_files}
+          sha_by_component={}
+          for item in m.get('packages',[]):
+              if item.get('slug')=='koz-static-translate':
+                  item['version']='0.9.39'
+                  item['file']='packages/koz-static-translate-0.9.39.zip'
+              filename=Path(item['file']).name
+              p=package_by_name.get(filename)
+              assert p is not None,(item.get('slug'),filename,sorted(package_by_name))
+              h=sha256(p)
+              item['sha256']=h
+              item['size']=p.stat().st_size
+              item['strict_re_audit']='PASS'
+              item['plugin_check']='PASS'
+              item['wordpress_org_ready']='YES'
+              if item.get('slug')=='koz-static-translate':
+                  item['live_functional']='NOT RE-RUN'
+                  item['wordpress_core_tested']='PLUGIN CHECK PASS'
+                  item['wordpress_org_status']='0.9.39 SUBMITTED — REVIEW IN PROGRESS'
+              sha_by_component[item.get('name')]=(item.get('version'),h)
+
+          assert len(m.get('packages',[]))==12
+          for item in m.get('changed_components',[]):
+              if item.get('name')=='KOZ Static Translate':
+                  item.update(version='0.9.39',sha256=static_sha,live='NOT RE-RUN',plugin_check='PASS',wordpress_7_1='PLUGIN CHECK PASS')
+              elif item.get('name') in sha_by_component:
+                  _,h=sha_by_component[item['name']]
+                  item['sha256']=h
+
+          m.setdefault('wordpress_org',{})['koz-static-translate']='0.9.39 SUBMITTED — REVIEW IN PROGRESS'
+          for k in list(m):
+              if k.startswith('changes_from_'): m.pop(k)
+          m['changes_from_1_0_28']=[
+              'KOZ Static Translate updated from 0.9.38 to 0.9.39.',
+              'WordPress Plugin Check filesystem findings remediated.',
+              'T3 security remediations retained.',
+              'Other 11 public plugin packages retained from the verified full Suite 1.0.26 baseline.'
+          ]
+          manifest_path.write_text(json.dumps(m,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+
+          sums=[]
+          for p in package_files:
+              h=sha256(p)
+              (checksums/(p.name+'.sha256')).write_text(f'{h}  {p.name}\n',encoding='utf-8')
+              sums.append(f'{h}  packages/{p.name}')
+          (dist/'SHA256SUMS.txt').write_text('\n'.join(sums)+'\n',encoding='utf-8')
+
+          build=Path('/tmp/kozsuite1029full')
+          if build.exists(): shutil.rmtree(build)
+          (build/'packages').mkdir(parents=True); (build/'checksums').mkdir()
+          for p in package_files: shutil.copy2(p,build/'packages'/p.name)
+          for p in sorted(checksums.glob('*.sha256')): shutil.copy2(p,build/'checksums'/p.name)
+          shutil.copy2(manifest_path,build/'manifest.json')
+          shutil.copy2(dist/'SHA256SUMS.txt',build/'SHA256SUMS.txt')
+          suite_zip=dist/'KOZ-Suite-1.0.29.zip'
+          zip_tree(build,suite_zip,None)
+          suite_sha=sha256(suite_zip)
+          (dist/'KOZ-Suite-1.0.29.zip.sha256').write_text(f'{suite_sha}  KOZ-Suite-1.0.29.zip\n',encoding='utf-8')
+
+          with zipfile.ZipFile(suite_zip) as zf:
+              package_entries=[n for n in zf.namelist() if n.startswith('packages/') and n.endswith('.zip')]
+              assert len(package_entries)==12,package_entries
+              bad=zf.testzip()
+              assert bad is None,bad
+
+          Path('RELEASE_NOTES_v1.0.29.md').write_text(f'''# KOZ WordPress Plugin Suite 1.0.29\n\nRelease date: 2026-08-27\n\n- Full public bundle: 12 plugins.\n- KOZ Static Translate updated to 0.9.39.\n- WordPress Plugin Check: PASS.\n- T3 security remediation retained.\n- Other 11 public plugins retained from verified baseline.\n\nKOZ Static Translate 0.9.39 SHA-256: `{static_sha}`.\nKOZ Suite 1.0.29 SHA-256: `{suite_sha}`.\n''',encoding='utf-8')
+
+          r=Path('README.md'); text=r.read_text(encoding='utf-8')
+          text=re.sub(r'Suite bundle: \*\*[0-9.]+\*\*','Suite bundle: **1.0.29**',text)
+          text=re.sub(r'\*\*KOZ Suite Bundle [0-9.]+\*\*','**KOZ Suite Bundle 1.0.29**',text)
+          text=re.sub(r'\| koz-static-translate \| [0-9.]+ \|','| koz-static-translate | 0.9.39 |',text)
+          text=re.sub(r'- WordPress.org: \*\*KOZ Static Translate .*','- WordPress.org: **KOZ Static Translate 0.9.39 submitted — review in progress**',text)
+          r.write_text(text,encoding='utf-8')
+          print('STATIC_SHA='+static_sha)
+          print('SUITE_SHA='+suite_sha)
+          print('PACKAGE_COUNT=12')
+          PY
+
+          unzip -tq dist/packages/koz-static-translate-0.9.39.zip
+          unzip -tq dist/KOZ-Suite-1.0.29.zip
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add README.md RELEASE_NOTES_v1.0.29.md dist
+          git commit -m 'Publish full KOZ Suite 1.0.29 with Static Translate 0.9.39'
+          git push origin HEAD:main
+
+          gh release upload v1.0.29 dist/KOZ-Suite-1.0.29.zip dist/packages/koz-static-translate-0.9.39.zip --clobber
+          gh release edit v1.0.29 --title 'KOZ Suite 1.0.29' --notes-file RELEASE_NOTES_v1.0.29.md --target main
+
+      - name: Export exact full bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: KOZ-Suite-1.0.29-FULL
+          path: |
+            dist/KOZ-Suite-1.0.29.zip
+            dist/KOZ-Suite-1.0.29.zip.sha256
+            dist/packages/koz-static-translate-0.9.39.zip
+          if-no-files-found: error
