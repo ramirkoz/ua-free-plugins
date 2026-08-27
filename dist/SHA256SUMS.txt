@@ -1,0 +1,1 @@
+6f83475eb5232419fdf8cfea3e64199c10e0149c01c9e737bcadc3e18bdba521  packages/koz-static-translate-0.9.39.zip

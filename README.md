@@ -4,12 +4,12 @@ A practical collection of 12 privacy-first WordPress plugins independently maint
 
 ## Current release status
 
-- Suite bundle: **1.0.27**
+- Suite bundle: **1.0.29**
 - Public plugins: **12**
 - Live functional baseline: **12/12 PASS**
 - WordPress Plugin Check baseline: **12/12 PASS**
 - WordPress compatibility baseline: **7.1**
-- WordPress.org: **KOZ Static Translate 0.9.39 ready for Plugin Check/live re-test**
+- WordPress.org: **KOZ Static Translate 0.9.39 submitted — review in progress**
 - Private Hub: **KOZ Suite Hub — Private 0.4.8**, final/live UI/copy isolation/local tests PASS, intentionally excluded from this public repository and release.
 
 ## Included plugins
@@ -31,7 +31,7 @@ A practical collection of 12 privacy-first WordPress plugins independently maint
 
 ## Current bundle
 
-**KOZ Suite Bundle 1.0.27** contains the exact 12 verified public plugin ZIP packages.
+**KOZ Suite Bundle 1.0.29** contains the exact 12 verified public plugin ZIP packages.
 
 ## License
 

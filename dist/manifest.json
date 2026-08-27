@@ -1,10 +1,10 @@
 {
   "format": "KOZ Suite Release Library",
-  "version": "1.0.27",
-  "created": "2026-08-26",
-  "status": "CURRENT LIBRARY — 12/12 LIVE + PLUGIN CHECK PASS — WORDPRESS 7.1",
-  "suite_version": "1.0.27",
-  "release_date": "2026-08-26",
+  "version": "1.0.29",
+  "created": "2026-08-27",
+  "status": "CURRENT LIBRARY — 12/12 PACKAGE INTEGRITY PASS — STATIC TRANSLATE 0.9.39 PLUGIN CHECK PASS",
+  "suite_version": "1.0.29",
+  "release_date": "2026-08-27",
   "changed_components": [
     {
       "name": "KOZ Migration & Cleanup",
@@ -17,10 +17,10 @@
     {
       "name": "KOZ Static Translate",
       "version": "0.9.39",
-      "sha256": "251ad4a9217765aef1e13c6d5aa339f8fea6dfa6b65bdbd321a03a66be0de9c4",
-      "live": "STATIC PASS",
-      "plugin_check": "PENDING USER RUN",
-      "wordpress_7_1": "STATIC PASS"
+      "sha256": "6f83475eb5232419fdf8cfea3e64199c10e0149c01c9e737bcadc3e18bdba521",
+      "live": "NOT RE-RUN",
+      "plugin_check": "PASS",
+      "wordpress_7_1": "PLUGIN CHECK PASS"
     },
     {
       "name": "KOZ Translate Diagnostics",
@@ -124,14 +124,14 @@
       "version": "0.9.39",
       "canonical_prefix": "kozstx / KOZSTX",
       "file": "packages/koz-static-translate-0.9.39.zip",
-      "sha256": "251ad4a9217765aef1e13c6d5aa339f8fea6dfa6b65bdbd321a03a66be0de9c4",
-      "size": 153138,
+      "sha256": "6f83475eb5232419fdf8cfea3e64199c10e0149c01c9e737bcadc3e18bdba521",
+      "size": 152767,
       "strict_re_audit": "PASS",
-      "live_functional": "PENDING USER RUN",
-      "plugin_check": "PENDING USER RUN",
+      "live_functional": "NOT RE-RUN",
+      "plugin_check": "PASS",
       "wordpress_org_ready": "YES",
-      "wordpress_core_tested": "7.1 PASS",
-      "wordpress_org_status": "0.9.39 PLUGIN CHECK REMEDIATION — READY FOR RE-TEST"
+      "wordpress_core_tested": "PLUGIN CHECK PASS",
+      "wordpress_org_status": "0.9.39 SUBMITTED — REVIEW IN PROGRESS"
     },
     {
       "slug": "koz-translate-diagnostics",
@@ -291,12 +291,12 @@
     "koz-copy-actions": "1.1.14 LIVE",
     "koz-url-only-comment-spam": "1.1.11 LIVE",
     "koz-seo-core": "2.1.22 LIVE",
-    "koz-static-translate": "0.9.39 READY FOR PLUGIN CHECK / LIVE RE-TEST"
+    "koz-static-translate": "0.9.39 SUBMITTED — REVIEW IN PROGRESS"
   },
-  "changes_from_1_0_26": [
-    "KOZ Static Translate updated from 0.9.36 to 0.9.37.",
-    "WordPress.org review remediation complete.",
-    "Public readable source synchronized to GitHub.",
-    "Other 11 public plugin packages remain unchanged from KOZ Suite 1.0.26."
+  "changes_from_1_0_28": [
+    "KOZ Static Translate updated from 0.9.38 to 0.9.39.",
+    "WordPress Plugin Check filesystem findings remediated.",
+    "T3 security remediations retained: non-public backups and JSON_HEX inline configuration.",
+    "Other 11 public plugin packages remain unchanged."
   ]
 }
