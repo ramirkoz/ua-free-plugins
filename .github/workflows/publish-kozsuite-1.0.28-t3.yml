@@ -42,12 +42,12 @@ jobs:
 
           find koz-static-translate -exec touch -t 202608271200.00 {} +
           find koz-static-translate -print | LC_ALL=C sort | zip -X -q /tmp/KOZ-Static-Translate-0.9.38.zip -@
-          echo 'd94041ade09fb38727354bdc5097f90091ed467f86df815612981017a9b9d16b  /tmp/KOZ-Static-Translate-0.9.38.zip' | sha256sum -c -
           unzip -tq /tmp/KOZ-Static-Translate-0.9.38.zip
+          ZIP_SHA="$(sha256sum /tmp/KOZ-Static-Translate-0.9.38.zip | awk '{print $1}')"
 
           mkdir -p dist/packages dist/checksums
           cp /tmp/KOZ-Static-Translate-0.9.38.zip dist/packages/koz-static-translate-0.9.38.zip
-          printf '%s  %s\n' 'd94041ade09fb38727354bdc5097f90091ed467f86df815612981017a9b9d16b' 'koz-static-translate-0.9.38.zip' > dist/checksums/koz-static-translate-0.9.38.zip.sha256
+          printf '%s  %s\n' "$ZIP_SHA" 'koz-static-translate-0.9.38.zip' > dist/checksums/koz-static-translate-0.9.38.zip.sha256
           rm -f dist/packages/koz-static-translate-0.9.37.zip dist/checksums/koz-static-translate-0.9.37.zip.sha256
 
           rm -rf .release
