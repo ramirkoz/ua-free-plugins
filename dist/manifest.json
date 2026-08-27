@@ -16,11 +16,11 @@
     },
     {
       "name": "KOZ Static Translate",
-      "version": "0.9.37",
-      "sha256": "3719698eb7cc4015871074f4d9ddadcd45d6e80ba05818f9e14ff733a23706fb",
-      "live": "PASS",
-      "plugin_check": "PASS",
-      "wordpress_7_1": "PASS"
+      "version": "0.9.39",
+      "sha256": "251ad4a9217765aef1e13c6d5aa339f8fea6dfa6b65bdbd321a03a66be0de9c4",
+      "live": "STATIC PASS",
+      "plugin_check": "PENDING USER RUN",
+      "wordpress_7_1": "STATIC PASS"
     },
     {
       "name": "KOZ Translate Diagnostics",
@@ -121,17 +121,17 @@
     {
       "slug": "koz-static-translate",
       "name": "KOZ Static Translate",
-      "version": "0.9.37",
+      "version": "0.9.39",
       "canonical_prefix": "kozstx / KOZSTX",
-      "file": "packages/koz-static-translate-0.9.37.zip",
-      "sha256": "3719698eb7cc4015871074f4d9ddadcd45d6e80ba05818f9e14ff733a23706fb",
-      "size": 153336,
+      "file": "packages/koz-static-translate-0.9.39.zip",
+      "sha256": "251ad4a9217765aef1e13c6d5aa339f8fea6dfa6b65bdbd321a03a66be0de9c4",
+      "size": 153138,
       "strict_re_audit": "PASS",
-      "live_functional": "PASS",
-      "plugin_check": "PASS",
+      "live_functional": "PENDING USER RUN",
+      "plugin_check": "PENDING USER RUN",
       "wordpress_org_ready": "YES",
       "wordpress_core_tested": "7.1 PASS",
-      "wordpress_org_status": "0.9.37 REVIEW REMEDIATION PASS — SUBMITTED FOR WORDPRESS.ORG REVIEW"
+      "wordpress_org_status": "0.9.39 PLUGIN CHECK REMEDIATION — READY FOR RE-TEST"
     },
     {
       "slug": "koz-translate-diagnostics",
@@ -291,7 +291,7 @@
     "koz-copy-actions": "1.1.14 LIVE",
     "koz-url-only-comment-spam": "1.1.11 LIVE",
     "koz-seo-core": "2.1.22 LIVE",
-    "koz-static-translate": "0.9.37 SUBMITTED — REVIEW IN PROGRESS"
+    "koz-static-translate": "0.9.39 READY FOR PLUGIN CHECK / LIVE RE-TEST"
   },
   "changes_from_1_0_26": [
     "KOZ Static Translate updated from 0.9.36 to 0.9.37.",

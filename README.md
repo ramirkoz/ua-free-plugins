@@ -9,7 +9,7 @@ A practical collection of 12 privacy-first WordPress plugins independently maint
 - Live functional baseline: **12/12 PASS**
 - WordPress Plugin Check baseline: **12/12 PASS**
 - WordPress compatibility baseline: **7.1**
-- WordPress.org: **KOZ Static Translate 0.9.37 submitted — review in progress**
+- WordPress.org: **KOZ Static Translate 0.9.39 ready for Plugin Check/live re-test**
 - Private Hub: **KOZ Suite Hub — Private 0.4.8**, final/live UI/copy isolation/local tests PASS, intentionally excluded from this public repository and release.
 
 ## Included plugins
@@ -17,7 +17,7 @@ A practical collection of 12 privacy-first WordPress plugins independently maint
 | Plugin slug | Version |
 |---|---:|
 | koz-migration-cleanup | 0.9.7 |
-| koz-static-translate | 0.9.37 |
+| koz-static-translate | 0.9.39 |
 | koz-translate-diagnostics | 0.3.6 |
 | koz-seo-core | 2.1.22 |
 | koz-404-guard | 2.1.4 |

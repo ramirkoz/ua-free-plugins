@@ -38,14 +38,30 @@ final class KOZSTX_Cleanup {
 		return '' !== $root && ( $path === $root || 0 === strpos( $path . '/', $root . '/' ) );
 	}
 
+	private static function filesystem() {
+		global $wp_filesystem;
+
+		if ( ! function_exists( 'WP_Filesystem' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/file.php';
+		}
+		if ( ! is_object( $wp_filesystem ) ) {
+			WP_Filesystem();
+		}
+
+		return is_object( $wp_filesystem ) ? $wp_filesystem : null;
+	}
+
 	private static function path_is_potentially_public( string $path ): bool {
 		$roots = array( ABSPATH, WP_CONTENT_DIR );
 		$uploads = wp_upload_dir( null, false );
 		if ( empty( $uploads['error'] ) && ! empty( $uploads['basedir'] ) ) {
 			$roots[] = (string) $uploads['basedir'];
 		}
-		if ( ! empty( $_SERVER['DOCUMENT_ROOT'] ) ) {
-			$roots[] = wp_unslash( (string) $_SERVER['DOCUMENT_ROOT'] );
+		$document_root = isset( $_SERVER['DOCUMENT_ROOT'] )
+			? sanitize_text_field( wp_unslash( (string) $_SERVER['DOCUMENT_ROOT'] ) )
+			: '';
+		if ( '' !== $document_root ) {
+			$roots[] = $document_root;
 		}
 
 		foreach ( $roots as $root ) {
@@ -74,7 +90,10 @@ final class KOZSTX_Cleanup {
 			if ( ! wp_mkdir_p( $dir ) || ! is_dir( $dir ) || ! wp_is_writable( $dir ) ) {
 				continue;
 			}
-			@chmod( $dir, 0700 );
+			$filesystem = self::filesystem();
+			if ( $filesystem ) {
+				$filesystem->chmod( $dir, 0700 );
+			}
 			$dir_real = realpath( $dir );
 			if ( false !== $dir_real && ! self::path_is_potentially_public( $dir_real ) ) {
 				return trailingslashit( $dir_real );
@@ -133,12 +152,17 @@ final class KOZSTX_Cleanup {
 			}
 
 			$target = $secure_dir . wp_unique_filename( $secure_dir, basename( $real_file ) );
-			if ( @rename( $real_file, $target ) || ( @copy( $real_file, $target ) && @unlink( $real_file ) ) ) {
-				@chmod( $target, 0600 );
+			$filesystem = self::filesystem();
+			if ( $filesystem && $filesystem->move( $real_file, $target, false ) ) {
+				$filesystem->chmod( $target, 0600 );
 				$data['backup_file'] = $target;
 				$data['sha256'] = hash_file( 'sha256', $target );
 				update_option( $option_name, $data, false );
+				continue;
 			}
+
+			wp_delete_file( $real_file );
+			delete_option( $option_name );
 		}
 
 		$legacy_files = glob( trailingslashit( $legacy_real ) . '*.jsonl.gz' );
@@ -367,7 +391,10 @@ final class KOZSTX_Cleanup {
 			$write( array( 'type' => 'legacy_page', 'post' => $post, 'meta' => $meta ) );
 		}
 		gzclose( $gz );
-		@chmod( $file, 0600 );
+		$filesystem = self::filesystem();
+		if ( $filesystem ) {
+			$filesystem->chmod( $file, 0600 );
+		}
 		return array( 'file' => $file, 'sha256' => hash_file( 'sha256', $file ) );
 	}
 
@@ -564,7 +591,10 @@ final class KOZSTX_Cleanup {
 		);
 
 		gzclose( $gz );
-		@chmod( $file, 0600 );
+		$filesystem = self::filesystem();
+		if ( $filesystem ) {
+			$filesystem->chmod( $file, 0600 );
+		}
 
 		return array(
 			'file' => $file,

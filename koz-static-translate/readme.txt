@@ -4,7 +4,7 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=kozyr
 Tags: translation, multilingual, azure, static translation, language switcher
 Requires at least: 6.0
 Tested up to: 7.1
-Stable tag: 0.9.38
+Stable tag: 0.9.39
 Requires PHP: 8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -108,6 +108,11 @@ No. Existing settings determine whether the queue and public routes are enabled.
 No. It originated from production work for the foundation website but is independently owned and maintained by Tony Kozyriev.
 
 == Changelog ==
+
+= 0.9.39 =
+* Uses the WordPress Filesystem API for backup-directory/file permission changes and legacy-backup moves.
+* Sanitizes the server document-root value before using it in backup path safety checks.
+* WordPress Plugin Check remediation for the filesystem and input-sanitization findings reported after 0.9.38.
 
 = 0.9.38 =
 * Stores cleanup/reset backups only in a verified non-public temporary directory and migrates legacy uploads backups away from the public web tree.
