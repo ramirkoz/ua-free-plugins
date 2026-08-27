@@ -1,3 +1,11 @@
+# 0.9.38
+
+- WordPress.org T3 security/compliance remediation.
+- Moves cleanup/reset backups out of the uploads tree into a verified non-public temporary directory and migrates legacy plugin backups when possible.
+- Validates backup download paths against the secure directory.
+- Adds JSON_HEX escaping to inline JavaScript configuration data and validates the global identifier.
+- Translation behavior is otherwise unchanged.
+
 # 0.9.37
 
 - WordPress.org review compliance release.

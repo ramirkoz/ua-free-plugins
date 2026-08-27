@@ -4198,16 +4198,23 @@ final class KOZSTX_Static_Translate {
 		);
 		wp_enqueue_script( $handle );
 
-		if ( '' !== $config_name ) {
+		if ( '' !== $config_name && preg_match( '/^[A-Za-z_$][A-Za-z0-9_$]*$/D', $config_name ) ) {
 			$config_json = wp_json_encode(
 				$config,
-				JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
+				JSON_UNESCAPED_UNICODE
+					| JSON_UNESCAPED_SLASHES
+					| JSON_HEX_TAG
+					| JSON_HEX_AMP
+					| JSON_HEX_APOS
+					| JSON_HEX_QUOT
 			);
-			wp_add_inline_script(
-				$handle,
-				'window.' . $config_name . ' = ' . (string) $config_json . ';',
-				'before'
-			);
+			if ( false !== $config_json ) {
+				wp_add_inline_script(
+					$handle,
+					'window.' . $config_name . ' = ' . $config_json . ';',
+					'before'
+				);
+			}
 		}
 
 		ob_start();
@@ -5371,7 +5378,15 @@ final class KOZSTX_Static_Translate {
 				continue;
 			}
 			$data = self::rewrite_json_ld_value( $data, $source_url, $translated_url, $language_code );
-			$node->nodeValue = wp_json_encode( $data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES );
+			$node->nodeValue = wp_json_encode(
+				$data,
+				JSON_UNESCAPED_UNICODE
+					| JSON_UNESCAPED_SLASHES
+					| JSON_HEX_TAG
+					| JSON_HEX_AMP
+					| JSON_HEX_APOS
+					| JSON_HEX_QUOT
+			);
 		}
 	}
 
@@ -6891,7 +6906,7 @@ final class KOZSTX_Static_Translate {
 	public static function ajax_run(): void {
 		self::ajax_guard();
 		wp_send_json_error(
-			array( 'message' => __( 'Background translation processing is temporarily disabled in version 0.9.37.', 'koz-static-translate' ) ),
+			array( 'message' => __( 'Background translation processing is temporarily disabled in version 0.9.38.', 'koz-static-translate' ) ),
 			409
 		);
 	}
@@ -6899,7 +6914,7 @@ final class KOZSTX_Static_Translate {
 	public static function ajax_rebuild(): void {
 		self::ajax_guard();
 		wp_send_json_error(
-			array( 'message' => __( 'Inventory rebuild is temporarily disabled in version 0.9.37.', 'koz-static-translate' ) ),
+			array( 'message' => __( 'Inventory rebuild is temporarily disabled in version 0.9.38.', 'koz-static-translate' ) ),
 			409
 		);
 	}

@@ -28,6 +28,125 @@ final class KOZSTX_Cleanup {
 		add_action( 'admin_post_' . self::DOWNLOAD_ACTION, array( __CLASS__, 'download_backup' ) );
 		add_action( 'admin_post_' . self::RESET_ACTION, array( __CLASS__, 'reset_current' ) );
 		add_action( 'admin_post_' . self::RESET_DOWNLOAD_ACTION, array( __CLASS__, 'download_current_backup' ) );
+		add_action( 'admin_init', array( __CLASS__, 'migrate_legacy_web_backups' ) );
+	}
+
+
+	private static function path_is_within( string $path, string $root ): bool {
+		$path = untrailingslashit( wp_normalize_path( $path ) );
+		$root = untrailingslashit( wp_normalize_path( $root ) );
+		return '' !== $root && ( $path === $root || 0 === strpos( $path . '/', $root . '/' ) );
+	}
+
+	private static function path_is_potentially_public( string $path ): bool {
+		$roots = array( ABSPATH, WP_CONTENT_DIR );
+		$uploads = wp_upload_dir( null, false );
+		if ( empty( $uploads['error'] ) && ! empty( $uploads['basedir'] ) ) {
+			$roots[] = (string) $uploads['basedir'];
+		}
+		if ( ! empty( $_SERVER['DOCUMENT_ROOT'] ) ) {
+			$roots[] = wp_unslash( (string) $_SERVER['DOCUMENT_ROOT'] );
+		}
+
+		foreach ( $roots as $root ) {
+			$real_root = realpath( (string) $root );
+			if ( false !== $real_root && self::path_is_within( $path, $real_root ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private static function secure_backup_dir( bool $required = true ): string {
+		$candidates = array();
+		if ( defined( 'WP_TEMP_DIR' ) && WP_TEMP_DIR ) {
+			$candidates[] = (string) WP_TEMP_DIR;
+		}
+		$candidates[] = sys_get_temp_dir();
+		$candidates = array_values( array_unique( array_filter( $candidates ) ) );
+
+		foreach ( $candidates as $base ) {
+			$base_real = realpath( $base );
+			if ( false === $base_real || self::path_is_potentially_public( $base_real ) ) {
+				continue;
+			}
+			$dir = trailingslashit( $base_real ) . 'kozstx-private';
+			if ( ! wp_mkdir_p( $dir ) || ! is_dir( $dir ) || ! wp_is_writable( $dir ) ) {
+				continue;
+			}
+			@chmod( $dir, 0700 );
+			$dir_real = realpath( $dir );
+			if ( false !== $dir_real && ! self::path_is_potentially_public( $dir_real ) ) {
+				return trailingslashit( $dir_real );
+			}
+		}
+
+		if ( $required ) {
+			wp_die(
+				esc_html__(
+					'A secure non-public temporary directory is not available. Configure WP_TEMP_DIR outside the web document root before creating a backup.',
+					'koz-static-translate'
+				)
+			);
+		}
+		return '';
+	}
+
+	private static function backup_file_is_secure( string $file ): bool {
+		$real_file = realpath( $file );
+		if ( false === $real_file || ! is_file( $real_file ) || self::path_is_potentially_public( $real_file ) ) {
+			return false;
+		}
+		$dir = self::secure_backup_dir( false );
+		if ( '' === $dir ) {
+			return false;
+		}
+		$real_dir = realpath( $dir );
+		return false !== $real_dir && self::path_is_within( $real_file, $real_dir );
+	}
+
+	public static function migrate_legacy_web_backups(): void {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+
+		$uploads = wp_upload_dir( null, false );
+		if ( ! empty( $uploads['error'] ) || empty( $uploads['basedir'] ) ) {
+			return;
+		}
+		$legacy_dir = trailingslashit( (string) $uploads['basedir'] ) . 'kozstx-private';
+		$legacy_real = realpath( $legacy_dir );
+		if ( false === $legacy_real ) {
+			return;
+		}
+
+		$secure_dir = self::secure_backup_dir( false );
+		if ( '' === $secure_dir ) {
+			return;
+		}
+		foreach ( array( self::LAST_OPTION, self::RESET_LAST_OPTION ) as $option_name ) {
+			$data = get_option( $option_name, array() );
+			$file = is_array( $data ) ? (string) ( $data['backup_file'] ?? '' ) : '';
+			$real_file = '' !== $file ? realpath( $file ) : false;
+			if ( false === $real_file || ! self::path_is_within( $real_file, $legacy_real ) || ! is_file( $real_file ) ) {
+				continue;
+			}
+
+			$target = $secure_dir . wp_unique_filename( $secure_dir, basename( $real_file ) );
+			if ( @rename( $real_file, $target ) || ( @copy( $real_file, $target ) && @unlink( $real_file ) ) ) {
+				@chmod( $target, 0600 );
+				$data['backup_file'] = $target;
+				$data['sha256'] = hash_file( 'sha256', $target );
+				update_option( $option_name, $data, false );
+			}
+		}
+
+		$legacy_files = glob( trailingslashit( $legacy_real ) . '*.jsonl.gz' );
+		foreach ( is_array( $legacy_files ) ? $legacy_files : array() as $legacy_file ) {
+			if ( is_file( $legacy_file ) ) {
+				wp_delete_file( $legacy_file );
+			}
+		}
 	}
 
 	public static function render_section(): void {
@@ -206,12 +325,8 @@ final class KOZSTX_Cleanup {
 
 	private static function create_backup( array $scan ): array {
 		global $wpdb;
-		$uploads = wp_upload_dir();
-		$dir = trailingslashit( $uploads['basedir'] ) . 'kozstx-private';
-		wp_mkdir_p( $dir );
-		@file_put_contents( $dir . '/index.php', "<?php\n// Silence is golden.\n" );
-		@file_put_contents( $dir . '/.htaccess', "Deny from all\n" );
-		$file = $dir . '/translation-cleanup-' . gmdate( 'Ymd-His' ) . '-' . wp_generate_password( 8, false, false ) . '.jsonl.gz';
+		$dir = self::secure_backup_dir();
+		$file = $dir . 'translation-cleanup-' . gmdate( 'Ymd-His' ) . '-' . wp_generate_password( 8, false, false ) . '.jsonl.gz';
 		$gz = gzopen( $file, 'wb9' );
 		if ( ! $gz ) {
 			wp_die( esc_html__( 'Could not create the backup.', 'koz-static-translate' ) );
@@ -252,6 +367,7 @@ final class KOZSTX_Cleanup {
 			$write( array( 'type' => 'legacy_page', 'post' => $post, 'meta' => $meta ) );
 		}
 		gzclose( $gz );
+		@chmod( $file, 0600 );
 		return array( 'file' => $file, 'sha256' => hash_file( 'sha256', $file ) );
 	}
 
@@ -297,7 +413,7 @@ final class KOZSTX_Cleanup {
 		check_admin_referer( self::DOWNLOAD_ACTION );
 		$last = get_option( self::LAST_OPTION, array() );
 		$file = is_array( $last ) ? (string) ( $last['backup_file'] ?? '' ) : '';
-		if ( '' === $file || ! is_file( $file ) ) { wp_die( esc_html__( 'Backup not found.', 'koz-static-translate' ) ); }
+		if ( '' === $file || ! self::backup_file_is_secure( $file ) ) { wp_die( esc_html__( 'Backup not found or is outside the secure backup directory.', 'koz-static-translate' ) ); }
 		nocache_headers();
 		header( 'Content-Type: application/gzip' );
 		header( 'Content-Disposition: attachment; filename="' . basename( $file ) . '"' );
@@ -367,13 +483,9 @@ final class KOZSTX_Cleanup {
 	private static function create_current_backup(): array {
 		global $wpdb;
 
-		$uploads = wp_upload_dir();
-		$dir = trailingslashit( $uploads['basedir'] ) . 'kozstx-private';
-		wp_mkdir_p( $dir );
-		@file_put_contents( $dir . '/index.php', "<?php\n// Silence is golden.\n" );
-		@file_put_contents( $dir . '/.htaccess', "Deny from all\n" );
+		$dir = self::secure_backup_dir();
 
-		$file = $dir . '/current-translation-reset-' . gmdate( 'Ymd-His' ) . '-' . wp_generate_password( 8, false, false ) . '.jsonl.gz';
+		$file = $dir . 'current-translation-reset-' . gmdate( 'Ymd-His' ) . '-' . wp_generate_password( 8, false, false ) . '.jsonl.gz';
 		$gz = gzopen( $file, 'wb9' );
 
 		if ( ! $gz ) {
@@ -452,6 +564,7 @@ final class KOZSTX_Cleanup {
 		);
 
 		gzclose( $gz );
+		@chmod( $file, 0600 );
 
 		return array(
 			'file' => $file,
@@ -478,8 +591,8 @@ final class KOZSTX_Cleanup {
 			? (string) ( $last['backup_file'] ?? '' )
 			: '';
 
-		if ( '' === $file || ! is_file( $file ) ) {
-			wp_die( 'Backup поточного стану не знайдено.' );
+		if ( '' === $file || ! self::backup_file_is_secure( $file ) ) {
+			wp_die( esc_html__( 'Current-state backup was not found in the secure backup directory.', 'koz-static-translate' ) );
 		}
 
 		nocache_headers();

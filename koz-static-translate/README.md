@@ -1,6 +1,6 @@
 # KOZ Static Translate
 
-Version 0.9.37. Progressive Azure-backed static translation for EN/ZH/ES/AR/ID/PT/FR/JA/DE/HI with translation memory, readiness-safe SEO output and optional SEO integration.
+Version 0.9.38. Progressive Azure-backed static translation for EN/ZH/ES/AR/ID/PT/FR/JA/DE/HI with translation memory, readiness-safe SEO output and optional SEO integration.
 
 
 ## Source

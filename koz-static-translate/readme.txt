@@ -4,7 +4,7 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=kozyr
 Tags: translation, multilingual, azure, static translation, language switcher
 Requires at least: 6.0
 Tested up to: 7.1
-Stable tag: 0.9.37
+Stable tag: 0.9.38
 Requires PHP: 8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -108,6 +108,11 @@ No. Existing settings determine whether the queue and public routes are enabled.
 No. It originated from production work for the foundation website but is independently owned and maintained by Tony Kozyriev.
 
 == Changelog ==
+
+= 0.9.38 =
+* Stores cleanup/reset backups only in a verified non-public temporary directory and migrates legacy uploads backups away from the public web tree.
+* Hardens inline JavaScript configuration JSON with JSON_HEX escaping and validates the JavaScript global identifier before enqueue output.
+* WordPress.org T3 security/compliance remediation; translation behavior is otherwise unchanged.
 
 = 0.9.37 =
 * Uses WordPress enqueue APIs for plugin-owned frontend CSS and JavaScript instead of printing raw style/script tags.
