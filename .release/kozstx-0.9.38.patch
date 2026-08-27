@@ -1,0 +1,330 @@
+--- a/koz-static-translate/koz-static-translate.php
++++ b/koz-static-translate/koz-static-translate.php
+@@ -3,7 +3,7 @@
+  * Plugin Name: KOZ Static Translate
+  * Plugin URI: https://github.com/ramirkoz/ua-free-plugins
+  * Description: Frontend static translation with queued Azure processing, translation memory, language routes, dynamic-content support and migration-safe compatibility.
+- * Version: 0.9.37
++ * Version: 0.9.38
+  * Author: Tony Kozyriev
+  * Author URI: https://www.linkedin.com/in/tonykoz/
+  * Text Domain: koz-static-translate
+@@ -16,7 +16,7 @@
+ 
+ if ( ! defined( 'ABSPATH' ) ) { exit; }
+ 
+-define( 'KOZSTX_VERSION', '0.9.37' );
++define( 'KOZSTX_VERSION', '0.9.38' );
+ define( 'KOZSTX_DIR', plugin_dir_path( __FILE__ ) );
+ define( 'KOZSTX_FILE', __FILE__ );
+ define( 'KOZSTX_URL', plugin_dir_url( __FILE__ ) );
+--- a/koz-static-translate/readme.txt
++++ b/koz-static-translate/readme.txt
+@@ -4,7 +4,7 @@
+ Tags: translation, multilingual, azure, static translation, language switcher
+ Requires at least: 6.0
+ Tested up to: 7.1
+-Stable tag: 0.9.37
++Stable tag: 0.9.38
+ Requires PHP: 8.0
+ License: GPLv2 or later
+ License URI: https://www.gnu.org/licenses/gpl-2.0.html
+@@ -109,6 +109,11 @@
+ 
+ == Changelog ==
+ 
++= 0.9.38 =
++* Stores cleanup/reset backups only in a verified non-public temporary directory and migrates legacy uploads backups away from the public web tree.
++* Hardens inline JavaScript configuration JSON with JSON_HEX escaping and validates the JavaScript global identifier before enqueue output.
++* WordPress.org T3 security/compliance remediation; translation behavior is otherwise unchanged.
++
+ = 0.9.37 =
+ * Uses WordPress enqueue APIs for plugin-owned frontend CSS and JavaScript instead of printing raw style/script tags.
+ * Makes the dynamic translation REST endpoint administrator-only with capability checks and WordPress REST nonce authentication; public HMAC tokens are removed.
+--- a/koz-static-translate/README.md
++++ b/koz-static-translate/README.md
+@@ -1,6 +1,6 @@
+ # KOZ Static Translate
+ 
+-Version 0.9.37. Progressive Azure-backed static translation for EN/ZH/ES/AR/ID/PT/FR/JA/DE/HI with translation memory, readiness-safe SEO output and optional SEO integration.
++Version 0.9.38. Progressive Azure-backed static translation for EN/ZH/ES/AR/ID/PT/FR/JA/DE/HI with translation memory, readiness-safe SEO output and optional SEO integration.
+ 
+ 
+ ## Source
+--- a/koz-static-translate/CHANGELOG.md
++++ b/koz-static-translate/CHANGELOG.md
+@@ -1,3 +1,11 @@
++# 0.9.38
++
++- WordPress.org T3 security/compliance remediation.
++- Moves cleanup/reset backups out of the uploads tree into a verified non-public temporary directory and migrates legacy plugin backups when possible.
++- Validates backup download paths against the secure directory.
++- Adds JSON_HEX escaping to inline JavaScript configuration data and validates the global identifier.
++- Translation behavior is otherwise unchanged.
++
+ # 0.9.37
+ 
+ - WordPress.org review compliance release.
+--- a/koz-static-translate/includes/class-kozstx-cleanup.php
++++ b/koz-static-translate/includes/class-kozstx-cleanup.php
+@@ -28,6 +28,125 @@
+ 		add_action( 'admin_post_' . self::DOWNLOAD_ACTION, array( __CLASS__, 'download_backup' ) );
+ 		add_action( 'admin_post_' . self::RESET_ACTION, array( __CLASS__, 'reset_current' ) );
+ 		add_action( 'admin_post_' . self::RESET_DOWNLOAD_ACTION, array( __CLASS__, 'download_current_backup' ) );
++		add_action( 'admin_init', array( __CLASS__, 'migrate_legacy_web_backups' ) );
++	}
++
++
++	private static function path_is_within( string $path, string $root ): bool {
++		$path = untrailingslashit( wp_normalize_path( $path ) );
++		$root = untrailingslashit( wp_normalize_path( $root ) );
++		return '' !== $root && ( $path === $root || 0 === strpos( $path . '/', $root . '/' ) );
++	}
++
++	private static function path_is_potentially_public( string $path ): bool {
++		$roots = array( ABSPATH, WP_CONTENT_DIR );
++		$uploads = wp_upload_dir( null, false );
++		if ( empty( $uploads['error'] ) && ! empty( $uploads['basedir'] ) ) {
++			$roots[] = (string) $uploads['basedir'];
++		}
++		if ( ! empty( $_SERVER['DOCUMENT_ROOT'] ) ) {
++			$roots[] = wp_unslash( (string) $_SERVER['DOCUMENT_ROOT'] );
++		}
++
++		foreach ( $roots as $root ) {
++			$real_root = realpath( (string) $root );
++			if ( false !== $real_root && self::path_is_within( $path, $real_root ) ) {
++				return true;
++			}
++		}
++		return false;
++	}
++
++	private static function secure_backup_dir( bool $required = true ): string {
++		$candidates = array();
++		if ( defined( 'WP_TEMP_DIR' ) && WP_TEMP_DIR ) {
++			$candidates[] = (string) WP_TEMP_DIR;
++		}
++		$candidates[] = sys_get_temp_dir();
++		$candidates = array_values( array_unique( array_filter( $candidates ) ) );
++
++		foreach ( $candidates as $base ) {
++			$base_real = realpath( $base );
++			if ( false === $base_real || self::path_is_potentially_public( $base_real ) ) {
++				continue;
++			}
++			$dir = trailingslashit( $base_real ) . 'kozstx-private';
++			if ( ! wp_mkdir_p( $dir ) || ! is_dir( $dir ) || ! wp_is_writable( $dir ) ) {
++				continue;
++			}
++			@chmod( $dir, 0700 );
++			$dir_real = realpath( $dir );
++			if ( false !== $dir_real && ! self::path_is_potentially_public( $dir_real ) ) {
++				return trailingslashit( $dir_real );
++			}
++		}
++
++		if ( $required ) {
++			wp_die(
++				esc_html__(
++					'A secure non-public temporary directory is not available. Configure WP_TEMP_DIR outside the web document root before creating a backup.',
++					'koz-static-translate'
++				)
++			);
++		}
++		return '';
++	}
++
++	private static function backup_file_is_secure( string $file ): bool {
++		$real_file = realpath( $file );
++		if ( false === $real_file || ! is_file( $real_file ) || self::path_is_potentially_public( $real_file ) ) {
++			return false;
++		}
++		$dir = self::secure_backup_dir( false );
++		if ( '' === $dir ) {
++			return false;
++		}
++		$real_dir = realpath( $dir );
++		return false !== $real_dir && self::path_is_within( $real_file, $real_dir );
++	}
++
++	public static function migrate_legacy_web_backups(): void {
++		if ( ! current_user_can( 'manage_options' ) ) {
++			return;
++		}
++
++		$uploads = wp_upload_dir( null, false );
++		if ( ! empty( $uploads['error'] ) || empty( $uploads['basedir'] ) ) {
++			return;
++		}
++		$legacy_dir = trailingslashit( (string) $uploads['basedir'] ) . 'kozstx-private';
++		$legacy_real = realpath( $legacy_dir );
++		if ( false === $legacy_real ) {
++			return;
++		}
++
++		$secure_dir = self::secure_backup_dir( false );
++		if ( '' === $secure_dir ) {
++			return;
++		}
++		foreach ( array( self::LAST_OPTION, self::RESET_LAST_OPTION ) as $option_name ) {
++			$data = get_option( $option_name, array() );
++			$file = is_array( $data ) ? (string) ( $data['backup_file'] ?? '' ) : '';
++			$real_file = '' !== $file ? realpath( $file ) : false;
++			if ( false === $real_file || ! self::path_is_within( $real_file, $legacy_real ) || ! is_file( $real_file ) ) {
++				continue;
++			}
++
++			$target = $secure_dir . wp_unique_filename( $secure_dir, basename( $real_file ) );
++			if ( @rename( $real_file, $target ) || ( @copy( $real_file, $target ) && @unlink( $real_file ) ) ) {
++				@chmod( $target, 0600 );
++				$data['backup_file'] = $target;
++				$data['sha256'] = hash_file( 'sha256', $target );
++				update_option( $option_name, $data, false );
++			}
++		}
++
++		$legacy_files = glob( trailingslashit( $legacy_real ) . '*.jsonl.gz' );
++		foreach ( is_array( $legacy_files ) ? $legacy_files : array() as $legacy_file ) {
++			if ( is_file( $legacy_file ) ) {
++				wp_delete_file( $legacy_file );
++			}
++		}
+ 	}
+ 
+ 	public static function render_section(): void {
+@@ -206,12 +325,8 @@
+ 
+ 	private static function create_backup( array $scan ): array {
+ 		global $wpdb;
+-		$uploads = wp_upload_dir();
+-		$dir = trailingslashit( $uploads['basedir'] ) . 'kozstx-private';
+-		wp_mkdir_p( $dir );
+-		@file_put_contents( $dir . '/index.php', "<?php\n// Silence is golden.\n" );
+-		@file_put_contents( $dir . '/.htaccess', "Deny from all\n" );
+-		$file = $dir . '/translation-cleanup-' . gmdate( 'Ymd-His' ) . '-' . wp_generate_password( 8, false, false ) . '.jsonl.gz';
++		$dir = self::secure_backup_dir();
++		$file = $dir . 'translation-cleanup-' . gmdate( 'Ymd-His' ) . '-' . wp_generate_password( 8, false, false ) . '.jsonl.gz';
+ 		$gz = gzopen( $file, 'wb9' );
+ 		if ( ! $gz ) {
+ 			wp_die( esc_html__( 'Could not create the backup.', 'koz-static-translate' ) );
+@@ -252,6 +367,7 @@
+ 			$write( array( 'type' => 'legacy_page', 'post' => $post, 'meta' => $meta ) );
+ 		}
+ 		gzclose( $gz );
++		@chmod( $file, 0600 );
+ 		return array( 'file' => $file, 'sha256' => hash_file( 'sha256', $file ) );
+ 	}
+ 
+@@ -297,7 +413,7 @@
+ 		check_admin_referer( self::DOWNLOAD_ACTION );
+ 		$last = get_option( self::LAST_OPTION, array() );
+ 		$file = is_array( $last ) ? (string) ( $last['backup_file'] ?? '' ) : '';
+-		if ( '' === $file || ! is_file( $file ) ) { wp_die( esc_html__( 'Backup not found.', 'koz-static-translate' ) ); }
++		if ( '' === $file || ! self::backup_file_is_secure( $file ) ) { wp_die( esc_html__( 'Backup not found or is outside the secure backup directory.', 'koz-static-translate' ) ); }
+ 		nocache_headers();
+ 		header( 'Content-Type: application/gzip' );
+ 		header( 'Content-Disposition: attachment; filename="' . basename( $file ) . '"' );
+@@ -367,13 +483,9 @@
+ 	private static function create_current_backup(): array {
+ 		global $wpdb;
+ 
+-		$uploads = wp_upload_dir();
+-		$dir = trailingslashit( $uploads['basedir'] ) . 'kozstx-private';
+-		wp_mkdir_p( $dir );
+-		@file_put_contents( $dir . '/index.php', "<?php\n// Silence is golden.\n" );
+-		@file_put_contents( $dir . '/.htaccess', "Deny from all\n" );
++		$dir = self::secure_backup_dir();
+ 
+-		$file = $dir . '/current-translation-reset-' . gmdate( 'Ymd-His' ) . '-' . wp_generate_password( 8, false, false ) . '.jsonl.gz';
++		$file = $dir . 'current-translation-reset-' . gmdate( 'Ymd-His' ) . '-' . wp_generate_password( 8, false, false ) . '.jsonl.gz';
+ 		$gz = gzopen( $file, 'wb9' );
+ 
+ 		if ( ! $gz ) {
+@@ -452,6 +564,7 @@
+ 		);
+ 
+ 		gzclose( $gz );
++		@chmod( $file, 0600 );
+ 
+ 		return array(
+ 			'file' => $file,
+@@ -478,8 +591,8 @@
+ 			? (string) ( $last['backup_file'] ?? '' )
+ 			: '';
+ 
+-		if ( '' === $file || ! is_file( $file ) ) {
+-			wp_die( 'Backup поточного стану не знайдено.' );
++		if ( '' === $file || ! self::backup_file_is_secure( $file ) ) {
++			wp_die( esc_html__( 'Current-state backup was not found in the secure backup directory.', 'koz-static-translate' ) );
+ 		}
+ 
+ 		nocache_headers();
+--- a/koz-static-translate/includes/class-kozstx-static-translate.php
++++ b/koz-static-translate/includes/class-kozstx-static-translate.php
+@@ -4198,16 +4198,23 @@
+ 		);
+ 		wp_enqueue_script( $handle );
+ 
+-		if ( '' !== $config_name ) {
++		if ( '' !== $config_name && preg_match( '/^[A-Za-z_$][A-Za-z0-9_$]*$/D', $config_name ) ) {
+ 			$config_json = wp_json_encode(
+ 				$config,
+-				JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
+-			);
+-			wp_add_inline_script(
+-				$handle,
+-				'window.' . $config_name . ' = ' . (string) $config_json . ';',
+-				'before'
++				JSON_UNESCAPED_UNICODE
++					| JSON_UNESCAPED_SLASHES
++					| JSON_HEX_TAG
++					| JSON_HEX_AMP
++					| JSON_HEX_APOS
++					| JSON_HEX_QUOT
+ 			);
++			if ( false !== $config_json ) {
++				wp_add_inline_script(
++					$handle,
++					'window.' . $config_name . ' = ' . $config_json . ';',
++					'before'
++				);
++			}
+ 		}
+ 
+ 		ob_start();
+@@ -5371,7 +5378,15 @@
+ 				continue;
+ 			}
+ 			$data = self::rewrite_json_ld_value( $data, $source_url, $translated_url, $language_code );
+-			$node->nodeValue = wp_json_encode( $data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES );
++			$node->nodeValue = wp_json_encode(
++				$data,
++				JSON_UNESCAPED_UNICODE
++					| JSON_UNESCAPED_SLASHES
++					| JSON_HEX_TAG
++					| JSON_HEX_AMP
++					| JSON_HEX_APOS
++					| JSON_HEX_QUOT
++			);
+ 		}
+ 	}
+ 
+@@ -6891,7 +6906,7 @@
+ 	public static function ajax_run(): void {
+ 		self::ajax_guard();
+ 		wp_send_json_error(
+-			array( 'message' => __( 'Background translation processing is temporarily disabled in version 0.9.37.', 'koz-static-translate' ) ),
++			array( 'message' => __( 'Background translation processing is temporarily disabled in version 0.9.38.', 'koz-static-translate' ) ),
+ 			409
+ 		);
+ 	}
+@@ -6899,7 +6914,7 @@
+ 	public static function ajax_rebuild(): void {
+ 		self::ajax_guard();
+ 		wp_send_json_error(
+-			array( 'message' => __( 'Inventory rebuild is temporarily disabled in version 0.9.37.', 'koz-static-translate' ) ),
++			array( 'message' => __( 'Inventory rebuild is temporarily disabled in version 0.9.38.', 'koz-static-translate' ) ),
+ 			409
+ 		);
+ 	}
