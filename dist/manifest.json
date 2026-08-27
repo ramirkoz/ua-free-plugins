@@ -296,7 +296,7 @@
   "changes_from_1_0_28": [
     "KOZ Static Translate updated from 0.9.38 to 0.9.39.",
     "WordPress Plugin Check filesystem findings remediated.",
-    "T3 security remediations retained: non-public backups and JSON_HEX inline configuration.",
-    "Other 11 public plugin packages remain unchanged."
+    "T3 security remediations retained.",
+    "Other 11 public plugin packages retained from the verified full Suite 1.0.26 baseline."
   ]
 }
