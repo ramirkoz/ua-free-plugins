@@ -1,0 +1,59 @@
+name: Publish KOZ Static Translate 0.9.38 T3
+
+on:
+  push:
+    branches: [main]
+    paths: [.release/kozstx-0.9.38.trigger]
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Apply, verify and publish 0.9.38
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f .release/kozstx-0.9.38.patch
+          test -f .release/kozstx-0.9.38.trigger
+          git apply --check .release/kozstx-0.9.38.patch
+          git apply .release/kozstx-0.9.38.patch
+
+          grep -q 'Version: 0.9.38' koz-static-translate/koz-static-translate.php
+          grep -q "define( 'KOZSTX_VERSION', '0.9.38' )" koz-static-translate/koz-static-translate.php
+          grep -q 'Stable tag: 0.9.38' koz-static-translate/readme.txt
+          grep -q 'secure_backup_dir' koz-static-translate/includes/class-kozstx-cleanup.php
+          ! grep -q "file_put_contents.*\.htaccess" koz-static-translate/includes/class-kozstx-cleanup.php
+          ! grep -q "trailingslashit( \$uploads\['basedir'\] ).*kozstx-private" koz-static-translate/includes/class-kozstx-cleanup.php
+          grep -q 'JSON_HEX_TAG' koz-static-translate/includes/class-kozstx-static-translate.php
+          grep -q "return current_user_can( 'manage_options' );" koz-static-translate/includes/class-kozstx-static-translate.php
+          ! grep -R "permission_callback.*__return_true" koz-static-translate --include='*.php'
+          ! grep -R "deactivate_plugins" koz-static-translate --include='*.php'
+
+          find koz-static-translate -name '*.php' -type f -print0 | xargs -0 -n1 php -l >/dev/null
+          for f in koz-static-translate/assets/*.js; do node --check "$f"; done
+
+          find koz-static-translate -exec touch -t 202608271200.00 {} +
+          find koz-static-translate -print | LC_ALL=C sort | zip -X -q /tmp/KOZ-Static-Translate-0.9.38.zip -@
+          echo 'd94041ade09fb38727354bdc5097f90091ed467f86df815612981017a9b9d16b  /tmp/KOZ-Static-Translate-0.9.38.zip' | sha256sum -c -
+          unzip -tq /tmp/KOZ-Static-Translate-0.9.38.zip
+
+          mkdir -p dist/packages dist/checksums
+          cp /tmp/KOZ-Static-Translate-0.9.38.zip dist/packages/koz-static-translate-0.9.38.zip
+          printf '%s  %s\n' 'd94041ade09fb38727354bdc5097f90091ed467f86df815612981017a9b9d16b' 'koz-static-translate-0.9.38.zip' > dist/checksums/koz-static-translate-0.9.38.zip.sha256
+          rm -f dist/packages/koz-static-translate-0.9.37.zip dist/checksums/koz-static-translate-0.9.37.zip.sha256
+
+          rm -rf .release
+          rm -f .github/workflows/publish-kozsuite-1.0.28-t3.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Publish KOZ Static Translate 0.9.38 T3 remediation'
+          git push origin HEAD:main
