@@ -18,6 +18,21 @@ You choose what can be copied by adding simple CSS selectors in the plugin setti
 
 No copied content is sent to the developer or to an external service.
 
+= Part of the KOZ Suite =
+
+KOZ Copy Actions is one focused module of the KOZ Suite, a family of independent WordPress plugins with a shared KOZ administration experience and visual identity.
+
+Each KOZ plugin can be installed independently or combined with other KOZ Suite modules.
+
+Current public KOZ plugins:
+
+* [KOZ SEO Core](https://wordpress.org/plugins/koz-seo-core/) — technical SEO, schema, sitemaps, AI discovery and OpenAI Vision image ALT.
+* KOZ Copy Actions — accessible copy-to-clipboard actions for selected WordPress content.
+* [KOZ URL-Only Comment Spam](https://wordpress.org/plugins/koz-url-only-comment-spam/) — privacy-first local moderation for URL-only comment spam.
+* [KOZ Static Translate](https://wordpress.org/plugins/koz-static-translate/) — AI-powered multilingual translation with Microsoft Azure Translator and static language routes.
+
+Additional KOZ Suite modules are used in production and may be published separately as they are prepared for public distribution.
+
 = Typical uses =
 
 * Copy coupon codes, reference numbers, wallet addresses or contact details.
@@ -205,6 +220,7 @@ Yes. Enable **Prevent navigation when a matching link is clicked** in the plugin
 == Changelog ==
 
 = 1.1.14 =
+* Updated KOZ Suite documentation to include KOZ Static Translate as the fourth public plugin.
 * Updated WordPress compatibility metadata for WordPress 7.1.
 * No changes to clipboard, selector, path, privacy or multilingual runtime behavior.
 
