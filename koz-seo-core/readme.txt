@@ -19,6 +19,21 @@ It also provides `/llms.txt`, `/.well-known/koz-ai-manifest.json`, a read-only i
 
 The plugin was originally developed for the UA FREE charitable foundation website, which remains a production environment for the suite. The software is independently owned and maintained by Tony Kozyriev (`ramirkz`).
 
+= Part of the KOZ Suite =
+
+KOZ SEO Core is one focused module of the KOZ Suite, a family of independent WordPress plugins with a shared KOZ administration experience and visual identity.
+
+Each KOZ plugin can be installed independently or combined with other KOZ Suite modules.
+
+Current public KOZ plugins:
+
+* KOZ SEO Core — technical SEO, schema, sitemaps, AI discovery and OpenAI Vision image ALT.
+* [KOZ Copy Actions](https://wordpress.org/plugins/koz-copy-actions/) — accessible copy-to-clipboard actions for selected WordPress content.
+* [KOZ URL-Only Comment Spam](https://wordpress.org/plugins/koz-url-only-comment-spam/) — privacy-first local moderation for URL-only comment spam.
+* [KOZ Static Translate](https://wordpress.org/plugins/koz-static-translate/) — AI-powered multilingual translation with Microsoft Azure Translator and static language routes.
+
+Additional KOZ Suite modules are used in production and may be published separately as they are prepared for public distribution.
+
 = Main features =
 
 * SEO title, description, canonical, robots and social metadata.
@@ -56,6 +71,7 @@ OpenAI Privacy Policy: https://openai.com/policies/privacy-policy/
 == Changelog ==
 
 = 2.1.22 =
+* Updated KOZ Suite documentation to include KOZ Static Translate as the fourth public plugin.
 * WordPress.org compatibility metadata: updated Tested up to to WordPress 7.1.
 
 = 2.1.21 =
