@@ -25,6 +25,21 @@ Use case: a community site permits internal resource links but wants external UR
 
 The plugin was originally developed for the UA FREE charitable foundation website, which remains a production test environment. Development and ownership belong to Tony Kozyriev (`ramirkz`). Foundation donations and developer support are separate.
 
+= Part of the KOZ Suite =
+
+KOZ URL-Only Comment Spam is one focused module of the KOZ Suite, a family of independent WordPress plugins with a shared KOZ administration experience and visual identity.
+
+Each KOZ plugin can be installed independently or combined with other KOZ Suite modules.
+
+Current public KOZ plugins:
+
+* [KOZ SEO Core](https://wordpress.org/plugins/koz-seo-core/) — technical SEO, schema, sitemaps, AI discovery and OpenAI Vision image ALT.
+* [KOZ Copy Actions](https://wordpress.org/plugins/koz-copy-actions/) — accessible copy-to-clipboard actions for selected WordPress content.
+* KOZ URL-Only Comment Spam — privacy-first local moderation for URL-only comment spam.
+* [KOZ Static Translate](https://wordpress.org/plugins/koz-static-translate/) — AI-powered multilingual translation with Microsoft Azure Translator and static language routes.
+
+Additional KOZ Suite modules are used in production and may be published separately as they are prepared for public distribution.
+
 Features:
 
 * Detect one or more URL-only values after HTML and invisible spacing are removed.
@@ -67,6 +82,7 @@ Yes. The administration screen includes a sample test that does not persist the 
 == Changelog ==
 
 = 1.1.11 =
+* Updated KOZ Suite documentation to include KOZ Static Translate as the fourth public plugin.
 * Updated WordPress compatibility metadata for WordPress 7.1.
 * No changes to spam detection, moderation settings, counters or privacy behavior.
 
@@ -99,7 +115,7 @@ Yes. The administration screen includes a sample test that does not persist the 
 * Preserved existing settings and UA FREE compatibility hooks.
 
 = 1.1.2 =
-* Aligned KOZ hook names with the plugin namespace prefix used by Plugin Check.
+* Aligned the KOZ hook names with the plugin namespace prefix used by Plugin Check.
 * Removed the global uninstall variable while preserving conditional data deletion.
 
 = 1.1.0 =
