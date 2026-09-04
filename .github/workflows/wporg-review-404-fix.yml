@@ -1,0 +1,171 @@
+name: Build WP.org review package for KOZ 404 Guard
+
+on:
+  push:
+    branches:
+      - wporg-review-404-fix
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v4
+        with:
+          ref: wporg-review-404-fix
+          fetch-depth: 0
+
+      - name: Apply WordPress.org review fixes
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          root = Path('koz-404-guard')
+
+          # 1) Fix register_setting sanitize callback class typo.
+          admin = root / 'includes/class-koz404-admin.php'
+          s = admin.read_text(encoding='utf-8')
+          old = "array( KOZ404_KOZ404_Guard::class, 'sanitize_settings' )"
+          new = "array( KOZ404_Guard::class, 'sanitize_settings' )"
+          if old not in s and new not in s:
+              raise SystemExit('Expected register_setting callback pattern not found')
+          s = s.replace(old, new)
+          admin.write_text(s, encoding='utf-8')
+
+          # 2) Stop automatically deactivating the legacy plugin on activation.
+          main = root / 'koz-404-guard.php'
+          s = main.read_text(encoding='utf-8')
+          start = "register_activation_hook(\n\tKOZ404_FILE,\n\tstatic function (): void {\n"
+          end = "\t\t\\ramirkz\\koz404\\KOZ404_Guard::migrate_legacy_data();\n\t\t\\ramirkz\\koz404\\KOZ404_Guard::activate();\n\t}\n);"
+          i = s.find(start)
+          j = s.find(end, i)
+          if i < 0 or j < 0:
+              raise SystemExit('Activation hook pattern not found')
+          j += len(end)
+          replacement = "register_activation_hook(\n\tKOZ404_FILE,\n\tstatic function (): void {\n\t\t\\ramirkz\\koz404\\KOZ404_Guard::migrate_legacy_data();\n\t\t\\ramirkz\\koz404\\KOZ404_Guard::activate();\n\t}\n);"
+          s = s[:i] + replacement + s[j:]
+
+          notice_start = "\nadd_action(\n\t'admin_notices',\n\tstatic function (): void {"
+          ni = s.find(notice_start)
+          if ni >= 0:
+              nj = s.find("\n);", ni)
+              if nj < 0:
+                  raise SystemExit('Legacy deactivation notice end not found')
+              s = s[:ni] + s[nj + 3:]
+          main.write_text(s, encoding='utf-8')
+
+          # 3) Replace direct frontend <script> output with enqueued JS + wp_add_inline_script.
+          guard = root / 'includes/class-koz404-guard.php'
+          s = guard.read_text(encoding='utf-8')
+          s = s.replace(
+              "\t\tadd_action( 'wp_footer', array( __CLASS__, 'print_datalayer' ), 99 );",
+              "\t\tadd_action( 'wp_enqueue_scripts', array( __CLASS__, 'enqueue_datalayer' ), 99 );"
+          )
+          old_method = """\tpublic static function print_datalayer(): void {\n\t\t$settings = self::settings();\n\t\tif ( empty( $settings['enabled'] ) || empty( $settings['emit_datalayer'] ) || self::bypass() || ! is_404() || 'human' !== self::classify_request() ) {\n\t\t\treturn;\n\t\t}\n\t\t$payload = array(\n\t\t\t'event'            => 'koz_404',\n\t\t\t'status'           => 404,\n\t\t\t'path_fingerprint' => self::fingerprint( self::request_path(), 'path' ),\n\t\t);\n\t\techo '<script>window.dataLayer=window.dataLayer||[];window.dataLayer.push(' . wp_json_encode( $payload ) . ');</script>';\n\t}\n"""
+          new_method = """\tpublic static function enqueue_datalayer(): void {\n\t\t$settings = self::settings();\n\t\tif ( empty( $settings['enabled'] ) || empty( $settings['emit_datalayer'] ) || self::bypass() || ! is_404() || 'human' !== self::classify_request() ) {\n\t\t\treturn;\n\t\t}\n\t\t$payload = array(\n\t\t\t'event'            => 'koz_404',\n\t\t\t'status'           => 404,\n\t\t\t'path_fingerprint' => self::fingerprint( self::request_path(), 'path' ),\n\t\t);\n\t\twp_enqueue_script( 'koz404-datalayer', KOZ404_URL . 'assets/koz404-datalayer.js', array(), KOZ404_VERSION, true );\n\t\twp_add_inline_script( 'koz404-datalayer', 'window.dataLayer.push(' . wp_json_encode( $payload ) . ');', 'after' );\n\t}\n"""
+          if old_method not in s and new_method not in s:
+              raise SystemExit('Data layer method pattern not found')
+          s = s.replace(old_method, new_method)
+
+          # 4) Replace direct <style> output in the minimal response with an enqueued stylesheet.
+          old_csp = "header( \"Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'\", true );"
+          new_csp = "header( \"Content-Security-Policy: default-src 'none'; style-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'\", true );"
+          s = s.replace(old_csp, new_csp)
+          old_head = "\t\techo '<title>' . esc_html( $title ) . '</title><style>body{font-family:system-ui,sans-serif;background:#f6f7f7;color:#1d2327;margin:0}main{max-width:700px;margin:12vh auto;padding:32px;background:#fff;border-radius:12px;text-align:center}h1{font-size:56px;margin:0 0 12px}a{display:inline-block;padding:12px 20px;background:#2271b1;color:#fff;text-decoration:none;border-radius:8px}</style></head>';"
+          new_head = "\t\techo '<title>' . esc_html( $title ) . '</title>';\n\t\twp_enqueue_style( 'koz404-minimal-response', KOZ404_URL . 'assets/koz404-minimal-response.css', array(), KOZ404_VERSION );\n\t\twp_print_styles( 'koz404-minimal-response' );\n\t\techo '</head>';"
+          if old_head not in s and new_head not in s:
+              raise SystemExit('Minimal response style pattern not found')
+          s = s.replace(old_head, new_head)
+          guard.write_text(s, encoding='utf-8')
+
+          # New enqueued frontend assets.
+          (root / 'assets/koz404-datalayer.js').write_text(
+              "window.dataLayer = window.dataLayer || [];\n",
+              encoding='utf-8'
+          )
+          (root / 'assets/koz404-minimal-response.css').write_text(
+              "body{font-family:system-ui,sans-serif;background:#f6f7f7;color:#1d2327;margin:0}\n"
+              "main{max-width:700px;margin:12vh auto;padding:32px;background:#fff;border-radius:12px;text-align:center}\n"
+              "h1{font-size:56px;margin:0 0 12px}\n"
+              "a{display:inline-block;padding:12px 20px;background:#2271b1;color:#fff;text-decoration:none;border-radius:8px}\n",
+              encoding='utf-8'
+          )
+
+          # Review-facing documentation. Keep version 2.1.4 unchanged.
+          readme = root / 'readme.txt'
+          s = readme.read_text(encoding='utf-8')
+          marker = "= 2.1.4 =\n"
+          addition = (
+              "* WordPress.org review remediation: enqueue frontend JS/CSS, preserve user control over legacy plugin activation, and fix settings sanitization callback.\n"
+              "* Requested WordPress.org permalink: `koz-404-guard`, matching the existing plugin text domain.\n"
+          )
+          if addition not in s:
+              s = s.replace(marker, marker + addition, 1)
+          readme.write_text(s, encoding='utf-8')
+
+          changelog = root / 'CHANGELOG.md'
+          s = changelog.read_text(encoding='utf-8')
+          marker = "## 2.1.4\n"
+          addition = (
+              "- WordPress.org review remediation: enqueue frontend JS/CSS, preserve user control over legacy plugin activation, and fix settings sanitization callback.\n"
+              "- Requested WordPress.org permalink: `koz-404-guard`, matching the existing plugin text domain.\n"
+          )
+          if addition not in s:
+              s = s.replace(marker, marker + addition, 1)
+          changelog.write_text(s, encoding='utf-8')
+          PY
+
+      - name: Static verification
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(grep -RIl --include='*.php' 'KOZ404_KOZ404_Guard' koz-404-guard | wc -l)" -eq 0
+          test "$(grep -RIl --include='*.php' 'deactivate_plugins(' koz-404-guard | wc -l)" -eq 0
+          test "$(grep -RIl --include='*.php' "echo '<script" koz-404-guard | wc -l)" -eq 0
+          test "$(grep -RIl --include='*.php' "<style>" koz-404-guard | wc -l)" -eq 0
+          grep -q "Text Domain: koz-404-guard" koz-404-guard/koz-404-guard.php
+          grep -q "Version: 2.1.4" koz-404-guard/koz-404-guard.php
+          grep -q "Stable tag: 2.1.4" koz-404-guard/readme.txt
+          grep -q "wp_enqueue_script( 'koz404-datalayer'" koz-404-guard/includes/class-koz404-guard.php
+          grep -q "wp_add_inline_script( 'koz404-datalayer'" koz-404-guard/includes/class-koz404-guard.php
+          grep -q "wp_enqueue_style( 'koz404-minimal-response'" koz-404-guard/includes/class-koz404-guard.php
+          find koz-404-guard -name '*.php' -print0 | xargs -0 -n1 php -l
+
+      - name: Build review ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf build-review
+          mkdir -p build-review
+          cp -a koz-404-guard build-review/koz-404-guard
+          rm -rf build-review/koz-404-guard/.git
+          (cd build-review && zip -qr ../koz-404-guard-2.1.4-wporg-review.zip koz-404-guard)
+          unzip -t koz-404-guard-2.1.4-wporg-review.zip
+          sha256sum koz-404-guard-2.1.4-wporg-review.zip > koz-404-guard-2.1.4-wporg-review.zip.sha256
+
+      - name: Commit corrected source on review branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add koz-404-guard
+          if ! git diff --cached --quiet; then
+            git commit -m 'Fix WordPress.org review issues for KOZ 404 Guard 2.1.4'
+            git push origin HEAD:wporg-review-404-fix
+          fi
+
+      - name: Upload review package
+        uses: actions/upload-artifact@v4
+        with:
+          name: koz-404-guard-2.1.4-wporg-review
+          path: |
+            koz-404-guard-2.1.4-wporg-review.zip
+            koz-404-guard-2.1.4-wporg-review.zip.sha256
+          if-no-files-found: error
+          retention-days: 30
