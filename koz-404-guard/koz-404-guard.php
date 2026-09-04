@@ -42,20 +42,6 @@ require_once KOZ404_DIR . 'includes/class-koz404-admin.php';
 register_activation_hook(
 	KOZ404_FILE,
 	static function (): void {
-		if ( ! function_exists( 'deactivate_plugins' ) ) {
-			require_once ABSPATH . 'wp-admin/includes/plugin.php';
-		}
-		$legacy = array();
-		foreach ( (array) get_option( 'active_plugins', array() ) as $plugin_file ) {
-			$plugin_file = (string) $plugin_file;
-			if ( str_starts_with( $plugin_file, 'ua-free-404-guard/' ) ) {
-				$legacy[] = $plugin_file;
-			}
-		}
-		if ( ! empty( $legacy ) ) {
-			deactivate_plugins( $legacy, true );
-			set_transient( 'koz404_legacy_deactivated', count( $legacy ), MINUTE_IN_SECONDS );
-		}
 		\ramirkz\koz404\KOZ404_Guard::migrate_legacy_data();
 		\ramirkz\koz404\KOZ404_Guard::activate();
 	}
@@ -71,18 +57,6 @@ add_action(
 	}
 );
 
-add_action(
-	'admin_notices',
-	static function (): void {
-		if ( ! current_user_can( 'activate_plugins' ) ) { return; }
-		$count = (int) get_transient( 'koz404_legacy_deactivated' );
-		if ( $count <= 0 ) { return; }
-		delete_transient( 'koz404_legacy_deactivated' );
-		?>
-		<div class="notice notice-success is-dismissible"><p><?php echo esc_html__( 'KOZ 404 Guard activated. The former UA FREE package was deactivated without deleting settings, rules or diagnostic data.', 'koz-404-guard' ); ?></p></div>
-		<?php
-	}
-);
 
 if ( is_admin() ) {
 	require_once KOZ404_DIR . 'includes/class-koz404-admin-support-panel.php';

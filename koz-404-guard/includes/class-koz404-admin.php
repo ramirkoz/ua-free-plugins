@@ -40,7 +40,7 @@ final class KOZ404_Admin {
 			'koz404_settings',
 			KOZ404_Guard::SETTINGS_OPTION,
 			array(
-				'sanitize_callback' => array( KOZ404_KOZ404_Guard::class, 'sanitize_settings' ),
+				'sanitize_callback' => array( KOZ404_Guard::class, 'sanitize_settings' ),
 				'default'           => KOZ404_Guard::defaults(),
 			)
 		);

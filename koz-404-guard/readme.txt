@@ -42,6 +42,8 @@ Existing UA FREE 404 Guard settings, rules and logs are preserved during migrati
 == Changelog ==
 
 = 2.1.4 =
+* WordPress.org review remediation: enqueue frontend JS/CSS, preserve user control over legacy plugin activation, and fix settings sanitization callback.
+* Requested WordPress.org permalink: `koz-404-guard`, matching the existing plugin text domain.
 * Updated WordPress compatibility metadata for WordPress 7.1.
 * No functional changes.
 

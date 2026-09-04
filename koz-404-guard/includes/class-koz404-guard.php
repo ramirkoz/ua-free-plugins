@@ -24,7 +24,7 @@ final class KOZ404_Guard {
 
 	public static function init(): void {
 		add_action( 'template_redirect', array( __CLASS__, 'handle_request' ), 0 );
-		add_action( 'wp_footer', array( __CLASS__, 'print_datalayer' ), 99 );
+		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'enqueue_datalayer' ), 99 );
 		add_filter( 'redirect_canonical', array( __CLASS__, 'guard_language_namespace_redirect' ), 10, 2 );
 		add_filter( 'koz404_public_status', array( __CLASS__, 'public_status' ) );
 	}
@@ -362,7 +362,7 @@ final class KOZ404_Guard {
 		return 'wordpress_404';
 	}
 
-	public static function print_datalayer(): void {
+	public static function enqueue_datalayer(): void {
 		$settings = self::settings();
 		if ( empty( $settings['enabled'] ) || empty( $settings['emit_datalayer'] ) || self::bypass() || ! is_404() || 'human' !== self::classify_request() ) {
 			return;
@@ -372,7 +372,8 @@ final class KOZ404_Guard {
 			'status'           => 404,
 			'path_fingerprint' => self::fingerprint( self::request_path(), 'path' ),
 		);
-		echo '<script>window.dataLayer=window.dataLayer||[];window.dataLayer.push(' . wp_json_encode( $payload ) . ');</script>';
+		wp_enqueue_script( 'koz404-datalayer', KOZ404_URL . 'assets/koz404-datalayer.js', array(), KOZ404_VERSION, true );
+		wp_add_inline_script( 'koz404-datalayer', 'window.dataLayer.push(' . wp_json_encode( $payload ) . ');', 'after' );
 	}
 
 	private static function matching_redirect(): ?array {
@@ -796,12 +797,15 @@ final class KOZ404_Guard {
 		header( 'X-Robots-Tag: noindex, nofollow, noarchive', true );
 		header( 'X-Content-Type-Options: nosniff', true );
 		header( 'Referrer-Policy: no-referrer', true );
-		header( "Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'", true );
+		header( "Content-Security-Policy: default-src 'none'; style-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'", true );
 		header( 'Content-Type: text/html; charset=' . get_bloginfo( 'charset' ), true );
 		$home = home_url( '/' );
 		echo '<!doctype html><html lang="' . esc_attr( substr( determine_locale(), 0, 2 ) ) . '"><head><meta charset="utf-8">';
 		echo '<meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow,noarchive">';
-		echo '<title>' . esc_html( $title ) . '</title><style>body{font-family:system-ui,sans-serif;background:#f6f7f7;color:#1d2327;margin:0}main{max-width:700px;margin:12vh auto;padding:32px;background:#fff;border-radius:12px;text-align:center}h1{font-size:56px;margin:0 0 12px}a{display:inline-block;padding:12px 20px;background:#2271b1;color:#fff;text-decoration:none;border-radius:8px}</style></head>';
+		echo '<title>' . esc_html( $title ) . '</title>';
+		wp_enqueue_style( 'koz404-minimal-response', KOZ404_URL . 'assets/koz404-minimal-response.css', array(), KOZ404_VERSION );
+		wp_print_styles( 'koz404-minimal-response' );
+		echo '</head>';
 		echo '<body><main><h1>' . esc_html( (string) $status ) . '</h1><p>' . esc_html( $message ) . '</p><a href="' . esc_url( $home ) . '">' . esc_html__( 'Return to the homepage', 'koz-404-guard' ) . '</a></main></body></html>';
 		exit;
 	}
