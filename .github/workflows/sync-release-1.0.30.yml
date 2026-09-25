@@ -1,0 +1,234 @@
+name: Sync and release KOZ Suite 1.0.30
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/sync-release-1.0.30.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  sync-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download exact tested Site Bridge 0.5.7
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -L --fail --retry 5 --retry-delay 2 \
+            'https://drive.usercontent.google.com/download?id=1L5ISzN-_bEwInsU5JuxDmNAoN8VL1gVx&export=download&confirm=t' \
+            -o /tmp/koz-site-bridge-0.5.7.zip
+          echo 'cead19bb4897114cf015b7668c9d5013d842ca997030c6ffe0c615bd952f42b1  /tmp/koz-site-bridge-0.5.7.zip' | sha256sum -c -
+          unzip -t /tmp/koz-site-bridge-0.5.7.zip
+
+      - name: Synchronize Site Bridge source and current release library
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/sitebridge057
+          mkdir -p /tmp/sitebridge057
+          unzip -q /tmp/koz-site-bridge-0.5.7.zip -d /tmp/sitebridge057
+          test -f /tmp/sitebridge057/koz-site-bridge/koz-site-bridge.php
+
+          rm -rf koz-site-bridge
+          cp -a /tmp/sitebridge057/koz-site-bridge ./
+
+          rm -f _tmp2 _tmp3 _tmp4 _tmp5 _tmp_blobtest _tmp_should_not_use
+
+          rm -f dist/packages/koz-site-bridge-0.5.6.zip
+          rm -f dist/checksums/koz-site-bridge-0.5.6.zip.sha256
+          cp /tmp/koz-site-bridge-0.5.7.zip dist/packages/koz-site-bridge-0.5.7.zip
+
+          python3 - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+
+          site_sha = 'cead19bb4897114cf015b7668c9d5013d842ca997030c6ffe0c615bd952f42b1'
+          site_pkg = Path('dist/packages/koz-site-bridge-0.5.7.zip')
+
+          manifest_path = Path('dist/manifest.json')
+          data = json.loads(manifest_path.read_text(encoding='utf-8'))
+          data['version'] = '1.0.30'
+          data['created'] = '2026-09-25'
+          data['status'] = 'CURRENT LIBRARY — 12/12 PACKAGE INTEGRITY PASS — SITE BRIDGE 0.5.7 PLUGIN CHECK PASS — WORDPRESS.ORG REVIEW IN PROGRESS'
+          data['suite_version'] = '1.0.30'
+          data['release_date'] = '2026-09-25'
+
+          for item in data.get('changed_components', []):
+              if item.get('name') == 'KOZ Site Bridge':
+                  item['version'] = '0.5.7'
+                  item['sha256'] = site_sha
+                  item['live'] = 'PASS'
+                  item['plugin_check'] = 'PASS'
+                  item['wordpress_7_1'] = 'PASS'
+
+          for item in data.get('packages', []):
+              if item.get('slug') == 'koz-site-bridge':
+                  item['version'] = '0.5.7'
+                  item['file'] = 'packages/koz-site-bridge-0.5.7.zip'
+                  item['sha256'] = site_sha
+                  item['size'] = site_pkg.stat().st_size
+                  item['strict_re_audit'] = 'PASS'
+                  item['live_functional'] = 'PASS'
+                  item['plugin_check'] = 'PASS'
+                  item['wordpress_org_ready'] = 'YES'
+                  item['wordpress_core_tested'] = '7.1 PASS'
+                  item['wordpress_org_status'] = '0.5.7 SUBMITTED — REVIEW IN PROGRESS'
+
+          data['wordpress_org'] = {
+              'koz-seo-core': '2.1.22 LIVE',
+              'koz-copy-actions': '1.1.14 LIVE',
+              'koz-url-only-comment-spam': '1.1.11 LIVE',
+              'koz-static-translate': '0.9.39 LIVE',
+              'koz-translate-diagnostics': '0.3.6 LIVE',
+              'koz-404-guard': '2.1.4 LIVE',
+              'koz-consent-manager': '0.2.12 LIVE',
+              'koz-donate-stats': '1.3.11 LIVE',
+              'koz-site-bridge': '0.5.7 SUBMITTED — REVIEW IN PROGRESS',
+          }
+          data.pop('changes_from_1_0_28', None)
+          data['changes_from_1_0_29'] = [
+              'KOZ Site Bridge updated from 0.5.6 to 0.5.7.',
+              'Removed automatic deactivation of the legacy UA FREE Site Bridge package.',
+              'Clarified X-KOZ-Key as local API authentication rather than a license or feature gate.',
+              'Made the intentionally public OpenAPI schema permission callback explicit.',
+              'KOZ Site Bridge 0.5.7 passed Plugin Check on the foundation site and was resubmitted to WordPress.org.',
+          ]
+          manifest_path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+
+          packages = sorted(Path('dist/packages').glob('*.zip'))
+          if len(packages) != 12:
+              raise SystemExit(f'Expected 12 plugin packages, found {len(packages)}')
+
+          lines = []
+          checksum_dir = Path('dist/checksums')
+          checksum_dir.mkdir(parents=True, exist_ok=True)
+          for package in packages:
+              digest = hashlib.sha256(package.read_bytes()).hexdigest()
+              lines.append(f'{digest}  packages/{package.name}')
+              (checksum_dir / f'{package.name}.sha256').write_text(
+                  f'{digest}  {package.name}\n', encoding='utf-8'
+              )
+          Path('dist/SHA256SUMS.txt').write_text('\n'.join(lines) + '\n', encoding='utf-8')
+
+          readme = Path('README.md').read_text(encoding='utf-8')
+          readme = readme.replace('Suite bundle: **1.0.29**', 'Suite bundle: **1.0.30**')
+          readme = readme.replace('| koz-site-bridge | 0.5.6 |', '| koz-site-bridge | 0.5.7 |')
+          readme = readme.replace(
+              'WordPress.org: **KOZ Static Translate 0.9.39 submitted — review in progress**',
+              'WordPress.org: **8 plugins live; KOZ Site Bridge 0.5.7 submitted — review in progress**'
+          )
+          readme = readme.replace(
+              '**KOZ Suite Bundle 1.0.29** contains the exact 12 verified public plugin ZIP packages.',
+              '**KOZ Suite Bundle 1.0.30** contains the exact 12 verified public plugin ZIP packages.'
+          )
+          Path('README.md').write_text(readme, encoding='utf-8')
+          PY
+
+      - name: Build Suite 1.0.30 and WordPress.org Package Set 1.0.6
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          rm -f dist/KOZ-Suite-1.0.29.zip dist/KOZ-Suite-1.0.29.zip.sha256
+          rm -f dist/KOZ-Suite-1.0.30.zip dist/KOZ-Suite-1.0.30.zip.sha256
+          rm -f dist/KOZ-WordPress.org-Package-Set-1.0.6.zip dist/KOZ-WordPress.org-Package-Set-1.0.6.zip.sha256
+
+          cat > RELEASE_NOTES_v1.0.30.md <<'EOF'
+          # KOZ WordPress Plugin Suite 1.0.30
+
+          Release date: 2026-09-25
+
+          - Public bundle: 12 independently installable plugins.
+          - KOZ Site Bridge updated to 0.5.7.
+          - Site Bridge 0.5.7 passed Plugin Check on the foundation site and was uploaded to the existing WordPress.org review submission.
+          - Site Bridge no longer auto-deactivates the legacy UA FREE package.
+          - X-KOZ-Key is explicitly documented as local REST authentication, not licensing or feature gating.
+          - The public /openapi endpoint exposes schema only; diagnostic endpoints remain authenticated.
+          - Other 11 public plugins remain unchanged from Suite 1.0.29.
+          EOF
+
+          cat > dist/KOZ_SUITE_1.0.30_TEST_REPORT.md <<'EOF'
+          # KOZ Suite 1.0.30 — Test Report
+
+          Status: PASS for release packaging.
+
+          - Package count: 12/12 PASS.
+          - ZIP integrity: 12/12 PASS.
+          - SHA-256 manifest/checksum regeneration: PASS.
+          - KOZ Site Bridge 0.5.7 package integrity: PASS.
+          - KOZ Site Bridge 0.5.7 foundation-site Plugin Check: PASS (owner-confirmed 2026-09-25).
+          - KOZ Site Bridge 0.5.7 WordPress.org submission: uploaded, review in progress.
+          - Other 11 packages retained from Suite 1.0.29 baseline.
+          EOF
+
+          (
+            cd dist
+            zip -qr KOZ-Suite-1.0.30.zip SHA256SUMS.txt checksums manifest.json packages
+            sha256sum KOZ-Suite-1.0.30.zip > KOZ-Suite-1.0.30.zip.sha256
+          )
+
+          rm -rf /tmp/wporg-set-1.0.6
+          mkdir -p /tmp/wporg-set-1.0.6/packages
+          cp dist/packages/*.zip /tmp/wporg-set-1.0.6/packages/
+          cp dist/SHA256SUMS.txt /tmp/wporg-set-1.0.6/SHA256SUMS.txt
+          cp dist/manifest.json /tmp/wporg-set-1.0.6/manifest.json
+          (
+            cd /tmp/wporg-set-1.0.6
+            zip -qr "$GITHUB_WORKSPACE/dist/KOZ-WordPress.org-Package-Set-1.0.6.zip" SHA256SUMS.txt manifest.json packages
+          )
+          (
+            cd dist
+            sha256sum KOZ-WordPress.org-Package-Set-1.0.6.zip > KOZ-WordPress.org-Package-Set-1.0.6.zip.sha256
+          )
+
+          unzip -t dist/KOZ-Suite-1.0.30.zip
+          unzip -t dist/KOZ-WordPress.org-Package-Set-1.0.6.zip
+
+      - name: Commit synchronized release state
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m 'Release KOZ Suite 1.0.30 with Site Bridge 0.5.7'
+            git push origin HEAD:main
+          fi
+
+      - name: Publish GitHub release v1.0.30
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          TAG='v1.0.30'
+          TITLE='KOZ Suite 1.0.30'
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release edit "$TAG" --title "$TITLE" --notes-file RELEASE_NOTES_v1.0.30.md --latest
+          else
+            gh release create "$TAG" \
+              --target main \
+              --title "$TITLE" \
+              --notes-file RELEASE_NOTES_v1.0.30.md \
+              --latest
+          fi
+          gh release upload "$TAG" \
+            /tmp/koz-site-bridge-0.5.7.zip \
+            dist/KOZ-Suite-1.0.30.zip \
+            dist/KOZ-Suite-1.0.30.zip.sha256 \
+            dist/KOZ-WordPress.org-Package-Set-1.0.6.zip \
+            dist/KOZ-WordPress.org-Package-Set-1.0.6.zip.sha256 \
+            dist/KOZ_SUITE_1.0.30_TEST_REPORT.md \
+            RELEASE_NOTES_v1.0.30.md \
+            --clobber
