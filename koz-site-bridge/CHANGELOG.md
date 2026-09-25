@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.7
+- Removed automatic deactivation of the legacy UA FREE Site Bridge plugin; administrators retain activation control.
+- Replaced the generic public OpenAPI permission callback with an explicit schema-only permission callback.
+- Documented that X-KOZ-Key is local API authentication, does not control feature availability, and that the hourly throttle is security/abuse protection.
+- All diagnostic data endpoints remain authenticated.
+
 ## 0.5.6
 - Updated WordPress compatibility metadata for WordPress 7.1.
 - No functional or API behavior changes.

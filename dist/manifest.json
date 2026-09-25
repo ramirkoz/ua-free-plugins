@@ -1,10 +1,10 @@
 {
   "format": "KOZ Suite Release Library",
-  "version": "1.0.29",
-  "created": "2026-08-27",
-  "status": "CURRENT LIBRARY — 12/12 PACKAGE INTEGRITY PASS — STATIC TRANSLATE 0.9.39 PLUGIN CHECK PASS",
-  "suite_version": "1.0.29",
-  "release_date": "2026-08-27",
+  "version": "1.0.30",
+  "created": "2026-09-25",
+  "status": "CURRENT LIBRARY — 12/12 PACKAGE INTEGRITY PASS — SITE BRIDGE 0.5.7 PLUGIN CHECK PASS — WORDPRESS.ORG REVIEW IN PROGRESS",
+  "suite_version": "1.0.30",
+  "release_date": "2026-09-25",
   "changed_components": [
     {
       "name": "KOZ Migration & Cleanup",
@@ -48,8 +48,8 @@
     },
     {
       "name": "KOZ Site Bridge",
-      "version": "0.5.6",
-      "sha256": "bc51fb891501962929d171cb8c031900e795b963d02a41a0994e3aa823303b86",
+      "version": "0.5.7",
+      "sha256": "cead19bb4897114cf015b7668c9d5013d842ca997030c6ffe0c615bd952f42b1",
       "live": "PASS",
       "plugin_check": "PASS",
       "wordpress_7_1": "PASS"
@@ -179,16 +179,17 @@
     {
       "slug": "koz-site-bridge",
       "name": "KOZ Site Bridge",
-      "version": "0.5.6",
+      "version": "0.5.7",
       "canonical_prefix": "kozbridge / KOZBRIDGE",
-      "file": "packages/koz-site-bridge-0.5.6.zip",
-      "sha256": "bc51fb891501962929d171cb8c031900e795b963d02a41a0994e3aa823303b86",
-      "size": 116270,
+      "file": "packages/koz-site-bridge-0.5.7.zip",
+      "sha256": "cead19bb4897114cf015b7668c9d5013d842ca997030c6ffe0c615bd952f42b1",
+      "size": 115525,
       "strict_re_audit": "PASS",
       "live_functional": "PASS",
       "plugin_check": "PASS",
       "wordpress_org_ready": "YES",
-      "wordpress_core_tested": "7.1 PASS"
+      "wordpress_core_tested": "7.1 PASS",
+      "wordpress_org_status": "0.5.7 SUBMITTED — REVIEW IN PROGRESS"
     },
     {
       "slug": "koz-consent-manager",
@@ -288,15 +289,21 @@
     }
   ],
   "wordpress_org": {
+    "koz-seo-core": "2.1.22 LIVE",
     "koz-copy-actions": "1.1.14 LIVE",
     "koz-url-only-comment-spam": "1.1.11 LIVE",
-    "koz-seo-core": "2.1.22 LIVE",
-    "koz-static-translate": "0.9.39 SUBMITTED — REVIEW IN PROGRESS"
+    "koz-static-translate": "0.9.39 LIVE",
+    "koz-translate-diagnostics": "0.3.6 LIVE",
+    "koz-404-guard": "2.1.4 LIVE",
+    "koz-consent-manager": "0.2.12 LIVE",
+    "koz-donate-stats": "1.3.11 LIVE",
+    "koz-site-bridge": "0.5.7 SUBMITTED — REVIEW IN PROGRESS"
   },
-  "changes_from_1_0_28": [
-    "KOZ Static Translate updated from 0.9.38 to 0.9.39.",
-    "WordPress Plugin Check filesystem findings remediated.",
-    "T3 security remediations retained.",
-    "Other 11 public plugin packages retained from the verified full Suite 1.0.26 baseline."
+  "changes_from_1_0_29": [
+    "KOZ Site Bridge updated from 0.5.6 to 0.5.7.",
+    "Removed automatic deactivation of the legacy UA FREE Site Bridge package.",
+    "Clarified X-KOZ-Key as local API authentication rather than a license or feature gate.",
+    "Made the intentionally public OpenAPI schema permission callback explicit.",
+    "KOZ Site Bridge 0.5.7 passed Plugin Check on the foundation site and was resubmitted to WordPress.org."
   ]
 }

@@ -4,7 +4,7 @@ Donate link: https://github.com/ramirkoz/ua-free-plugins
 Tags: diagnostics, rest api, automation, googlebot, adsbot
 Requires at least: 6.2
 Tested up to: 7.1
-Stable tag: 0.5.6
+Stable tag: 0.5.7
 Requires PHP: 8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -34,14 +34,28 @@ Features:
 
 Existing Site Bridge API keys are preserved. The old REST namespace and X-UAFree-Key header remain accepted during migration, while new integrations should use /wp-json/kozbridge/v1 and X-KOZ-Key. The previous /wp-json/koz-site-bridge/v1 route also remains available.
 
+Access and security:
+
+* The X-KOZ-Key is generated locally by the site administrator and is used only to authenticate the read-only REST API. It does not control feature availability.
+* Every built-in plugin feature is available to every installation.
+* The authenticated API has a security/abuse throttle of 120 successful requests per hour per key. This protects the WordPress site and applies equally to all authenticated clients.
+* The OpenAPI schema endpoint is intentionally public so an administrator can import the schema into a REST client. It exposes only the API contract and does not return private site data, credentials, settings, content, or logs. All diagnostic data endpoints require X-KOZ-Key authentication.
+* KOZ Site Bridge does not connect to an external processing service. Its HTTP probes are restricted to the current WordPress site. External REST clients or automation tools are optional and chosen by the site administrator.
+
 == Installation ==
 
-1. Deactivate the legacy UA FREE Site Bridge plugin, but keep it installed until verification is complete.
+1. If the legacy UA FREE Site Bridge plugin is active, deactivate it manually and keep it installed until verification is complete. KOZ Site Bridge does not deactivate other plugins automatically.
 2. Upload and activate the KOZ plugin ZIP.
 3. Open KOZ Suite > Site Bridge.
 4. Verify the existing key or rotate it, then test Ping and OpenAPI.
 
 == Changelog ==
+
+= 0.5.7 =
+* Removed automatic deactivation of the legacy UA FREE Site Bridge plugin; activation state remains under administrator control.
+* Replaced the generic public REST permission callback on the OpenAPI schema with an explicit plugin callback documenting the intentionally public, schema-only endpoint.
+* Clarified that X-KOZ-Key is a local authentication credential, does not control feature availability, and that the hourly request throttle is security/abuse protection only.
+* No diagnostic endpoint was made public; all site-data endpoints remain authenticated.
 
 = 0.5.6 =
 * Updated WordPress compatibility metadata for WordPress 7.1.
@@ -82,6 +96,9 @@ Existing Site Bridge API keys are preserved. The old REST namespace and X-UAFree
 * Added a dedicated enqueued admin interface and shared KOZ support panel.
 
 == Upgrade Notice ==
+
+= 0.5.7 =
+Keeps legacy-plugin activation under administrator control and clarifies the security/authentication model for WordPress.org review.
 
 = 0.5.6 =
 WordPress 7.1 compatibility metadata update; no functional changes.

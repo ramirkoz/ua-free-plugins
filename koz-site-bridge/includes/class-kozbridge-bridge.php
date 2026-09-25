@@ -20,7 +20,8 @@ final class KOZBRIDGE_Bridge {
 	private const LEGACY_KEY_HASH_OPTIONS = array( 'uafree_bridge_api_key_hash', 'koz_site_bridge_api_key_hash' );
 	private const LEGACY_KEY_DATE_OPTIONS = array( 'uafree_bridge_api_key_created_at', 'koz_site_bridge_api_key_created_at' );
 	private const LEGACY_LOG_OPTIONS = array( 'uafree_bridge_api_log', 'koz_site_bridge_api_log' );
-	private const RATE_LIMIT      = 120;
+	// Security/abuse throttle for authenticated diagnostic traffic. It does not alter feature availability.
+	private const SECURITY_REQUESTS_PER_HOUR = 120;
 	private const RATE_TTL        = 3700;
 	private const RATE_LOCK_TTL   = 5;
 	private const CONTENT_LIMIT   = 50;
@@ -199,7 +200,7 @@ final class KOZBRIDGE_Bridge {
 					<tr><th><?php echo esc_html( self::tr( 'Key created' ) ); ?></th><td><?php echo esc_html( $key_created ?: '—' ); ?></td></tr>
 					<tr><th>OpenAPI</th><td><code class="kozbridge-url"><?php echo esc_html( $schema_url ); ?></code></td></tr>
 					<tr><th>Ping</th><td><code class="kozbridge-url"><?php echo esc_html( $ping_url ); ?></code></td></tr>
-					<tr><th><?php echo esc_html( self::tr( 'Limit' ) ); ?></th><td><?php echo esc_html( (string) self::RATE_LIMIT ); ?> <?php echo esc_html( self::tr( 'successfully authenticated requests per hour.' ) ); ?></td></tr>
+					<tr><th><?php echo esc_html( self::tr( 'Limit' ) ); ?></th><td><?php echo esc_html( (string) self::SECURITY_REQUESTS_PER_HOUR ); ?> <?php echo esc_html( self::tr( 'successfully authenticated requests per hour.' ) ); ?></td></tr>
 					<tr><th><?php echo esc_html( self::tr( 'API log' ) ); ?></th><td><?php echo esc_html( self::tr( 'Disabled. IP addresses, User-Agent strings and request history are not stored.' ) ); ?></td></tr>
 				</tbody>
 			</table>
@@ -267,7 +268,7 @@ final class KOZBRIDGE_Bridge {
 				array(
 					'methods'             => WP_REST_Server::READABLE,
 					'callback'            => array( __CLASS__, 'openapi' ),
-					'permission_callback' => '__return_true',
+					'permission_callback' => array( __CLASS__, 'public_openapi_permission' ),
 				)
 			);
 
@@ -439,6 +440,15 @@ final class KOZBRIDGE_Bridge {
 		return null !== self::normalise_probe_path( (string) $value );
 	}
 
+	/**
+	 * The OpenAPI document is intentionally public. It contains only the API schema,
+	 * not site diagnostics, credentials, settings, content, or log data. All data
+	 * endpoints use self::permission() and require the locally generated X-KOZ-Key.
+	 */
+	public static function public_openapi_permission(): bool {
+		return true;
+	}
+
 	public static function permission( WP_REST_Request $request ) {
 		if ( 'https' !== wp_parse_url( home_url(), PHP_URL_SCHEME ) ) {
 			return new WP_Error( 'kozbridge_https_required', 'Site Bridge requires HTTPS.', array( 'status' => 503 ) );
@@ -464,7 +474,7 @@ final class KOZBRIDGE_Bridge {
 			return $rate;
 		}
 
-		if ( $rate > self::RATE_LIMIT ) {
+		if ( $rate > self::SECURITY_REQUESTS_PER_HOUR ) {
 			return new WP_Error( 'kozbridge_rate_limit', 'Hourly API rate limit exceeded.', array( 'status' => 429 ) );
 		}
 
@@ -521,8 +531,8 @@ final class KOZBRIDGE_Bridge {
 			$current = max( 0, (int) ( $state['count'] ?? 0 ) );
 
 			// Saturating counter: after the limit, do not perform another persistent write.
-			if ( $current >= self::RATE_LIMIT ) {
-				return self::RATE_LIMIT + 1;
+			if ( $current >= self::SECURITY_REQUESTS_PER_HOUR ) {
+				return self::SECURITY_REQUESTS_PER_HOUR + 1;
 			}
 
 			$state['count'] = $current + 1;
