@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.7
+- Adds an independent Settings > KOZ Translate Diagnostics fallback route for administrators.
+- Keeps the normal KOZ Suite navigation while preventing page lockout when another independently installed KOZ component owns or changes the shared Suite menu.
+- No diagnostic data, database write, external-request, queue, cache or robots behavior changes.
+
 ## 0.3.6
 - Updated WordPress compatibility metadata for WordPress 7.1.
 - No functional changes.
