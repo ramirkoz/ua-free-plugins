@@ -60,18 +60,17 @@ register_activation_hook(
 \ramirkz\koztdiag\KOZTDIAG_Translate_Diagnostics::init();
 
 /*
- * Keep a second, hidden registration under Settings so admin.php?page=koz-translate-diagnostics
- * remains reachable even when another KOZ component owns or mutates the shared Suite parent.
- * The visible navigation remains under KOZ Suite; this registration exists only as a resilient
- * WordPress capability/page-hook fallback for independently installable plugins.
+ * Independent plugins cannot rely on another component owning a shared parent menu forever.
+ * Keep the normal KOZ Suite entry and also expose a Settings fallback with its own page hook.
+ * This prevents an administrator lockout when Suite menu ownership/load order changes.
  */
 add_action(
 	'admin_menu',
 	static function (): void {
 		add_submenu_page(
-			null,
-			__( 'Translation Diagnostics', 'koz-translate-diagnostics' ),
-			__( 'Translation Diagnostics', 'koz-translate-diagnostics' ),
+			'options-general.php',
+			__( 'KOZ Translate Diagnostics', 'koz-translate-diagnostics' ),
+			__( 'KOZ Translate Diagnostics', 'koz-translate-diagnostics' ),
 			'manage_options',
 			'koz-translate-diagnostics-fallback',
 			array( '\\ramirkz\\koztdiag\\KOZTDIAG_Translate_Diagnostics', 'admin_page' )
