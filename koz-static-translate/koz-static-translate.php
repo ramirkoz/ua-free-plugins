@@ -3,7 +3,7 @@
  * Plugin Name: KOZ Static Translate
  * Plugin URI: https://github.com/ramirkoz/ua-free-plugins
  * Description: Frontend static translation with queued Azure processing, translation memory, language routes, dynamic-content support and migration-safe compatibility.
- * Version: 0.9.39
+ * Version: 0.9.40
  * Author: Tony Kozyriev
  * Author URI: https://www.linkedin.com/in/tonykoz/
  * Text Domain: koz-static-translate
@@ -16,7 +16,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
-define( 'KOZSTX_VERSION', '0.9.39' );
+define( 'KOZSTX_VERSION', '0.9.40' );
 define( 'KOZSTX_DIR', plugin_dir_path( __FILE__ ) );
 define( 'KOZSTX_FILE', __FILE__ );
 define( 'KOZSTX_URL', plugin_dir_url( __FILE__ ) );
@@ -66,7 +66,6 @@ add_action(
 				$legacy_active = true;
 				break;
 			}
-		}
 
 		if ( ! $legacy_active ) {
 			return;
