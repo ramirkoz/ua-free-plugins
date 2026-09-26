@@ -3,7 +3,7 @@
  * Plugin Name: KOZ Translate Diagnostics
  * Plugin URI: https://github.com/ramirkoz/ua-free-plugins
  * Description: Read-only diagnostics and privacy-safe reports for KOZ Static Translate installations.
- * Version: 0.3.6
+ * Version: 0.3.7
  * Author: Tony Kozyriev
  * Author URI: https://www.linkedin.com/in/tonykoz/
  * Text Domain: koz-translate-diagnostics
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'KOZTDIAG_VERSION', '0.3.6' );
+define( 'KOZTDIAG_VERSION', '0.3.7' );
 define( 'KOZTDIAG_FILE', __FILE__ );
 define( 'KOZTDIAG_DIR', plugin_dir_path( __FILE__ ) );
 define( 'KOZTDIAG_URL', plugin_dir_url( __FILE__ ) );
@@ -58,6 +58,27 @@ register_activation_hook(
 );
 
 \ramirkz\koztdiag\KOZTDIAG_Translate_Diagnostics::init();
+
+/*
+ * Keep a second, hidden registration under Settings so admin.php?page=koz-translate-diagnostics
+ * remains reachable even when another KOZ component owns or mutates the shared Suite parent.
+ * The visible navigation remains under KOZ Suite; this registration exists only as a resilient
+ * WordPress capability/page-hook fallback for independently installable plugins.
+ */
+add_action(
+	'admin_menu',
+	static function (): void {
+		add_submenu_page(
+			null,
+			__( 'Translation Diagnostics', 'koz-translate-diagnostics' ),
+			__( 'Translation Diagnostics', 'koz-translate-diagnostics' ),
+			'manage_options',
+			'koz-translate-diagnostics-fallback',
+			array( '\\ramirkz\\koztdiag\\KOZTDIAG_Translate_Diagnostics', 'admin_page' )
+		);
+	},
+	99
+);
 
 add_action(
 	'admin_notices',
