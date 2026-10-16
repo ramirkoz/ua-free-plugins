@@ -320,21 +320,7 @@ final class KOZSEO_Alt_Manager {
 		}
 		$current_alt = trim( (string) get_post_meta( $id, '_wp_attachment_image_alt', true ) );
 
-		$context = '' !== $parent_title
-			? sprintf( 'Контекст сторінки: %s. ', self::limit_text( $parent_title, 180 ) )
-			: '';
-
-		$prompt = $context . 'Проаналізуй саме візуальний вміст прикріпленого зображення та підготуй accessibility ALT українською мовою для сайту благодійного фонду UA FREE. '
-			. 'Не використовуй filename, URL або назву медіафайлу як джерело опису. '
-			. 'Для змістового фото опиши лише те, що реально видно, коротко і природно, зазвичай 5–18 слів. '
-			. 'Не вигадуй імена людей, посади, локації, події, діагнози чи інші факти, яких не видно. '
-			. 'Не починай з фраз «зображення», «фото», «картинка». '
-			. 'Якщо це чисто декоративний елемент, фон, spacer або дублюючий UI-елемент, decision=decorative і alt="". '
-			. 'Якщо зміст неможливо описати впевнено, decision=uncertain і alt="". '
-			. 'confidence=high став лише коли ALT очевидно відповідає видимому змісту і корисний без додаткових припущень.';
-
-		$prompt .= ' Поверни ЛИШЕ один JSON-об’єкт без Markdown і без додаткового тексту у форматі: '
-			. '{"alt":"...","decision":"content|decorative|uncertain","confidence":"high|medium|low","reason":"..."}.';
+		$prompt = self::build_prompt( $parent_title );
 
 		$result = self::generate_vision_result( $prompt, $file, $mime );
 
@@ -414,6 +400,55 @@ final class KOZSEO_Alt_Manager {
 		return self::row( $id );
 	}
 
+
+	/**
+	 * Two-letter language code for generated ALT text: the SEO Core setting, otherwise the site locale.
+	 */
+	public static function alt_language_code(): string {
+		$setting = (string) ( KOZSEO_Core::settings()['alt_language'] ?? '' );
+		if ( '' !== $setting ) {
+			return $setting;
+		}
+		$code = strtolower( (string) strtok( (string) get_locale(), '_' ) );
+		return '' !== $code ? $code : 'en';
+	}
+
+	private static function build_prompt( string $parent_title ): string {
+		$site     = wp_strip_all_tags( (string) get_bloginfo( 'name' ), true );
+		$code     = self::alt_language_code();
+		$language = KOZSEO_Core::alt_languages()[ $code ] ?? $code;
+		$format   = '{"alt":"...","decision":"content|decorative|uncertain","confidence":"high|medium|low","reason":"..."}';
+
+		if ( 'uk' === $code ) {
+			// The Ukrainian prompt is the production-tested original; only the site name is no longer fixed.
+			$context = '' !== $parent_title
+				? sprintf( 'Контекст сторінки: %s. ', self::limit_text( $parent_title, 180 ) )
+				: '';
+			return $context . sprintf( 'Проаналізуй саме візуальний вміст прикріпленого зображення та підготуй accessibility ALT українською мовою для сайту «%s». ', $site )
+				. 'Не використовуй filename, URL або назву медіафайлу як джерело опису. '
+				. 'Для змістового фото опиши лише те, що реально видно, коротко і природно, зазвичай 5–18 слів. '
+				. 'Не вигадуй імена людей, посади, локації, події, діагнози чи інші факти, яких не видно. '
+				. 'Не починай з фраз «зображення», «фото», «картинка». '
+				. 'Якщо це чисто декоративний елемент, фон, spacer або дублюючий UI-елемент, decision=decorative і alt="". '
+				. 'Якщо зміст неможливо описати впевнено, decision=uncertain і alt="". '
+				. 'confidence=high став лише коли ALT очевидно відповідає видимому змісту і корисний без додаткових припущень.'
+				. ' Поверни ЛИШЕ один JSON-об’єкт без Markdown і без додаткового тексту у форматі: ' . $format . '.';
+		}
+
+		$context = '' !== $parent_title
+			? sprintf( 'Page context: %s. ', self::limit_text( $parent_title, 180 ) )
+			: '';
+		return $context . sprintf( 'Analyze only the visual content of the attached image and write accessibility ALT text in %1$s for the website "%2$s". ', $language, $site )
+			. 'Do not use the filename, URL or media title as a source. '
+			. 'For a content image describe only what is actually visible, briefly and naturally, usually 5-18 words. '
+			. 'Do not invent names, job titles, places, events, diagnoses or other facts that are not visible. '
+			. 'Do not start with phrases like "image of", "photo of" or "picture of". '
+			. 'If it is purely decorative (background, spacer or a duplicated UI element), use decision=decorative and alt="". '
+			. 'If the content cannot be described with confidence, use decision=uncertain and alt="". '
+			. 'Use confidence=high only when the ALT clearly matches the visible content and is useful without assumptions. '
+			. 'The "alt" value must be written in ' . $language . '; the "reason" may be in English. '
+			. 'Return ONLY one JSON object without Markdown or extra text, in the format: ' . $format . '.';
+	}
 
 	private static function generate_vision_result( string $prompt, string $file, string $mime ) {
 		$attempts = array(
