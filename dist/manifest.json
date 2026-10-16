@@ -305,5 +305,19 @@
     "Clarified X-KOZ-Key as local API authentication rather than a license or feature gate.",
     "Made the intentionally public OpenAPI schema permission callback explicit.",
     "KOZ Site Bridge 0.5.7 passed Plugin Check on the foundation site and was resubmitted to WordPress.org."
-  ]
+  ],
+  "public_release_overrides": {
+    "koz-copy-actions": {
+      "version": "1.2.0",
+      "status": "WORDPRESS_ORG_LIVE",
+      "wordpress_org_url": "https://wordpress.org/plugins/koz-copy-actions/",
+      "svn_trunk_revision": 3750186,
+      "svn_tag_revision": 3750189,
+      "source_commit": "5281b1af5ae4459e63d37b68c73eff0a7b1a7a25",
+      "tested_zip_sha256": "7490c8bb20602c1fa429d5e106569d73d9342e2de80b10920dfe13b0c03445c6",
+      "tested_zip_drive_url": "https://drive.google.com/file/d/1a8UOxQdtRNVhLxZoAUY4pvZQarf9uPXr/view",
+      "dist_package_status": "PENDING_BINARY_SYNC",
+      "note": "The packages array is a 2026-09-25 Suite 1.0.30 snapshot; its Copy Actions 1.1.14 package is historical and not the current public plugin release."
+    }
+  }
 }
