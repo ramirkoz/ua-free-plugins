@@ -338,7 +338,7 @@
     },
     "koz-seo-core": {
       "version": "2.2.0",
-      "status": "GITHUB_SYNC_VERIFIED_WORDPRESS_ORG_UNPUBLISHED",
+      "status": "WORDPRESS_ORG_LIVE_2.2.0",
       "source_path": "koz-seo-core/",
       "dist_package_status": "SYNCED_VERIFIED",
       "dist_package_path": "dist/packages/koz-seo-core-2.2.0.zip",
@@ -347,7 +347,12 @@
       "tested_zip_size_bytes": 96129,
       "drive_release_url": "https://drive.google.com/file/d/1-CSHBXLtubtSYAkxTtfQphHQ6yhF88dv/view",
       "binary_commit": "c707fd2dcd985a63bb647b7a9d6c1092b6896356",
-      "note": "28 source files match the tested release ZIP. WordPress.org SVN publication not yet confirmed. Historical Suite package records remain snapshots."
+      "note": "GitHub source, ZIP and SHA-256 synced; WordPress.org Advanced View screenshot confirms 2.2.0 LIVE. SVN trunk r3750404; tag creation reported, tag revision unverified. Historical Suite package records remain snapshots.",
+      "wordpress_org_url": "https://wordpress.org/plugins/koz-seo-core/",
+      "wordpress_org_svn_trunk_revision": 3750404,
+      "wordpress_org_tag": "2.2.0",
+      "wordpress_org_tag_revision_status": "UNVERIFIED",
+      "wordpress_org_live_evidence": "Owner screenshot of WordPress.org Advanced View showing Version 2.2.0 and Download button on 2026-10-16"
     }
   }
 }
