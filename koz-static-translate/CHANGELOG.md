@@ -1,3 +1,19 @@
+## 0.10.0
+
+- Fixed: public page views (visitors and search engine crawlers) no longer call Azure Translator. Source-language text found on rendered translated pages is queued for the background worker instead. Before this change crawlers could use the whole monthly budget and wait up to 24 seconds per page.
+- Fixed: Azure output rejected by validation is remembered per language and text; after two rejections the text is no longer sent, so the same characters are not billed again. Administrators can allow the text again.
+- Fixed: cached translated pages are rebuilt after plugin, theme, menu, customizer or KOZ SEO Core settings changes, and the page cache is cleared.
+- Fixed: the idle scheduled event left by earlier releases is removed; nothing is scheduled unless the background worker is enabled.
+- New: daily character budget (default: monthly limit / 30) on top of the monthly limit and reserve.
+- New: Azure usage by source (queue, background worker, dynamic content, connection test) for the last 30 days, and admin notices at 80% and 95% of the monthly limit.
+- New: optional background worker (off by default) that processes the queue and queued page text every five minutes within the budget; the admin "Run one queue step" button works again.
+- Changed: partially translated (noindex) routes keep the page title instead of an empty <title>.
+- Changed: the translation sitemap lists hreflang alternates (source, x-default and every ready language) and moves to /koz-translations-sitemap.xml; /uafree-translations-sitemap.xml keeps working.
+- Changed: Azure client and budget accounting moved into separate classes (first step of splitting the main class).
+- Changed: site-specific behaviour is configurable: do-not-translate terms and the daily report title prefix are settings (existing installations keep their previous values), the UA FREE Donate repair routine is removed, and runtime messages are in English.
+- Changed: the bundled admin translations are loaded again, so the admin screen follows the user language.
+- Removed PayPal from the developer support panel and corrected the BTC and USDT TRC-20 developer wallet addresses.
+
 # 0.9.38
 
 - WordPress.org T3 security/compliance remediation.

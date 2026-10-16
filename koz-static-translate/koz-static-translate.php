@@ -3,7 +3,7 @@
  * Plugin Name: KOZ Static Translate
  * Plugin URI: https://github.com/ramirkoz/ua-free-plugins
  * Description: Frontend static translation with queued Azure processing, translation memory, language routes, dynamic-content support and migration-safe compatibility.
- * Version: 0.9.40
+ * Version: 0.10.0
  * Author: Tony Kozyriev
  * Author URI: https://www.linkedin.com/in/tonykoz/
  * Text Domain: koz-static-translate
@@ -16,12 +16,16 @@
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
-define( 'KOZSTX_VERSION', '0.9.40' );
+define( 'KOZSTX_VERSION', '0.10.0' );
 define( 'KOZSTX_DIR', plugin_dir_path( __FILE__ ) );
 define( 'KOZSTX_FILE', __FILE__ );
 define( 'KOZSTX_URL', plugin_dir_url( __FILE__ ) );
 
 require_once KOZSTX_DIR . 'includes/class-kozstx-suite-registry.php';
+require_once KOZSTX_DIR . 'includes/class-kozstx-runtime-i18n.php';
+\ramirkz\kozstx\KOZSTX_Runtime_I18n::register( 'koz-static-translate', KOZSTX_DIR );
+require_once KOZSTX_DIR . 'includes/class-kozstx-quota.php';
+require_once KOZSTX_DIR . 'includes/class-kozstx-azure-client.php';
 require_once KOZSTX_DIR . 'includes/class-kozstx-static-translate.php';
 require_once KOZSTX_DIR . 'includes/class-kozstx-cleanup.php';
 
@@ -66,6 +70,7 @@ add_action(
 				$legacy_active = true;
 				break;
 			}
+		}
 
 		if ( ! $legacy_active ) {
 			return;

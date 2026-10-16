@@ -1,10 +1,10 @@
 === KOZ Static Translate ===
 Contributors: ramirkz
-Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=kozyriev%40uafree.org&item_name=Support+KOZ+WordPress+plugin+development&currency_code=USD
+Donate link: https://github.com/ramirkoz/ua-free-plugins#support-plugin-development
 Tags: translation, multilingual, azure, static translation, language switcher
 Requires at least: 6.0
 Tested up to: 7.1
-Stable tag: 0.9.39
+Stable tag: 0.10.0
 Requires PHP: 8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -15,23 +15,28 @@ Queued static WordPress translation with Azure Translator, translation memory an
 
 KOZ Static Translate scans published WordPress content, stores translation segments in plugin-owned tables, processes them through Azure Translator and serves completed language routes without changing the original posts.
 
+Azure usage stays within a monthly limit and a daily budget, is shown by source, and is never triggered by visitors or search engine crawlers. Text that Azure translated but validation rejected is not paid for twice.
+
 The plugin preserves the proven database schema, queue, cron hooks, public URLs and stored Azure settings from the former UA FREE package. It also supports dynamic content added after page load, a floating language selector, a language sitemap and controlled cleanup of legacy translator leftovers.
 
 The plugin was originally developed for the UA FREE charitable foundation website, which remains its primary production environment. The software is independently owned and maintained by Tony Kozyriev (`ramirkz`).
 
 = Part of the KOZ Suite =
 
-KOZ Static Translate is **one focused module of the broader KOZ Suite**, a family of WordPress plugins that share a common KOZ administration experience and visual identity.
+KOZ Static Translate is **one focused module of the broader KOZ Suite**, a family of independent WordPress plugins that share a common KOZ administration experience and visual identity.
 
-Each KOZ plugin remains independent, so site owners can install only the modules they need or combine several modules into one toolkit.
+Each KOZ plugin remains independently installable, so site owners can use only the modules they need or combine several modules into one toolkit.
 
 Current public KOZ plugins:
 
 * [KOZ SEO Core](https://wordpress.org/plugins/koz-seo-core/) — technical SEO, schema, sitemaps, AI discovery and OpenAI Vision image ALT.
 * [KOZ Copy Actions](https://wordpress.org/plugins/koz-copy-actions/) — accessible copy-to-clipboard actions for selected WordPress content.
 * [KOZ URL-Only Comment Spam](https://wordpress.org/plugins/koz-url-only-comment-spam/) — privacy-first local moderation for URL-only comment spam.
-
-Additional KOZ Suite modules are used in production and may be published separately as they are prepared for public distribution.
+* KOZ Static Translate — AI-powered multilingual translation with Microsoft Azure AI Translator and static language routes.
+* [KOZ Translate Diagnostics](https://wordpress.org/plugins/koz-translate-diagnostics/) — read-only health checks and privacy-safe diagnostic reports for KOZ Static Translate.
+* [KOZ 404 Guard & URL Intelligence](https://wordpress.org/plugins/koz-404-guard/) — privacy-safe 404/410 diagnostics, controlled same-site redirects and URL intelligence.
+* [KOZ Consent Manager](https://wordpress.org/plugins/koz-consent-manager/) — privacy-first visitor consent, optional script control and Google Consent Mode v2 synchronization.
+* [KOZ Donate Stats & Conversions](https://wordpress.org/plugins/koz-donate-stats/) — local donation-journey analytics and consent-aware conversion events for WordPress.
 
 = Main features =
 
@@ -68,7 +73,7 @@ Default API endpoint: https://api.cognitive.microsofttranslator.com
 
 What is sent: only text segments selected for translation, together with the source and target language codes required by the Translator API. Site visitor analytics, advertising identifiers and WordPress user passwords are not sent by this plugin.
 
-When it is sent: only when an authorized site administrator explicitly runs translation processing or an administrator-only dynamic translation request while Azure credentials are configured. The automatic background worker remains disabled in this release.
+When it is sent: only when an authorized site administrator runs a queue step or the connection test, when an administrator-only dynamic translation request is made, or when the administrator has enabled the optional background worker. Page views by visitors or search engines never send text to Azure. Every request is limited by the configured daily and monthly character budget.
 
 Why it is sent: to receive machine-translated text that is stored in the site's translation memory and translation tables.
 
@@ -109,7 +114,23 @@ No. It originated from production work for the foundation website but is indepen
 
 == Changelog ==
 
+= 0.10.0 =
+* Fixed: public page views (visitors and search engine crawlers) no longer call Azure Translator. Source-language text found on rendered translated pages is queued for the background worker instead. Before this change crawlers could use the whole monthly budget and wait up to 24 seconds per page.
+* Fixed: Azure output rejected by validation is remembered per language and text; after two rejections the text is no longer sent, so the same characters are not billed again. Administrators can allow the text again.
+* Fixed: cached translated pages are rebuilt after plugin, theme, menu, customizer or KOZ SEO Core settings changes, and the page cache is cleared.
+* Fixed: the idle scheduled event left by earlier releases is removed; nothing is scheduled unless the background worker is enabled.
+* New: daily character budget (default: monthly limit / 30) on top of the monthly limit and reserve.
+* New: Azure usage by source (queue, background worker, dynamic content, connection test) for the last 30 days, and admin notices at 80% and 95% of the monthly limit.
+* New: optional background worker (off by default) that processes the queue and queued page text every five minutes within the budget; the admin "Run one queue step" button works again.
+* Changed: partially translated (noindex) routes keep the page title instead of an empty <title>.
+* Changed: the translation sitemap lists hreflang alternates (source, x-default and every ready language) and moves to /koz-translations-sitemap.xml; /uafree-translations-sitemap.xml keeps working.
+* Changed: Azure client and budget accounting moved into separate classes (first step of splitting the main class).
+* Changed: site-specific behaviour is configurable: do-not-translate terms and the daily report title prefix are settings (existing installations keep their previous values), the UA FREE Donate repair routine is removed, and runtime messages are in English.
+* Changed: the bundled admin translations are loaded again, so the admin screen follows the user language.
+* Removed PayPal from the developer support panel and corrected the BTC and USDT TRC-20 developer wallet addresses.
+
 = 0.9.39 =
+* Updated KOZ Suite documentation to include all eight current public plugins.
 * Uses the WordPress Filesystem API for backup-directory/file permission changes and legacy-backup moves.
 * Sanitizes the server document-root value before using it in backup path safety checks.
 * WordPress Plugin Check remediation for the filesystem and input-sanitization findings reported after 0.9.38.
@@ -301,6 +322,9 @@ No. It originated from production work for the foundation website but is indepen
 * Last stable release under the former UA FREE public branding.
 
 == Upgrade Notice ==
+
+= 0.10.0 =
+Stops page views and crawlers from spending the Azure Translator budget, stops paying twice for rejected text and adds a daily budget. Recommended for all sites.
 
 = 0.9.18 =
 The language switcher now exposes only fully translated routes for each page; unfinished routes are no longer advertised through navigation.

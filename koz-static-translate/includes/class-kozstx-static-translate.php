@@ -41,9 +41,9 @@ final class KOZSTX_Static_Translate {
 	const SETTINGS_OPTION = 'kozstx_settings';
 	const RUNTIME_OPTION = 'kozstx_runtime';
 	const REWRITE_OPTION = 'kozstx_rewrite_version';
-	const ROUTE_SCHEMA_VERSION = '0.9.16-final-language-contract';
+	const ROUTE_SCHEMA_VERSION = '0.10.0-koz-sitemap';
 	const CRON_HOOK = 'kozstx_cron';
-	const CRON_INTERVAL = 'kozstx_minute';
+	const CRON_INTERVAL = 'kozstx_five_minutes';
 	const AJAX_NONCE = 'kozstx_ajax';
 	const SITEMAP_QUERY_VAR = 'kozstx_sitemap';
 	const LANG_QUERY_VAR = 'kozstx_lang';
@@ -53,8 +53,13 @@ final class KOZSTX_Static_Translate {
 	const DEFAULT_SOURCE_LANGUAGE = 'uk';
 	const FORBIDDEN_LANG_QUERY_VAR = 'kozstx_forbidden_lang';
 	const LEGACY_PAGE_PATTERN = '/\s-\s(?:English|Deutsch|Español|Français|Polski|Italiano|Čeština|Română)\s*$/iu';
-	const REPORT_TITLE_PATTERN = '/^Звіт\s+на\s+\d{2}\.\d{2}\.\d{4}/u';
 	const LOCK_KEY = 'kozstx_worker_lock';
+	const RENDER_EPOCH_OPTION = 'kozstx_render_epoch';
+	const RESIDUAL_QUEUE_OPTION = 'kozstx_residual_queue';
+	const SITEMAP_PATH = 'koz-translations-sitemap.xml';
+	const LEGACY_SITEMAP_PATH = 'uafree-translations-sitemap.xml';
+	/** Report title prefix used when the setting has never been saved (installations before 0.10.0). */
+	const LEGACY_REPORT_TITLE_PREFIX = 'Звіт на';
 	const DYNAMIC_REST_NAMESPACE = 'kozstx/v1';
 	const DYNAMIC_REST_ROUTE = '/dynamic';
 	const SEO_SEGMENT_SCHEMA_OPTION = 'kozstx_seo_segment_schema_v0911';
@@ -63,6 +68,15 @@ final class KOZSTX_Static_Translate {
 	private const RETIRED_V0912_LANGUAGE_SLUGS = array( 'pl', 'it', 'cs', 'ro' );
 
 	private static bool $source_switcher_rendered = false;
+
+	/** Source of Azure usage in the current request: queue (admin), background, dynamic, test. */
+	private static string $usage_kind = 'queue';
+
+	/**
+	 * Whether residual_dom_translation() may call Azure in this request. It stays false
+	 * for every public page view; the background worker translates queued text instead.
+	 */
+	private static bool $live_azure = false;
 
 
 	private static function migrate_legacy_options(): void {
@@ -126,7 +140,7 @@ final class KOZSTX_Static_Translate {
 		add_action( 'rest_api_init', array( __CLASS__, 'register_dynamic_rest_route' ) );
 		add_action( 'admin_menu', array( __CLASS__, 'admin_menu' ) );
 		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'enqueue_admin_assets' ) );
-		/* 0.9.23 safety: automatic translation worker is intentionally disabled. */
+		/* The background worker is opt-in (setting "Background worker"); see ensure_cron(). */
 		add_action( 'init', array( __CLASS__, 'add_rewrite_rules' ), 1 );
 		add_filter( 'query_vars', array( __CLASS__, 'query_vars' ) );
 		add_action( 'template_redirect', array( __CLASS__, 'template_router' ), -1000 );
@@ -149,6 +163,65 @@ final class KOZSTX_Static_Translate {
 		add_action( 'wp_ajax_kozstx_priority_core_discovery', array( __CLASS__, 'ajax_priority_core_discovery' ) );
 		add_action( 'wp_ajax_kozstx_prepare_priority_core_source', array( __CLASS__, 'ajax_prepare_priority_core_source' ) );
 		add_action( 'kozstx_admin_cleanup_section', array( KOZSTX_Cleanup::class, 'render_section' ) );
+
+		// Background worker (opt-in) and its schedule.
+		add_filter( 'cron_schedules', array( __CLASS__, 'cron_schedules' ) );
+		add_action( self::CRON_HOOK, array( __CLASS__, 'cron_tick' ) );
+		add_action( 'admin_init', array( __CLASS__, 'ensure_cron' ) );
+		add_action( 'update_option_' . self::SETTINGS_OPTION, array( __CLASS__, 'ensure_cron' ), 20, 0 );
+
+		// One-time rewrite flush after the route schema changes (plugin updates do not run activation).
+		add_action( 'admin_init', array( __CLASS__, 'maybe_flush_rewrites' ), 99 );
+
+		// Translated pages are rebuilt from cached HTML; changes elsewhere must invalidate it.
+		foreach ( array( 'upgrader_process_complete', 'switch_theme', 'activated_plugin', 'deactivated_plugin', 'customize_save_after', 'wp_update_nav_menu', 'update_option_kozseo_settings' ) as $hook ) {
+			add_action( $hook, array( __CLASS__, 'bump_render_epoch' ), 99, 0 );
+		}
+
+		add_action( 'admin_notices', array( KOZSTX_Quota::class, 'admin_notice' ) );
+		add_action( 'admin_post_kozstx_clear_rejections', array( __CLASS__, 'handle_clear_rejections' ) );
+	}
+
+	/**
+	 * Invalidate every cached source and translated render, and the page cache, after a
+	 * plugin, theme, menu or SEO settings change. At most once per minute.
+	 */
+	public static function bump_render_epoch(): void {
+		if ( get_transient( 'kozstx_epoch_lock' ) ) {
+			return;
+		}
+		set_transient( 'kozstx_epoch_lock', 1, MINUTE_IN_SECONDS );
+		update_option( self::RENDER_EPOCH_OPTION, time(), false );
+		if ( function_exists( 'wp_cache_clear_cache' ) ) {
+			wp_cache_clear_cache();
+		}
+	}
+
+	private static function render_epoch(): string {
+		return (string) get_option( self::RENDER_EPOCH_OPTION, '0' );
+	}
+
+	public static function maybe_flush_rewrites(): void {
+		if ( self::ROUTE_SCHEMA_VERSION === (string) get_option( self::REWRITE_OPTION, '' ) ) {
+			return;
+		}
+		self::add_rewrite_rules();
+		flush_rewrite_rules( false );
+		update_option( self::REWRITE_OPTION, self::ROUTE_SCHEMA_VERSION, false );
+	}
+
+	public static function credentials_configured(): bool {
+		return ! empty( self::credentials()['configured'] );
+	}
+
+	public static function handle_clear_rejections(): void {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'You do not have permission to perform this action.', 'koz-static-translate' ) );
+		}
+		check_admin_referer( 'kozstx_clear_rejections' );
+		KOZSTX_Quota::clear_rejections();
+		wp_safe_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG ) );
+		exit;
 	}
 
 	public static function activate(): void {
@@ -176,7 +249,6 @@ final class KOZSTX_Static_Translate {
 			self::install_schema();
 			self::migrate_legacy_tables();
 			self::repair_all_language_readiness();
-			self::repair_donate_validation_deadlock_v0618();
 			self::purge_all_caches();
 			delete_option( 'kozstx_protected_progress_fix_v0611' );
 			delete_option( 'kozstx_route_readiness_fix_v0612' );
@@ -292,7 +364,7 @@ final class KOZSTX_Static_Translate {
 		update_option( self::SEO_SEGMENT_SCHEMA_OPTION, '0.9.11', false );
 	}
 
-	private static function tables(): array {
+	public static function tables(): array {
 		global $wpdb;
 
 		return array(
@@ -499,6 +571,10 @@ final class KOZSTX_Static_Translate {
 			'reset_hour_utc' => 0,
 			'request_interval' => 60,
 			'core_rescan_hours' => 12,
+			'daily_limit' => 0,
+			'background_worker' => 0,
+			'protected_terms' => KOZSTX_Azure_Client::DEFAULT_PROTECTED_TERMS,
+			'report_title_prefix' => '',
 		);
 	}
 
@@ -519,9 +595,18 @@ final class KOZSTX_Static_Translate {
 		);
 	}
 
-	private static function settings(): array {
-		$saved = get_option( self::SETTINGS_OPTION, array() );
-		return wp_parse_args( is_array( $saved ) ? $saved : array(), self::default_settings() );
+	public static function settings(): array {
+		$saved    = get_option( self::SETTINGS_OPTION, array() );
+		$saved    = is_array( $saved ) ? $saved : array();
+		$defaults = self::default_settings();
+		// Installations from before 0.10.0 keep their previous behaviour until the settings are saved.
+		if ( $saved && ! array_key_exists( 'protected_terms', $saved ) ) {
+			$defaults['protected_terms'] = KOZSTX_Azure_Client::LEGACY_PROTECTED_TERMS;
+		}
+		if ( $saved && ! array_key_exists( 'report_title_prefix', $saved ) ) {
+			$defaults['report_title_prefix'] = self::LEGACY_REPORT_TITLE_PREFIX;
+		}
+		return wp_parse_args( $saved, $defaults );
 	}
 
 	private static function runtime(): array {
@@ -606,22 +691,39 @@ final class KOZSTX_Static_Translate {
 			'reset_hour_utc' => min( 23, max( 0, absint( $input['reset_hour_utc'] ?? 0 ) ) ),
 			'request_interval' => min( 3600, max( 60, absint( $input['request_interval'] ?? 60 ) ) ),
 			'core_rescan_hours' => min( 168, max( 1, absint( $input['core_rescan_hours'] ?? 12 ) ) ),
+			'daily_limit' => min( 100000000, max( 0, absint( $input['daily_limit'] ?? $current['daily_limit'] ?? 0 ) ) ),
+			'background_worker' => empty( $input['background_worker'] ) ? 0 : 1,
+			'protected_terms' => array_key_exists( 'protected_terms', $input ) ? self::sanitize_terms( $input['protected_terms'] ) : (array) ( $current['protected_terms'] ?? array() ),
+			'report_title_prefix' => array_key_exists( 'report_title_prefix', $input ) ? self::short_text( sanitize_text_field( (string) $input['report_title_prefix'] ), 60 ) : (string) ( $current['report_title_prefix'] ?? '' ),
 		);
+	}
+
+	/** @param mixed $value Textarea string or array. @return string[] */
+	private static function sanitize_terms( $value ): array {
+		$items = is_array( $value ) ? $value : preg_split( '/\R/u', (string) $value );
+		$terms = array();
+		foreach ( (array) $items as $item ) {
+			$term = trim( sanitize_text_field( (string) $item ) );
+			if ( '' !== $term ) {
+				$terms[ $term ] = true;
+			}
+		}
+		return array_slice( array_keys( $terms ), 0, 200 );
 	}
 
 	public static function source_languages(): array {
 		return array(
-			'uk' => array( 'code' => 'uk', 'name' => 'Українська', 'native' => 'Українська', 'dir' => 'ltr' ),
-			'en' => array( 'code' => 'en', 'name' => 'Англійська', 'native' => 'English', 'dir' => 'ltr' ),
-			'zh' => array( 'code' => 'zh-Hans', 'name' => 'Китайська', 'native' => '简体中文', 'dir' => 'ltr' ),
-			'es' => array( 'code' => 'es', 'name' => 'Іспанська', 'native' => 'Español', 'dir' => 'ltr' ),
-			'ar' => array( 'code' => 'ar', 'name' => 'Арабська', 'native' => 'العربية', 'dir' => 'rtl' ),
-			'id' => array( 'code' => 'id', 'name' => 'Індонезійська', 'native' => 'Bahasa Indonesia', 'dir' => 'ltr' ),
-			'pt' => array( 'code' => 'pt', 'name' => 'Португальська', 'native' => 'Português', 'dir' => 'ltr' ),
-			'fr' => array( 'code' => 'fr', 'name' => 'Французька', 'native' => 'Français', 'dir' => 'ltr' ),
-			'ja' => array( 'code' => 'ja', 'name' => 'Японська', 'native' => '日本語', 'dir' => 'ltr' ),
-			'de' => array( 'code' => 'de', 'name' => 'Німецька', 'native' => 'Deutsch', 'dir' => 'ltr' ),
-			'hi' => array( 'code' => 'hi', 'name' => 'Гінді', 'native' => 'हिन्दी', 'dir' => 'ltr' ),
+			'uk' => array( 'code' => 'uk', 'name' => __( 'Ukrainian', 'koz-static-translate' ), 'native' => 'Українська', 'dir' => 'ltr' ),
+			'en' => array( 'code' => 'en', 'name' => __( 'English', 'koz-static-translate' ), 'native' => 'English', 'dir' => 'ltr' ),
+			'zh' => array( 'code' => 'zh-Hans', 'name' => __( 'Chinese (Simplified)', 'koz-static-translate' ), 'native' => '简体中文', 'dir' => 'ltr' ),
+			'es' => array( 'code' => 'es', 'name' => __( 'Spanish', 'koz-static-translate' ), 'native' => 'Español', 'dir' => 'ltr' ),
+			'ar' => array( 'code' => 'ar', 'name' => __( 'Arabic', 'koz-static-translate' ), 'native' => 'العربية', 'dir' => 'rtl' ),
+			'id' => array( 'code' => 'id', 'name' => __( 'Indonesian', 'koz-static-translate' ), 'native' => 'Bahasa Indonesia', 'dir' => 'ltr' ),
+			'pt' => array( 'code' => 'pt', 'name' => __( 'Portuguese', 'koz-static-translate' ), 'native' => 'Português', 'dir' => 'ltr' ),
+			'fr' => array( 'code' => 'fr', 'name' => __( 'French', 'koz-static-translate' ), 'native' => 'Français', 'dir' => 'ltr' ),
+			'ja' => array( 'code' => 'ja', 'name' => __( 'Japanese', 'koz-static-translate' ), 'native' => '日本語', 'dir' => 'ltr' ),
+			'de' => array( 'code' => 'de', 'name' => __( 'German', 'koz-static-translate' ), 'native' => 'Deutsch', 'dir' => 'ltr' ),
+			'hi' => array( 'code' => 'hi', 'name' => __( 'Hindi', 'koz-static-translate' ), 'native' => 'हिन्दी', 'dir' => 'ltr' ),
 		);
 	}
 
@@ -635,7 +737,7 @@ final class KOZSTX_Static_Translate {
 		return self::source_languages()[ self::source_language_slug() ];
 	}
 
-	private static function source_language_code(): string {
+	public static function source_language_code(): string {
 		return (string) self::source_language_info()['code'];
 	}
 
@@ -749,114 +851,69 @@ final class KOZSTX_Static_Translate {
 
 	public static function cron_schedules( array $schedules ): array {
 		$schedules[ self::CRON_INTERVAL ] = array(
-			'interval' => 60,
-			'display' => 'KOZ Static Translate worker every minute',
+			'interval' => 5 * MINUTE_IN_SECONDS,
+			'display' => 'KOZ Static Translate worker every five minutes',
 		);
 		return $schedules;
 	}
 
-	private static function ensure_cron(): void {
-		if ( ! wp_next_scheduled( self::CRON_HOOK ) ) {
-			wp_schedule_event( time() + 60, self::CRON_INTERVAL, self::CRON_HOOK );
+	/**
+	 * Keep the worker schedule in line with the "Background worker" setting.
+	 * Without it no event is scheduled at all (earlier releases left an idle one).
+	 */
+	public static function ensure_cron(): void {
+		$enabled = ! empty( self::settings()['background_worker'] );
+		$next    = wp_next_scheduled( self::CRON_HOOK );
+		if ( $enabled && ! $next ) {
+			wp_schedule_event( time() + MINUTE_IN_SECONDS, self::CRON_INTERVAL, self::CRON_HOOK );
+		} elseif ( ! $enabled && $next ) {
+			wp_clear_scheduled_hook( self::CRON_HOOK );
 		}
+		wp_clear_scheduled_hook( 'uafree_st_auto_cron' );
 	}
 
+	/**
+	 * Background worker: processes queued jobs, then source-language text found on rendered
+	 * pages, within the daily and monthly budget. Never runs during a visitor request.
+	 */
 	public static function cron_tick(): void {
-		/* 0.9.23 safety: background processing is disabled in this stability release. */
-		return;
+		if ( empty( self::settings()['background_worker'] ) || get_transient( self::LOCK_KEY ) ) {
+			return;
+		}
+		set_transient( self::LOCK_KEY, 1, 4 * MINUTE_IN_SECONDS );
+		self::$usage_kind = 'background';
+
+		self::maybe_resume_for_new_cycle();
+		self::release_stale_jobs();
+
+		$started = microtime( true );
+		for ( $step = 0; $step < 10 && ( microtime( true ) - $started ) < 25; $step++ ) {
+			$result = self::process_one_step();
+			if ( empty( $result['worked'] ) ) {
+				break;
+			}
+		}
+		if ( ( microtime( true ) - $started ) < 25 ) {
+			self::process_residual_queue();
+		}
+
+		self::$usage_kind = 'queue';
+		delete_transient( self::LOCK_KEY );
 	}
+
+
+
 
 	private static function cycle_info(): array {
-		$settings = self::settings();
-		$day = (int) $settings['reset_day'];
-		$hour = (int) $settings['reset_hour_utc'];
-		$now = new DateTimeImmutable( 'now', new DateTimeZone( 'UTC' ) );
-		$current_month_start = new DateTimeImmutable(
-			sprintf( '%s-%02d %02d:00:00', $now->format( 'Y-m' ), $day, $hour ),
-			new DateTimeZone( 'UTC' )
-		);
-
-		if ( $now < $current_month_start ) {
-			$start = $current_month_start->modify( '-1 month' );
-		} else {
-			$start = $current_month_start;
-		}
-
-		$next = $start->modify( '+1 month' );
-		return array(
-			'key' => $start->format( 'Y-m-d-H' ),
-			'start_ts' => $start->getTimestamp(),
-			'next_ts' => $next->getTimestamp(),
-			'start_iso' => $start->format( DATE_ATOM ),
-			'next_iso' => $next->format( DATE_ATOM ),
-		);
+		return KOZSTX_Quota::cycle_info();
 	}
 
 	private static function current_usage(): array {
-		global $wpdb;
-		$tables = self::tables();
-		$cycle = self::cycle_info();
-		$settings = self::settings();
-		$rows = $wpdb->get_results(
-			$wpdb->prepare(
-				"SELECT language, characters, requests
-				FROM {$tables['usage']}
-				WHERE cycle_key = %s",
-				$cycle['key']
-			),
-			ARRAY_A
-		);
-
-		$by_language = array();
-		$total_chars = 0;
-		$total_requests = 0;
-		foreach ( is_array( $rows ) ? $rows : array() as $row ) {
-			$by_language[ (string) $row['language'] ] = array(
-				'characters' => (int) $row['characters'],
-				'requests' => (int) $row['requests'],
-			);
-			$total_chars += (int) $row['characters'];
-			$total_requests += (int) $row['requests'];
-		}
-
-		$limit = (int) $settings['monthly_limit'];
-		$remaining = max( 0, $limit - $total_chars );
-		return array(
-			'cycle' => $cycle,
-			'limit' => $limit,
-			'characters' => $total_chars,
-			'requests' => $total_requests,
-			'remaining' => $remaining,
-			'percent' => $limit > 0 ? min( 100, ( $total_chars / $limit ) * 100 ) : 0,
-			'by_language' => $by_language,
-		);
+		return KOZSTX_Quota::current_usage();
 	}
 
-	private static function increment_usage( string $language, int $characters ): void {
-		global $wpdb;
-		$tables = self::tables();
-		$cycle = self::cycle_info();
-		$now = current_time( 'mysql', true );
-		$characters = max( 0, $characters );
-
-		$wpdb->query(
-			$wpdb->prepare(
-				"INSERT INTO {$tables['usage']}
-				(cycle_key, language, characters, requests, last_request_at, created_at, updated_at)
-				VALUES (%s, %s, %d, 1, %s, %s, %s)
-				ON DUPLICATE KEY UPDATE
-				characters = characters + VALUES(characters),
-				requests = requests + 1,
-				last_request_at = VALUES(last_request_at),
-				updated_at = VALUES(updated_at)",
-				$cycle['key'],
-				$language,
-				$characters,
-				$now,
-				$now,
-				$now
-			)
-		);
+	private static function increment_usage( string $language, int $characters, string $kind = '' ): void {
+		KOZSTX_Quota::increment_usage( $language, $characters, '' !== $kind ? $kind : self::$usage_kind );
 	}
 
 	private static function maybe_resume_for_new_cycle(): void {
@@ -871,7 +928,7 @@ final class KOZSTX_Static_Translate {
 			$runtime['last_error'] = '';
 			self::save_runtime( $runtime );
 			self::requeue_paused_jobs();
-			self::log_event( 0, 0, '', 'info', 'monthly_cycle_resumed', 0, 'Новий місячний цикл. Чергу відновлено.' );
+			self::log_event( 0, 0, '', 'info', 'monthly_cycle_resumed', 0, 'New monthly cycle. The queue has been resumed.' );
 		}
 	}
 
@@ -994,6 +1051,9 @@ final class KOZSTX_Static_Translate {
 	}
 
 	private static function bootstrap_reports_step( int $limit ): void {
+		if ( '' === self::report_title_like() ) {
+			return;
+		}
 		global $wpdb;
 		$runtime = self::runtime();
 		if ( ! empty( $runtime['report_bootstrap_complete'] ) ) {
@@ -1017,7 +1077,7 @@ final class KOZSTX_Static_Translate {
 					)
 				ORDER BY post_date_gmt DESC, ID DESC
 				LIMIT %d",
-				'Звіт на %',
+				self::report_title_like(),
 				$cursor_date,
 				$cursor_date,
 				$cursor_id,
@@ -1045,6 +1105,9 @@ final class KOZSTX_Static_Translate {
 	}
 
 	private static function reconcile_recent_reports(): void {
+		if ( '' === self::report_title_like() ) {
+			return;
+		}
 		$runtime = self::runtime();
 		$last = ! empty( $runtime['last_recent_reports_at'] ) ? strtotime( (string) $runtime['last_recent_reports_at'] . ' UTC' ) : 0;
 		if ( $last && time() - $last < 6 * HOUR_IN_SECONDS ) {
@@ -1057,7 +1120,7 @@ final class KOZSTX_Static_Translate {
 				"SELECT ID FROM {$wpdb->posts}
 				WHERE post_type = 'post' AND post_status = 'publish' AND post_title LIKE %s
 				ORDER BY post_date_gmt DESC, ID DESC LIMIT 50",
-				'Звіт на %'
+				self::report_title_like()
 			)
 		);
 		foreach ( is_array( $ids ) ? $ids : array() as $id ) {
@@ -1311,9 +1374,26 @@ final class KOZSTX_Static_Translate {
 		return $page instanceof WP_Post ? (int) $page->ID : 0;
 	}
 
+	/**
+	 * Title prefix of dated daily reports (for example "Report on 01.02.2026"). Empty disables
+	 * report handling. Filterable with kozstx_report_title_prefix.
+	 */
+	private static function report_title_prefix(): string {
+		return trim( (string) apply_filters( 'kozstx_report_title_prefix', (string) ( self::settings()['report_title_prefix'] ?? '' ) ) );
+	}
+
+	/** SQL LIKE pattern for report titles, or '' when reports are not configured. */
+	private static function report_title_like(): string {
+		global $wpdb;
+		$prefix = self::report_title_prefix();
+		return '' === $prefix ? '' : $wpdb->esc_like( $prefix ) . ' %';
+	}
+
 	private static function is_daily_report( WP_Post $post ): bool {
-		return 'post' === $post->post_type
-			&& (bool) preg_match( self::REPORT_TITLE_PATTERN, html_entity_decode( $post->post_title, ENT_QUOTES | ENT_HTML5, 'UTF-8' ) );
+		$prefix = self::report_title_prefix();
+		return '' !== $prefix
+			&& 'post' === $post->post_type
+			&& (bool) preg_match( '/^' . preg_quote( $prefix, '/' ) . '\s+\d{2}\.\d{2}\.\d{4}/u', html_entity_decode( $post->post_title, ENT_QUOTES | ENT_HTML5, 'UTF-8' ) );
 	}
 
 	private static function post_date_gmt( WP_Post $post ): string {
@@ -1370,14 +1450,14 @@ final class KOZSTX_Static_Translate {
 	}
 
 	private static function source_render_cache_key( int $source_id ): string {
-		$fingerprint = hash( 'sha256', max( 0, $source_id ) . '|' . KOZSTX_VERSION );
+		$fingerprint = hash( 'sha256', max( 0, $source_id ) . '|' . KOZSTX_VERSION . '|' . self::render_epoch() );
 		return 'kozstx_render_source_' . substr( $fingerprint, 0, 32 );
 	}
 
 	private static function translated_render_cache_key( array $source, string $slug ): string {
 		$source_id = (int) ( $source['id'] ?? 0 );
 		$render_hash = (string) ( $source['render_hash'] ?? '' );
-		$fingerprint = hash( 'sha256', $source_id . '|' . sanitize_key( $slug ) . '|' . $render_hash . '|' . KOZSTX_VERSION );
+		$fingerprint = hash( 'sha256', $source_id . '|' . sanitize_key( $slug ) . '|' . $render_hash . '|' . KOZSTX_VERSION . '|' . self::render_epoch() );
 		return 'kozstx_render_' . substr( $fingerprint, 0, 32 );
 	}
 
@@ -1429,7 +1509,7 @@ final class KOZSTX_Static_Translate {
 		}
 		$html = (string) wp_remote_retrieve_body( $response );
 		if ( '' === trim( $html ) || ! class_exists( 'DOMDocument' ) ) {
-			self::source_scan_error( $source_id, 'Порожній HTML або DOMDocument недоступний.' );
+			self::source_scan_error( $source_id, 'Empty HTML or DOMDocument is unavailable.' );
 			return false;
 		}
 
@@ -1437,7 +1517,7 @@ final class KOZSTX_Static_Translate {
 
 		$segments = self::extract_segments_from_html( $html, $source_id );
 		if ( empty( $segments ) ) {
-			self::source_scan_error( $source_id, 'Текстові сегменти не знайдено.' );
+			self::source_scan_error( $source_id, 'No text segments were found.' );
 			return false;
 		}
 
@@ -2126,101 +2206,6 @@ final class KOZSTX_Static_Translate {
 	}
 
 
-	private static function repair_donate_validation_deadlock_v0618(): void {
-		$repair_option = 'kozstx_donate_validation_fix_v0618';
-
-		if ( get_option( $repair_option, false ) ) {
-			return;
-		}
-
-		global $wpdb;
-		$tables = self::tables();
-		$now = current_time( 'mysql', true );
-
-		$source_id = (int) $wpdb->get_var(
-			"SELECT id
-			FROM {$tables['sources']}
-			WHERE source_path = '/donate/'
-				OR source_url LIKE '%/donate/'
-			ORDER BY id ASC
-			LIMIT 1"
-		);
-
-		$jobs_requeued = 0;
-
-		if ( $source_id > 0 ) {
-			$jobs_requeued = (int) $wpdb->query(
-				$wpdb->prepare(
-					"UPDATE {$tables['queue']}
-					SET status = 'queued',
-						priority = 0,
-						attempts = 0,
-						last_error = '',
-						next_run_at = %s,
-						locked_at = NULL,
-						finished_at = NULL,
-						updated_at = %s
-					WHERE source_id = %d
-						AND status <> 'done'",
-					$now,
-					$now,
-					$source_id
-				)
-			);
-		}
-
-		$runtime = self::runtime();
-
-		if (
-			'azure_rate_limit' === (string) $runtime['pause_reason']
-			|| (
-				! empty( $runtime['pause_until'] )
-				&& time() >= (int) $runtime['pause_until']
-			)
-		) {
-			$runtime['pause_reason'] = '';
-			$runtime['pause_until'] = 0;
-			$runtime['last_error'] = '';
-			self::save_runtime( $runtime );
-		}
-
-		/*
-		 * Remove only translator request locks/rate counters. Translation
-		 * rows, memory, usage and source scans remain untouched.
-		 */
-		$wpdb->query(
-			"DELETE FROM {$wpdb->options}
-			WHERE option_name LIKE '_transient_kozstx_dyn_rate_%'
-				OR option_name LIKE '_transient_timeout_kozstx_dyn_rate_%'
-				OR option_name LIKE '_transient_kozstx_dyn_lock_%'
-				OR option_name LIKE '_transient_timeout_kozstx_dyn_lock_%'
-				OR option_name LIKE '_transient_kozstx_render_%'
-				OR option_name LIKE '_transient_timeout_kozstx_render_%'"
-		);
-
-		update_option(
-			$repair_option,
-			array(
-				'completed_at' => current_time( 'c' ),
-				'source_id' => $source_id,
-				'jobs_requeued' => $jobs_requeued,
-			),
-			false
-		);
-
-		self::log_event(
-			0,
-			$source_id,
-			'',
-			'info',
-			'donate_validation_fix_v0618',
-			0,
-			sprintf(
-				'Donate jobs requeued: %d. Dynamic rate locks cleared.',
-				$jobs_requeued
-			)
-		);
-	}
 
 
 	private static function release_stale_jobs(): void {
@@ -2232,7 +2217,7 @@ final class KOZSTX_Static_Translate {
 			$wpdb->prepare(
 				"UPDATE {$tables['queue']}
 				SET status = 'retry', locked_at = NULL, next_run_at = %s, updated_at = %s,
-					last_error = 'Відновлено після завислого worker lock.'
+					last_error = 'Recovered after a stale worker lock.'
 				WHERE status = 'running' AND locked_at IS NOT NULL AND locked_at < %s",
 				$now,
 				$now,
@@ -2327,40 +2312,39 @@ final class KOZSTX_Static_Translate {
 
 		$credentials = self::credentials();
 		if ( ! $credentials['configured'] ) {
-			return array( 'worked' => false, 'message' => 'Azure Translator key не налаштований.' );
+			return array( 'worked' => false, 'message' => 'The Azure Translator key is not configured.' );
 		}
 
 		$runtime = self::runtime();
 		if ( ! empty( $runtime['manual_paused'] ) ) {
-			return array( 'worked' => false, 'message' => 'Черга поставлена на ручну паузу.' );
+			return array( 'worked' => false, 'message' => 'The queue is paused manually.' );
 		}
 		if ( ! empty( $runtime['pause_until'] ) && time() < (int) $runtime['pause_until'] ) {
-			return array( 'worked' => false, 'message' => 'Черга тимчасово призупинена: ' . (string) $runtime['pause_reason'] );
+			return array( 'worked' => false, 'message' => 'The queue is temporarily paused: ' . (string) $runtime['pause_reason'] );
 		}
 
-		$usage = self::current_usage();
 		$settings = self::settings();
-		$available = max( 0, (int) $usage['remaining'] - (int) $settings['reserve_chars'] );
+		$available = KOZSTX_Quota::available();
 		if ( $available <= 0 ) {
-			self::pause_for_monthly_limit();
-			return array( 'worked' => false, 'message' => 'Місячний ліміт вичерпано.' );
+			self::pause_for_budget();
+			return array( 'worked' => false, 'message' => 'The Azure budget is used up (daily or monthly).' );
 		}
 
 		$job = self::claim_next_job();
 		if ( ! is_array( $job ) ) {
-			return array( 'worked' => false, 'message' => 'Готових jobs у черзі немає.' );
+			return array( 'worked' => false, 'message' => 'No jobs are ready in the queue.' );
 		}
 
 		$source = self::source_row( (int) $job['source_id'] );
 		if ( ! is_array( $source ) ) {
-			self::fail_job( $job, 'Source row не знайдено.', true );
-			return array( 'worked' => true, 'message' => 'Некоректний job пропущено.' );
+			self::fail_job( $job, 'Source row not found.', true );
+			return array( 'worked' => true, 'message' => 'Invalid job skipped.' );
 		}
 
 		if ( 'ready' !== (string) $source['scan_status'] ) {
 			if ( ! self::scan_source( $source ) ) {
-				self::retry_job( $job, 'Не вдалося просканувати українську сторінку.', 10 * MINUTE_IN_SECONDS );
-				return array( 'worked' => true, 'message' => 'Сканування джерела не вдалося; заплановано повтор.' );
+				self::retry_job( $job, 'Could not scan the source-language page.', 10 * MINUTE_IN_SECONDS );
+				return array( 'worked' => true, 'message' => 'Source scan failed; a retry is scheduled.' );
 			}
 			$source = self::source_row( (int) $job['source_id'] );
 		}
@@ -2368,7 +2352,7 @@ final class KOZSTX_Static_Translate {
 		$progress = self::refresh_job_progress( (int) $job['id'], (int) $job['source_id'], (string) $job['language'] );
 		if ( ! empty( $progress['done'] ) ) {
 			self::source_translation_completed( (int) $job['source_id'], (string) $job['language'] );
-			return array( 'worked' => true, 'message' => 'Job уже завершений через translation memory.' );
+			return array( 'worked' => true, 'message' => 'The job was completed from translation memory.' );
 		}
 
 		$batch = self::pending_batch(
@@ -2380,9 +2364,9 @@ final class KOZSTX_Static_Translate {
 		);
 		if ( empty( $batch['segments'] ) ) {
 			if ( ! empty( $batch['budget_blocked'] ) ) {
-				self::pause_for_monthly_limit();
-				self::pause_job( $job, 'Недостатньо залишку місячного бюджету для наступного сегмента.' );
-				return array( 'worked' => true, 'message' => 'Чергу призупинено до нового циклу.' );
+				self::pause_for_budget();
+				self::pause_job( $job, 'Not enough budget left for the next segment.' );
+				return array( 'worked' => true, 'message' => 'The queue is paused until the budget renews.' );
 			}
 			$progress = self::refresh_job_progress(
 				(int) $job['id'],
@@ -2398,20 +2382,25 @@ final class KOZSTX_Static_Translate {
 
 				return array(
 					'worked' => true,
-					'message' => 'Мовну версію завершено: захищені реквізити збережено без перекладу.',
+					'message' => 'Language version completed; protected details were kept untranslated.',
 				);
+			}
+
+			if ( ! empty( $batch['rejected_skipped'] ) ) {
+				self::pause_job( $job, 'Needs review: Azure output for some segments was rejected repeatedly and is no longer requested.' );
+				return array( 'worked' => true, 'message' => 'Job paused for review: repeatedly rejected segments.' );
 			}
 
 			return array(
 				'worked' => true,
-				'message' => 'Немає сегментів для перекладу, але job ще не завершений.',
+				'message' => 'No segments to translate, but the job is not complete yet.',
 			);
 		}
 
 		$language = self::languages()[ (string) $job['language'] ] ?? null;
 		if ( ! is_array( $language ) ) {
-			self::fail_job( $job, 'Невідома цільова мова.', true );
-			return array( 'worked' => true, 'message' => 'Невідома мова job.' );
+			self::fail_job( $job, 'Unknown target language.', true );
+			return array( 'worked' => true, 'message' => 'Unknown job language.' );
 		}
 
 		$result = self::azure_translate_batch( $batch['segments'], (string) $language['code'], $credentials );
@@ -2442,6 +2431,7 @@ final class KOZSTX_Static_Translate {
 			$flags = self::validate_translation( (string) $segment['source_text'], $translation, (string) $job['language'] );
 			if ( ! empty( $flags ) ) {
 				$invalid++;
+				KOZSTX_Quota::note_rejection( (string) $job['language'], (string) $segment['source_hash'] );
 				self::log_event(
 					(int) $job['id'],
 					(int) $job['source_id'],
@@ -2481,7 +2471,7 @@ final class KOZSTX_Static_Translate {
 			$invalid > 0 ? 'warning' : 'info',
 			'api_success',
 			$characters,
-			sprintf( 'Збережено %d, не пройшло валідацію %d.', $stored, $invalid ),
+			sprintf( 'Stored %d, failed validation %d.', $stored, $invalid ),
 			array(
 				'api_version' => $result['api_version'],
 				'request_id' => $result['request_id'],
@@ -2495,15 +2485,15 @@ final class KOZSTX_Static_Translate {
 			$runtime['last_success_at'] = current_time( 'mysql', true );
 			$runtime['last_error'] = '';
 			self::save_runtime( $runtime );
-			return array( 'worked' => true, 'message' => 'Мовну версію сторінки завершено.' );
+			return array( 'worked' => true, 'message' => 'The language version of the page is complete.' );
 		}
 
 		if ( $invalid > 0 && 0 === $stored ) {
-			self::retry_job( $job, 'Усі сегменти не пройшли автоматичну валідацію.', self::retry_delay( (int) $job['attempts'] ) );
+			self::retry_job( $job, 'All segments failed automatic validation.', self::retry_delay( (int) $job['attempts'] ) );
 		} else {
 			self::queue_job_again( $job, (int) $settings['request_interval'] );
 		}
-		return array( 'worked' => true, 'message' => sprintf( 'Перекладено сегментів: %d. Залишилося: %d.', $stored, max( 0, $progress['total'] - $progress['ready'] ) ) );
+		return array( 'worked' => true, 'message' => sprintf( 'Segments translated: %d. Remaining: %d.', $stored, max( 0, $progress['total'] - $progress['ready'] ) ) );
 	}
 
 	private static function pending_batch( int $source_id, string $language, int $char_budget, int $max_segments, int $hard_budget ): array {
@@ -2530,10 +2520,16 @@ final class KOZSTX_Static_Translate {
 		$segments = array();
 		$chars = 0;
 		$budget_blocked = false;
+		$rejected_skipped = 0;
 		foreach ( is_array( $rows ) ? $rows : array() as $row ) {
 			$memory = self::memory_translation( $language, (string) $row['source_hash'] );
 			if ( '' !== $memory ) {
 				self::store_translation( $source_id, $language, (string) $row['segment_key'], (string) $row['source_hash'], $memory, 'ready', 0 );
+				continue;
+			}
+			// Azure output for this text was rejected repeatedly; do not pay for it again.
+			if ( KOZSTX_Quota::is_rejected( $language, (string) $row['source_hash'] ) ) {
+				$rejected_skipped++;
 				continue;
 			}
 			$length = self::string_length( (string) $row['source_text'] );
@@ -2552,210 +2548,24 @@ final class KOZSTX_Static_Translate {
 			$segments[] = $row;
 			$chars += $length;
 		}
-		return array( 'segments' => $segments, 'characters' => $chars, 'budget_blocked' => $budget_blocked );
+		return array( 'segments' => $segments, 'characters' => $chars, 'budget_blocked' => $budget_blocked, 'rejected_skipped' => $rejected_skipped );
 	}
 
+
+
+
+
+
+
+
+
+	/** @return array<string,mixed>|WP_Error */
 	private static function azure_translate_batch( array $segments, string $target_code, array $credentials ) {
-		$inputs = array();
-		$source_characters = 0;
-		foreach ( $segments as $segment ) {
-			$text = (string) $segment['source_text'];
-			$source_characters += self::string_length( $text );
-			$inputs[] = array(
-				'text' => self::prepare_api_text( $text ),
-				'language' => self::source_language_code(),
-				'textType' => 'html',
-				'targets' => array(
-					array( 'language' => $target_code ),
-				),
-			);
-		}
-
-		$endpoint = self::new_api_url( (string) $credentials['endpoint'] );
-		$headers = self::api_headers( $credentials );
-		$response = wp_remote_post(
-			$endpoint,
-			array(
-				'timeout' => 30,
-				'redirection' => 0,
-				'headers' => $headers,
-				'body' => wp_json_encode( array( 'inputs' => $inputs ), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ),
-				'data_format' => 'body',
-			)
-		);
-
-		if ( is_wp_error( $response ) ) {
-			return $response;
-		}
-
-		$status = (int) wp_remote_retrieve_response_code( $response );
-		if ( in_array( $status, array( 400, 404, 405 ), true ) ) {
-			return self::azure_translate_v3( $segments, $target_code, $credentials, $source_characters );
-		}
-		if ( $status < 200 || $status >= 300 ) {
-			return self::azure_http_error( $response, $status );
-		}
-
-		$data = json_decode( (string) wp_remote_retrieve_body( $response ), true );
-		if ( ! is_array( $data ) || ! isset( $data['value'] ) || ! is_array( $data['value'] ) ) {
-			return new WP_Error( 'azure_invalid_response', 'Azure повернув некоректну відповідь 2026-06-06.' );
-		}
-
-		$translations = array();
-		$reported_chars = 0;
-		foreach ( $data['value'] as $item ) {
-			$text = '';
-			if ( isset( $item['translations'][0]['text'] ) ) {
-				$text = (string) $item['translations'][0]['text'];
-				$reported_chars += (int) ( $item['translations'][0]['sourceCharacters'] ?? 0 );
-			}
-			$translations[] = $text;
-		}
-		if ( count( $translations ) !== count( $segments ) ) {
-			return new WP_Error( 'azure_response_count', 'Azure повернув іншу кількість перекладів, ніж було надіслано.' );
-		}
-
-		return array(
-			'translations' => $translations,
-			'source_characters' => $reported_chars > 0 ? $reported_chars : $source_characters,
-			'api_version' => self::API_VERSION,
-			'request_id' => (string) wp_remote_retrieve_header( $response, 'x-requestid' ),
-		);
-	}
-
-	private static function azure_translate_v3( array $segments, string $target_code, array $credentials, int $source_characters ) {
-		$body = array();
-		foreach ( $segments as $segment ) {
-			$body[] = array( 'Text' => self::prepare_api_text( (string) $segment['source_text'] ) );
-		}
-		$url = self::v3_api_url( (string) $credentials['endpoint'], $target_code );
-		$response = wp_remote_post(
-			$url,
-			array(
-				'timeout' => 30,
-				'redirection' => 0,
-				'headers' => self::api_headers( $credentials ),
-				'body' => wp_json_encode( $body, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ),
-				'data_format' => 'body',
-			)
-		);
-		if ( is_wp_error( $response ) ) {
-			return $response;
-		}
-		$status = (int) wp_remote_retrieve_response_code( $response );
-		if ( $status < 200 || $status >= 300 ) {
-			return self::azure_http_error( $response, $status );
-		}
-		$data = json_decode( (string) wp_remote_retrieve_body( $response ), true );
-		if ( ! is_array( $data ) ) {
-			return new WP_Error( 'azure_invalid_response_v3', 'Azure повернув некоректну v3.0 відповідь.' );
-		}
-		$translations = array();
-		foreach ( $data as $item ) {
-			$translations[] = (string) ( $item['translations'][0]['text'] ?? '' );
-		}
-		if ( count( $translations ) !== count( $segments ) ) {
-			return new WP_Error( 'azure_response_count_v3', 'Azure v3.0 повернув іншу кількість перекладів.' );
-		}
-		return array(
-			'translations' => $translations,
-			'source_characters' => $source_characters,
-			'api_version' => '3.0 fallback',
-			'request_id' => (string) wp_remote_retrieve_header( $response, 'x-requestid' ),
-		);
-	}
-
-	private static function api_headers( array $credentials ): array {
-		$headers = array(
-			'Content-Type' => 'application/json; charset=utf-8',
-			'Ocp-Apim-Subscription-Key' => (string) $credentials['key'],
-			'X-ClientTraceId' => wp_generate_uuid4(),
-		);
-		if ( '' !== (string) $credentials['region'] ) {
-			$headers['Ocp-Apim-Subscription-Region'] = (string) $credentials['region'];
-		}
-		return $headers;
-	}
-
-	private static function new_api_url( string $endpoint ): string {
-		$parts = wp_parse_url( $endpoint );
-		$host = strtolower( (string) ( $parts['host'] ?? '' ) );
-		$path = rtrim( (string) ( $parts['path'] ?? '' ), '/' );
-		if ( '' === $path ) {
-			$path = str_ends_with( $host, '.cognitiveservices.azure.com' )
-				? '/translator/text/translate'
-				: '/translate';
-		} elseif ( ! str_ends_with( $path, '/translate' ) ) {
-			$path .= '/translate';
-		}
-		$base = 'https://' . $host . $path;
-		return add_query_arg( 'api-version', self::API_VERSION, $base );
-	}
-
-	private static function v3_api_url( string $endpoint, string $target_code ): string {
-		$parts = wp_parse_url( $endpoint );
-		$host = strtolower( (string) ( $parts['host'] ?? '' ) );
-		$base = 'https://' . $host . '/translate';
-		return add_query_arg(
-			array(
-				'api-version' => '3.0',
-				'from' => self::source_language_code(),
-				'to' => $target_code,
-				'textType' => 'html',
-			),
-			$base
-		);
-	}
-
-	private static function azure_http_error( $response, int $status ): WP_Error {
-		$body = (string) wp_remote_retrieve_body( $response );
-		$data = json_decode( $body, true );
-		$message = '';
-		if ( is_array( $data ) ) {
-			$message = (string) ( $data['error']['message'] ?? $data['message'] ?? '' );
-		}
-		$message = $message ?: 'Azure Translator HTTP ' . $status;
-		$retry_header = wp_remote_retrieve_header( $response, 'retry-after' );
-		$retry_after = is_numeric( $retry_header ) ? (int) $retry_header : 0;
-		if ( 429 === $status ) {
-			$lower = strtolower( $message );
-			$code = false !== strpos( $lower, 'quota' ) || false !== strpos( $lower, 'monthly' )
-				? 'azure_quota'
-				: 'azure_rate_limit';
-			return new WP_Error( $code, $message, array( 'status' => $status, 'retry_after' => $retry_after ) );
-		}
-		if ( in_array( $status, array( 401, 403 ), true ) ) {
-			return new WP_Error( 'azure_auth', $message, array( 'status' => $status ) );
-		}
-		return new WP_Error( 'azure_http_' . $status, $message, array( 'status' => $status, 'retry_after' => $retry_after ) );
-	}
-
-	private static function prepare_api_text( string $text ): string {
-		$escaped = esc_html( $text );
-		$terms = array(
-			'UA FREE', 'PayPal', 'Monobank', 'MONOBANK', 'PrivatBank',
-			'LiqPay', 'LIQPAY', 'Google Pay', 'Apple Pay', 'BTC', 'ETH', 'BNB',
-			'USDT', 'USDC', 'XRP', 'Dogecoin', 'Bitcoin Cash', 'Stellar', 'ADA',
-			'ERC-20', 'TRC-20', 'BEP-20', 'Solana', 'TGE', 'Maecenata',
-		);
-		usort( $terms, static fn( string $a, string $b ): int => strlen( $b ) <=> strlen( $a ) );
-		foreach ( $terms as $term ) {
-			$quoted = preg_quote( esc_html( $term ), '/' );
-			$escaped = preg_replace(
-				'/' . $quoted . '/iu',
-				'<span class="notranslate" translate="no">$0</span>',
-				$escaped
-			);
-		}
-		return '<div>' . $escaped . '</div>';
+		return KOZSTX_Azure_Client::translate_batch( $segments, $target_code, $credentials );
 	}
 
 	private static function clean_api_translation( string $translation ): string {
-		$translation = preg_replace( '/<\/?(?:div|span)\b[^>]*>/iu', '', $translation );
-		$translation = preg_replace( '/<\/?mstrans:dictionary\b[^>]*>/iu', '', (string) $translation );
-		$translation = html_entity_decode( (string) $translation, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
-		$translation = preg_replace( '/\s+/u', ' ', (string) $translation );
-		return trim( (string) $translation );
+		return KOZSTX_Azure_Client::clean_translation( $translation );
 	}
 
 	private static function validate_translation( string $source, string $translation, string $language ): array {
@@ -2930,7 +2740,7 @@ final class KOZSTX_Static_Translate {
 
 	private static function pause_for_monthly_limit(): void {
 		$cycle = self::cycle_info();
-		self::pause_until( 'monthly_limit', (int) $cycle['next_ts'], 'Локальний місячний бюджет Azure Translator вичерпано.' );
+		self::pause_until( 'monthly_limit', (int) $cycle['next_ts'], 'The local monthly Azure Translator budget is used up.' );
 		global $wpdb;
 		$tables = self::tables();
 		$wpdb->query(
@@ -2951,7 +2761,7 @@ final class KOZSTX_Static_Translate {
 
 	private static function source_translation_completed( int $source_id, string $language ): void {
 		self::purge_translation_cache();
-		self::log_event( 0, $source_id, $language, 'info', 'language_page_ready', 0, 'Мовна версія готова до публічного маршруту.' );
+		self::log_event( 0, $source_id, $language, 'info', 'language_page_ready', 0, 'The language version is ready for its public URL.' );
 		$source = self::source_row( $source_id );
 		if ( is_array( $source ) ) {
 			do_action( 'kozstx_translation_ready', self::language_url( (string) $source['source_url'], $language ), (string) $source['source_url'], $language, (int) $source['post_id'] );
@@ -3020,6 +2830,8 @@ final class KOZSTX_Static_Translate {
 			return;
 		}
 		$pattern = implode( '|', array_map( static fn( string $slug ): string => preg_quote( $slug, '/' ), $slugs ) );
+		add_rewrite_rule( '^koz-translations-sitemap\.xml$', 'index.php?' . self::SITEMAP_QUERY_VAR . '=1', 'top' );
+		// Former path, kept so existing Search Console submissions keep working.
 		add_rewrite_rule( '^uafree-translations-sitemap\.xml$', 'index.php?' . self::SITEMAP_QUERY_VAR . '=1', 'top' );
 		add_rewrite_rule( '^ru(?:/.*)?$', 'index.php?' . self::FORBIDDEN_LANG_QUERY_VAR . '=1', 'top' );
 		add_rewrite_rule( '^(' . $pattern . ')/?$', 'index.php?' . self::LANG_QUERY_VAR . '=$matches[1]&' . self::PATH_QUERY_VAR . '=__home__', 'top' );
@@ -3633,6 +3445,13 @@ final class KOZSTX_Static_Translate {
 			return $summary;
 		}
 
+		// Visitors and crawlers must not spend the Azure budget or wait for Azure:
+		// remember the missing text and let the background worker translate it.
+		if ( ! self::$live_azure ) {
+			self::enqueue_residual( $slug, $missing );
+			return $summary;
+		}
+
 		$settings = self::settings();
 		$runtime = self::runtime();
 		$credentials = self::credentials();
@@ -3748,6 +3567,7 @@ final class KOZSTX_Static_Translate {
 
 				if ( ! empty( $flags ) ) {
 					$summary['invalid']++;
+					KOZSTX_Quota::note_rejection( $slug, $hash );
 					unset( $remaining[ $hash ] );
 					continue;
 				}
@@ -3838,6 +3658,136 @@ final class KOZSTX_Static_Translate {
 		return $summary;
 	}
 
+	/**
+	 * Remember source-language text seen on a rendered translated page that has no
+	 * translation yet. Stored as language => hash => text, at most 3,000 entries.
+	 *
+	 * @param array<string,array<string,mixed>> $missing Residual targets keyed by text hash.
+	 */
+	private static function enqueue_residual( string $slug, array $missing ): void {
+		$queue   = get_option( self::RESIDUAL_QUEUE_OPTION, array() );
+		$queue   = is_array( $queue ) ? $queue : array();
+		$changed = false;
+		$total   = array_sum( array_map( 'count', array_filter( $queue, 'is_array' ) ) );
+		foreach ( $missing as $hash => $target ) {
+			$hash = (string) $hash;
+			if ( $total >= 3000 || isset( $queue[ $slug ][ $hash ] ) || KOZSTX_Quota::is_rejected( $slug, $hash ) ) {
+				continue;
+			}
+			$queue[ $slug ][ $hash ] = self::short_text( (string) ( $target['source'] ?? '' ), 4000 );
+			$changed = true;
+			$total++;
+		}
+		if ( $changed ) {
+			update_option( self::RESIDUAL_QUEUE_OPTION, $queue, false );
+		}
+	}
+
+	/**
+	 * Background worker part: translate text queued from rendered pages into the translation
+	 * memory. The next render of the page picks it up from memory.
+	 */
+	private static function process_residual_queue(): void {
+		$queue = get_option( self::RESIDUAL_QUEUE_OPTION, array() );
+		if ( ! is_array( $queue ) || ! $queue ) {
+			return;
+		}
+		$credentials = self::credentials();
+		$runtime     = self::runtime();
+		if ( empty( $credentials['configured'] ) || ! empty( $runtime['manual_paused'] ) || ( ! empty( $runtime['pause_until'] ) && time() < (int) $runtime['pause_until'] ) ) {
+			return;
+		}
+
+		$available = KOZSTX_Quota::available();
+		$batches   = 0;
+		foreach ( $queue as $slug => $items ) {
+			$slug = (string) $slug;
+			if ( ! isset( self::languages()[ $slug ] ) || ! is_array( $items ) ) {
+				unset( $queue[ $slug ] );
+				continue;
+			}
+			if ( $available <= 0 || $batches >= 3 ) {
+				break;
+			}
+
+			$segments = array();
+			$chars    = 0;
+			foreach ( $items as $hash => $text ) {
+				$hash = (string) $hash;
+				if ( '' !== self::memory_translation( $slug, $hash ) || KOZSTX_Quota::is_rejected( $slug, $hash ) ) {
+					unset( $queue[ $slug ][ $hash ] );
+					continue;
+				}
+				$length = self::string_length( (string) $text );
+				if ( count( $segments ) >= 100 || $chars + $length > min( 12000, $available ) ) {
+					break;
+				}
+				$segments[] = array( 'source_hash' => $hash, 'source_text' => (string) $text );
+				$chars     += $length;
+			}
+			if ( ! $segments ) {
+				if ( empty( $queue[ $slug ] ) ) {
+					unset( $queue[ $slug ] );
+				}
+				continue;
+			}
+
+			$result = self::azure_translate_batch( $segments, (string) self::languages()[ $slug ]['code'], $credentials );
+			$batches++;
+			if ( is_wp_error( $result ) ) {
+				if ( 'azure_quota' === $result->get_error_code() ) {
+					self::pause_for_monthly_limit();
+				}
+				self::log_event( 0, 0, $slug, 'error', 'residual_worker_error', 0, $result->get_error_message() );
+				break;
+			}
+
+			$stored   = 0;
+			$rejected = 0;
+			foreach ( $segments as $index => $segment ) {
+				$hash        = (string) $segment['source_hash'];
+				$translation = self::clean_api_translation( (string) ( $result['translations'][ $index ] ?? '' ) );
+				if ( self::validate_translation( (string) $segment['source_text'], $translation, $slug ) ) {
+					KOZSTX_Quota::note_rejection( $slug, $hash );
+					$rejected++;
+					if ( KOZSTX_Quota::is_rejected( $slug, $hash ) ) {
+						unset( $queue[ $slug ][ $hash ] );
+					}
+					continue;
+				}
+				self::store_memory( $slug, $hash, (string) $segment['source_text'], $translation );
+				unset( $queue[ $slug ][ $hash ] );
+				$stored++;
+			}
+			if ( empty( $queue[ $slug ] ) ) {
+				unset( $queue[ $slug ] );
+			}
+
+			$characters = (int) ( $result['source_characters'] ?? $chars );
+			self::increment_usage( $slug, $characters, 'background' );
+			$available = max( 0, $available - $characters );
+			self::log_event( 0, 0, $slug, $rejected ? 'warning' : 'info', 'residual_worker', $characters, sprintf( 'Page text translated in the background: stored %d, rejected %d.', $stored, $rejected ) );
+		}
+
+		update_option( self::RESIDUAL_QUEUE_OPTION, $queue, false );
+	}
+
+	public static function residual_queue_size(): int {
+		$queue = get_option( self::RESIDUAL_QUEUE_OPTION, array() );
+		return is_array( $queue ) ? (int) array_sum( array_map( 'count', array_filter( $queue, 'is_array' ) ) ) : 0;
+	}
+
+	/**
+	 * Pause until the budget renews: tomorrow for the daily budget, the next cycle otherwise.
+	 */
+	private static function pause_for_budget(): void {
+		if ( 'daily' === KOZSTX_Quota::blocked_reason() ) {
+			self::pause_until( 'daily_limit', KOZSTX_Quota::next_daily_reset(), 'Daily Azure Translator budget used.' );
+			return;
+		}
+		self::pause_for_monthly_limit();
+	}
+
 	private static function is_residual_source_text(
 		string $text
 	): bool {
@@ -3892,10 +3842,8 @@ final class KOZSTX_Static_Translate {
 
 
 	private static function neutralize_provisional_seo_dom( DOMDocument $dom, DOMXPath $xpath ): void {
-		$title = $dom->getElementsByTagName( 'title' )->item( 0 );
-		if ( $title instanceof DOMElement ) {
-			$title->nodeValue = '';
-		}
+		// The <title> stays as rendered (source language if not yet translated): an empty title
+		// is worse for visitors, and the page is noindex until it is complete anyway.
 
 		$queries = array(
 			'//meta[@name="description"]',
@@ -4497,11 +4445,7 @@ final class KOZSTX_Static_Translate {
 			);
 		}
 
-		$usage = self::current_usage();
-		$available = max(
-			0,
-			(int) $usage['remaining'] - (int) $settings['reserve_chars']
-		);
+		$available = KOZSTX_Quota::available();
 		$missing_chars = array_sum(
 			array_map(
 				static fn( string $text ): int =>
@@ -4667,7 +4611,8 @@ final class KOZSTX_Static_Translate {
 
 		self::increment_usage(
 			$language,
-			(int) ( $result['source_characters'] ?? $missing_chars )
+			(int) ( $result['source_characters'] ?? $missing_chars ),
+			'dynamic'
 		);
 
 		$job_id = (int) $wpdb->get_var(
@@ -4702,7 +4647,7 @@ final class KOZSTX_Static_Translate {
 			'dynamic_translation',
 			(int) ( $result['source_characters'] ?? $missing_chars ),
 			sprintf(
-				'Динамічно перекладено %d із %d рядків.',
+				'Dynamically translated %d of %d strings.',
 				$translated_count,
 				count( $missing )
 			)
@@ -5914,7 +5859,7 @@ final class KOZSTX_Static_Translate {
 		if ( empty( $settings['routes_enabled'] ) ) {
 			return $sitemaps;
 		}
-		$sitemaps[] = home_url( '/uafree-translations-sitemap.xml' );
+		$sitemaps[] = home_url( '/' . self::SITEMAP_PATH );
 		return array_values( array_unique( array_filter( array_map( 'strval', $sitemaps ) ) ) );
 	}
 
@@ -6064,7 +6009,7 @@ final class KOZSTX_Static_Translate {
 
 		return array(
 			'success' => true,
-			'message' => 'Поточні переклади, memory, queue, usage та logs скинуто. Налаштування Azure і ключ збережено. Публічні мовні URL та автоматичну чергу вимкнено до нового контрольного запуску.',
+			'message' => 'Current translations, memory, queue, usage and logs were reset. The Azure settings and key were kept.',
 			'counts' => $counts,
 		);
 	}
@@ -6531,22 +6476,50 @@ final class KOZSTX_Static_Translate {
 			ORDER BY s.is_report ASC, s.report_date DESC, s.id ASC, q.language_order ASC",
 			ARRAY_A
 		);
-		status_header( 200 );
-		nocache_headers();
-		header( 'Content-Type: application/xml; charset=utf-8' );
-		echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
-		echo '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
+
+		// Group ready languages by source so each URL can list its alternates.
+		$groups = array();
 		foreach ( is_array( $rows ) ? $rows : array() as $row ) {
 			$slug = (string) $row['language'];
 			if ( ! isset( self::languages()[ $slug ] ) ) {
 				continue;
 			}
-			echo "  <url>\n";
-			echo '    <loc>' . esc_xml( self::language_url( (string) $row['source_url'], $slug ) ) . "</loc>\n";
-			if ( ! empty( $row['updated_at'] ) ) {
-				echo '    <lastmod>' . esc_xml( gmdate( DATE_W3C, strtotime( (string) $row['updated_at'] . ' UTC' ) ) ) . "</lastmod>\n";
+			$id = (int) $row['id'];
+			if ( ! isset( $groups[ $id ] ) ) {
+				$groups[ $id ] = array(
+					'source_url' => (string) $row['source_url'],
+					'updated_at' => (string) $row['updated_at'],
+					'languages'  => array(),
+				);
 			}
-			echo "  </url>\n";
+			$groups[ $id ]['languages'][] = $slug;
+		}
+
+		$source_hreflang = self::source_language_code();
+		status_header( 200 );
+		nocache_headers();
+		header( 'Content-Type: application/xml; charset=utf-8' );
+		echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
+		echo '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">' . "\n";
+		foreach ( $groups as $group ) {
+			$alternates = array(
+				$source_hreflang => $group['source_url'],
+				'x-default'      => $group['source_url'],
+			);
+			foreach ( $group['languages'] as $slug ) {
+				$alternates[ (string) self::languages()[ $slug ]['code'] ] = self::language_url( $group['source_url'], $slug );
+			}
+			foreach ( $group['languages'] as $slug ) {
+				echo "  <url>\n";
+				echo '    <loc>' . esc_xml( self::language_url( $group['source_url'], $slug ) ) . "</loc>\n";
+				if ( '' !== $group['updated_at'] ) {
+					echo '    <lastmod>' . esc_xml( gmdate( DATE_W3C, (int) strtotime( $group['updated_at'] . ' UTC' ) ) ) . "</lastmod>\n";
+				}
+				foreach ( $alternates as $hreflang => $href ) {
+					echo '    <xhtml:link rel="alternate" hreflang="' . esc_attr( (string) $hreflang ) . '" href="' . esc_xml( $href ) . '"/>' . "\n";
+				}
+				echo "  </url>\n";
+			}
 		}
 		echo '</urlset>';
 		exit;
@@ -6556,7 +6529,7 @@ final class KOZSTX_Static_Translate {
 		if ( ! $public ) {
 			return $output;
 		}
-		$line = 'Sitemap: ' . home_url( '/uafree-translations-sitemap.xml' );
+		$line = 'Sitemap: ' . home_url( '/' . self::SITEMAP_PATH );
 		if ( false === strpos( $output, $line ) ) {
 			$output = rtrim( $output ) . "\n" . $line . "\n";
 		}
@@ -6638,7 +6611,14 @@ final class KOZSTX_Static_Translate {
 			<div class="koz-st-panel">
 				<h2><?php echo esc_html__( 'Runtime status', 'koz-static-translate' ); ?></h2>
 				<table class="widefat striped"><tbody>
-					<tr><th><?php echo esc_html__( 'Automatic worker', 'koz-static-translate' ); ?></th><td><strong><?php echo esc_html__( 'Disabled (safety mode)', 'koz-static-translate' ); ?></strong></td></tr>
+					<tr><th><?php echo esc_html__( 'Background worker', 'koz-static-translate' ); ?></th><td><strong><?php
+					if ( empty( $settings['background_worker'] ) ) {
+						echo esc_html__( 'Off', 'koz-static-translate' );
+					} else {
+						$next_tick = wp_next_scheduled( self::CRON_HOOK );
+						echo esc_html( $next_tick ? sprintf( /* translators: %s: date and time. */ __( 'On, next run %s', 'koz-static-translate' ), wp_date( 'Y-m-d H:i', (int) $next_tick ) ) : __( 'On', 'koz-static-translate' ) );
+					}
+					?></strong><br><span class="description"><?php echo esc_html__( 'Page views never call Azure. Missing text is translated by the worker or by a manual queue step.', 'koz-static-translate' ); ?></span></td></tr>
 					<tr><th><?php echo esc_html__( 'Public language routes', 'koz-static-translate' ); ?></th><td><?php echo ! empty( $settings['routes_enabled'] ) ? esc_html__( 'Enabled when a page is ready', 'koz-static-translate' ) : esc_html__( 'Disabled', 'koz-static-translate' ); ?></td></tr>
 					<tr><th><?php echo esc_html__( 'Floating language switcher', 'koz-static-translate' ); ?></th><td><?php echo ! empty( $settings['switcher_enabled'] ) ? esc_html__( 'Enabled', 'koz-static-translate' ) : esc_html__( 'Disabled', 'koz-static-translate' ); ?></td></tr>
 					<tr><th><?php echo esc_html__( 'Manual pause', 'koz-static-translate' ); ?></th><td><?php echo ! empty( $runtime['manual_paused'] ) ? esc_html__( 'Yes', 'koz-static-translate' ) : esc_html__( 'No', 'koz-static-translate' ); ?></td></tr>
@@ -6648,7 +6628,7 @@ final class KOZSTX_Static_Translate {
 					<tr><th><?php echo esc_html__( 'Last error', 'koz-static-translate' ); ?></th><td><?php echo esc_html( (string) $runtime['last_error'] ?: __( 'None', 'koz-static-translate' ) ); ?></td></tr>
 				</tbody></table>
 				<div class="koz-st-actions">
-					<button class="button" disabled><?php echo esc_html__( 'Azure actions disabled (safety mode)', 'koz-static-translate' ); ?></button>
+					<button type="button" class="button" id="kozstx-auto-run"><?php echo esc_html__( 'Run one queue step (uses Azure budget)', 'koz-static-translate' ); ?></button>
 					<button class="button" disabled><?php echo esc_html__( 'Rebuild disabled (safety mode)', 'koz-static-translate' ); ?></button>
 				</div>
 				<div class="koz-st-actions" style="margin-top:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
@@ -6690,6 +6670,34 @@ final class KOZSTX_Static_Translate {
 						<tr><th><?php echo esc_html__( 'Limit resets in', 'koz-static-translate' ); ?></th><td><strong id="kozstx-countdown" data-reset="<?php echo esc_attr( (string) $usage['cycle']['next_ts'] ); ?>"><?php echo esc_html__( 'Calculating…', 'koz-static-translate' ); ?></strong></td></tr>
 					</tbody></table>
 					<div class="koz-st-progress"><span style="width:<?php echo esc_attr( (string) min( 100, $usage['percent'] ) ); ?>%"></span></div>
+					<?php
+					$kozstx_daily_limit = KOZSTX_Quota::daily_limit();
+					$kozstx_today       = KOZSTX_Quota::today_usage();
+					$kozstx_by_kind     = array_fill_keys( array_keys( KOZSTX_Quota::kinds() ), 0 );
+					foreach ( KOZSTX_Quota::daily_usage( 30 ) as $kozstx_day_usage ) {
+						foreach ( $kozstx_day_usage as $kozstx_kind => $kozstx_chars ) {
+							if ( isset( $kozstx_by_kind[ $kozstx_kind ] ) ) {
+								$kozstx_by_kind[ $kozstx_kind ] += (int) $kozstx_chars;
+							}
+						}
+					}
+					?>
+					<table class="widefat striped" style="margin-top:12px"><tbody>
+						<tr><th><?php echo esc_html__( 'Daily budget (UTC day)', 'koz-static-translate' ); ?></th><td><?php echo esc_html( number_format_i18n( $kozstx_today ) . ' / ' . number_format_i18n( $kozstx_daily_limit ) ); ?></td></tr>
+						<tr><th><?php echo esc_html__( 'Available now', 'koz-static-translate' ); ?></th><td><?php echo esc_html( number_format_i18n( KOZSTX_Quota::available() ) ); ?></td></tr>
+						<tr><th><?php echo esc_html__( 'Page text waiting for the worker', 'koz-static-translate' ); ?></th><td><?php echo esc_html( number_format_i18n( self::residual_queue_size() ) ); ?></td></tr>
+						<tr><th><?php echo esc_html__( 'Segments no longer requested (rejected twice)', 'koz-static-translate' ); ?></th><td><?php echo esc_html( number_format_i18n( KOZSTX_Quota::blocked_rejections() ) ); ?>
+							<?php if ( KOZSTX_Quota::blocked_rejections() > 0 ) : ?>
+								<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="display:inline"><input type="hidden" name="action" value="kozstx_clear_rejections"><?php wp_nonce_field( 'kozstx_clear_rejections' ); ?><button class="button-link" type="submit"><?php echo esc_html__( 'Allow them again', 'koz-static-translate' ); ?></button></form>
+							<?php endif; ?></td></tr>
+					</tbody></table>
+					<h3><?php echo esc_html__( 'Azure usage by source, last 30 days', 'koz-static-translate' ); ?></h3>
+					<table class="widefat striped"><tbody>
+					<?php foreach ( KOZSTX_Quota::kinds() as $kozstx_kind => $kozstx_label ) : ?>
+						<tr><th><?php echo esc_html( $kozstx_label ); ?></th><td><?php echo esc_html( number_format_i18n( $kozstx_by_kind[ $kozstx_kind ] ) ); ?></td></tr>
+					<?php endforeach; ?>
+						<tr><th><?php echo esc_html__( 'This cycle, not attributed (before 0.10.0, mostly page views)', 'koz-static-translate' ); ?></th><td><?php echo esc_html( number_format_i18n( max( 0, (int) $usage['characters'] - array_sum( $kozstx_by_kind ) ) ) ); ?></td></tr>
+					</tbody></table>
 					<?php if ( ! empty( $usage['by_language'] ) ) : ?>
 						<h3><?php echo esc_html__( 'Azure usage by language code', 'koz-static-translate' ); ?></h3>
 						<table class="widefat striped"><thead><tr><th><?php echo esc_html__( 'Language code', 'koz-static-translate' ); ?></th><th><?php echo esc_html__( 'Characters', 'koz-static-translate' ); ?></th><th><?php echo esc_html__( 'Requests', 'koz-static-translate' ); ?></th><th><?php echo esc_html__( 'Status', 'koz-static-translate' ); ?></th></tr></thead><tbody>
@@ -6733,12 +6741,16 @@ final class KOZSTX_Static_Translate {
 						<tr><th scope="row"><?php echo esc_html__( 'Floating language switcher', 'koz-static-translate' ); ?></th><td><label><input type="checkbox" name="<?php echo esc_attr( self::SETTINGS_OPTION ); ?>[switcher_enabled]" value="1" <?php checked( ! empty( $settings['switcher_enabled'] ) ); ?>> <?php echo esc_html__( 'Show on original and translated pages', 'koz-static-translate' ); ?></label> <select name="<?php echo esc_attr( self::SETTINGS_OPTION ); ?>[switcher_position]"><option value="right" <?php selected( $settings['switcher_position'], 'right' ); ?>><?php echo esc_html__( 'Right', 'koz-static-translate' ); ?></option><option value="left" <?php selected( $settings['switcher_position'], 'left' ); ?>><?php echo esc_html__( 'Left', 'koz-static-translate' ); ?></option></select></td></tr>
 						<tr><th scope="row"><?php echo esc_html__( 'Dynamic content', 'koz-static-translate' ); ?></th><td><label><input type="checkbox" name="<?php echo esc_attr( self::SETTINGS_OPTION ); ?>[dynamic_content_enabled]" value="1" <?php checked( ! empty( $settings['dynamic_content_enabled'] ) ); ?>> <?php echo esc_html__( 'Translate text and charts added after page load', 'koz-static-translate' ); ?></label><p class="description"><?php echo esc_html__( 'Repeated text is reused from translation memory without another Azure charge.', 'koz-static-translate' ); ?></p></td></tr>
 						<tr><th scope="row"><?php echo esc_html__( 'Monthly character limit', 'koz-static-translate' ); ?></th><td><input type="number" min="100000" max="100000000" step="1000" name="<?php echo esc_attr( self::SETTINGS_OPTION ); ?>[monthly_limit]" value="<?php echo esc_attr( (string) $settings['monthly_limit'] ); ?>"></td></tr>
+						<tr><th scope="row"><?php echo esc_html__( 'Background worker', 'koz-static-translate' ); ?></th><td><label><input type="checkbox" name="<?php echo esc_attr( self::SETTINGS_OPTION ); ?>[background_worker]" value="1" <?php checked( ! empty( $settings['background_worker'] ) ); ?>> <?php echo esc_html__( 'Translate the queue every five minutes within the daily budget', 'koz-static-translate' ); ?></label><p class="description"><?php echo esc_html__( 'Off by default. Uses WP-Cron, which runs on site visits; for exact timing add a real cron job for wp-cron.php.', 'koz-static-translate' ); ?></p></td></tr>
+						<tr><th scope="row"><?php echo esc_html__( 'Daily character budget', 'koz-static-translate' ); ?></th><td><input type="number" min="0" max="100000000" step="1000" name="<?php echo esc_attr( self::SETTINGS_OPTION ); ?>[daily_limit]" value="<?php echo esc_attr( (string) ( $settings['daily_limit'] ?? 0 ) ); ?>"><p class="description"><?php echo esc_html( sprintf( /* translators: %s: characters per day. */ __( '0 = monthly limit / 30 (now %s per day). Stops a single day from using the whole month.', 'koz-static-translate' ), number_format_i18n( KOZSTX_Quota::daily_limit() ) ) ); ?></p></td></tr>
 						<tr><th scope="row"><?php echo esc_html__( 'Reserve before limit', 'koz-static-translate' ); ?></th><td><input type="number" min="0" max="100000" step="1000" name="<?php echo esc_attr( self::SETTINGS_OPTION ); ?>[reserve_chars]" value="<?php echo esc_attr( (string) $settings['reserve_chars'] ); ?>"></td></tr>
 						<tr><th scope="row"><?php echo esc_html__( 'Cycle start', 'koz-static-translate' ); ?></th><td><?php echo esc_html__( 'Day', 'koz-static-translate' ); ?> <input type="number" min="1" max="28" name="<?php echo esc_attr( self::SETTINGS_OPTION ); ?>[reset_day]" value="<?php echo esc_attr( (string) $settings['reset_day'] ); ?>">, <?php echo esc_html__( 'UTC hour', 'koz-static-translate' ); ?> <input type="number" min="0" max="23" name="<?php echo esc_attr( self::SETTINGS_OPTION ); ?>[reset_hour_utc]" value="<?php echo esc_attr( (string) $settings['reset_hour_utc'] ); ?>"></td></tr>
 						<tr><th scope="row"><?php echo esc_html__( 'Characters per API step', 'koz-static-translate' ); ?></th><td><input type="number" min="1000" max="30000" name="<?php echo esc_attr( self::SETTINGS_OPTION ); ?>[batch_chars]" value="<?php echo esc_attr( (string) $settings['batch_chars'] ); ?>"></td></tr>
 						<tr><th scope="row"><?php echo esc_html__( 'Segments per API step', 'koz-static-translate' ); ?></th><td><input type="number" min="1" max="500" name="<?php echo esc_attr( self::SETTINGS_OPTION ); ?>[max_segments]" value="<?php echo esc_attr( (string) $settings['max_segments'] ); ?>"></td></tr>
 						<tr><th scope="row"><?php echo esc_html__( 'Request interval, seconds', 'koz-static-translate' ); ?></th><td><input type="number" min="60" max="3600" name="<?php echo esc_attr( self::SETTINGS_OPTION ); ?>[request_interval]" value="<?php echo esc_attr( (string) $settings['request_interval'] ); ?>"></td></tr>
 						<tr><th scope="row"><?php echo esc_html__( 'Core page rescan, hours', 'koz-static-translate' ); ?></th><td><input type="number" min="1" max="168" name="<?php echo esc_attr( self::SETTINGS_OPTION ); ?>[core_rescan_hours]" value="<?php echo esc_attr( (string) $settings['core_rescan_hours'] ); ?>"></td></tr>
+						<tr><th scope="row"><?php echo esc_html__( 'Do not translate', 'koz-static-translate' ); ?></th><td><textarea class="large-text code" rows="5" name="<?php echo esc_attr( self::SETTINGS_OPTION ); ?>[protected_terms]"><?php echo esc_textarea( implode( "\n", (array) ( $settings['protected_terms'] ?? array() ) ) ); ?></textarea><p class="description"><?php echo esc_html__( 'One term per line: brand names, payment systems, wallets. They are sent to Azure marked translate="no".', 'koz-static-translate' ); ?></p></td></tr>
+						<tr><th scope="row"><?php echo esc_html__( 'Daily report title prefix', 'koz-static-translate' ); ?></th><td><input class="regular-text" name="<?php echo esc_attr( self::SETTINGS_OPTION ); ?>[report_title_prefix]" value="<?php echo esc_attr( (string) ( $settings['report_title_prefix'] ?? '' ) ); ?>" placeholder="Report on"><p class="description"><?php echo esc_html__( 'Optional. Posts titled "<prefix> DD.MM.YYYY" are handled as daily reports (lower priority, newest first). Leave empty if the site has no such reports.', 'koz-static-translate' ); ?></p></td></tr>
 						<tr><th scope="row"><?php echo esc_html__( 'Maximum consecutive errors', 'koz-static-translate' ); ?></th><td><input type="number" min="3" max="30" name="<?php echo esc_attr( self::SETTINGS_OPTION ); ?>[max_attempts]" value="<?php echo esc_attr( (string) $settings['max_attempts'] ); ?>"></td></tr>
 					</table>
 					<?php submit_button( __( 'Save settings', 'koz-static-translate' ) ); ?>
@@ -6759,7 +6771,7 @@ final class KOZSTX_Static_Translate {
 				<?php if ( empty( $logs ) ) : ?><tr><td colspan="6"><?php echo esc_html__( 'No events yet.', 'koz-static-translate' ); ?></td></tr><?php endif; ?>
 				<?php foreach ( $logs as $log ) : ?><tr><td><?php echo esc_html( $log['created_at'] ); ?></td><td><?php echo esc_html( $log['level'] ); ?></td><td><?php echo esc_html( $log['event'] ); ?></td><td><code><?php echo esc_html( $log['language'] ); ?></code></td><td><?php echo esc_html( number_format_i18n( $log['characters'] ) ); ?></td><td><?php echo esc_html( self::short_text( $log['message'], 220 ) ); ?></td></tr><?php endforeach; ?>
 				</tbody></table>
-				<p><strong><?php echo esc_html__( 'Language sitemap:', 'koz-static-translate' ); ?></strong> <a href="<?php echo esc_url( home_url( '/uafree-translations-sitemap.xml' ) ); ?>" target="_blank" rel="noopener"><?php echo esc_html( home_url( '/uafree-translations-sitemap.xml' ) ); ?></a></p>
+				<p><strong><?php echo esc_html__( 'Language sitemap:', 'koz-static-translate' ); ?></strong> <a href="<?php echo esc_url( home_url( '/' . self::SITEMAP_PATH ) ); ?>" target="_blank" rel="noopener"><?php echo esc_html( home_url( '/' . self::SITEMAP_PATH ) ); ?></a></p>
 			</div>
 			<?php do_action( 'kozstx_admin_cleanup_section' ); ?>
 		</div>
@@ -6800,10 +6812,10 @@ final class KOZSTX_Static_Translate {
 			}
 		}
 		$core_expected = max( 0, $core_expected - $legacy_count );
-		$report_expected = (int) $wpdb->get_var(
+		$report_expected = '' === self::report_title_like() ? 0 : (int) $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_type = 'post' AND post_status = 'publish' AND post_title LIKE %s",
-				'Звіт на %'
+				self::report_title_like()
 			)
 		);
 		$core_sources = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$tables['sources']} WHERE is_report = 0" );
@@ -6883,8 +6895,7 @@ final class KOZSTX_Static_Translate {
 		if ( ! $credentials['configured'] ) {
 			wp_send_json_error( array( 'message' => __( 'Azure key is not configured.', 'koz-static-translate' ) ), 400 );
 		}
-		$usage = self::current_usage();
-		if ( $usage['remaining'] < 50 ) {
+		if ( KOZSTX_Quota::available() < 50 ) {
 			wp_send_json_error( array( 'message' => __( 'The monthly allowance is too low even for a test.', 'koz-static-translate' ) ), 400 );
 		}
 		$segment = array(
@@ -6898,17 +6909,16 @@ final class KOZSTX_Static_Translate {
 		if ( is_wp_error( $result ) ) {
 			wp_send_json_error( array( 'message' => $result->get_error_message() ), 400 );
 		}
-		self::increment_usage( $test_slug, (int) $result['source_characters'] );
+		self::increment_usage( $test_slug, (int) $result['source_characters'], 'test' );
 		self::log_event( 0, 0, $test_slug, 'info', 'api_test', (int) $result['source_characters'], 'Azure test successful.', array( 'request_id' => $result['request_id'], 'api_version' => $result['api_version'] ) );
 		wp_send_json_success( array( 'message' => __( 'Azure API works. Response: ', 'koz-static-translate' ) . self::clean_api_translation( (string) $result['translations'][0] ) ) );
 	}
 
 	public static function ajax_run(): void {
 		self::ajax_guard();
-		wp_send_json_error(
-			array( 'message' => __( 'Background translation processing is temporarily disabled in version 0.9.38.', 'koz-static-translate' ) ),
-			409
-		);
+		self::maybe_resume_for_new_cycle();
+		$result = self::process_one_step();
+		wp_send_json_success( array( 'message' => (string) ( $result['message'] ?? '' ), 'worked' => ! empty( $result['worked'] ) ) );
 	}
 
 	public static function ajax_rebuild(): void {
@@ -8108,7 +8118,7 @@ final class KOZSTX_Static_Translate {
 		return function_exists( 'mb_strtolower' ) ? mb_strtolower( $value, 'UTF-8' ) : strtolower( $value );
 	}
 
-	private static function string_length( string $value ): int {
+	public static function string_length( string $value ): int {
 		return function_exists( 'mb_strlen' ) ? mb_strlen( $value, 'UTF-8' ) : strlen( $value );
 	}
 
