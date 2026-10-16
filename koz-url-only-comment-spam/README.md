@@ -1,4 +1,4 @@
-# KOZ URL-Only Comment Spam 1.1.11
+# KOZ URL-Only Comment Spam 1.2.0
 
 A privacy-first WordPress moderation plugin for comments whose visible content consists only of one or more URLs.
 
