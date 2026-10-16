@@ -321,6 +321,15 @@
       "dist_package_path": "dist/packages/koz-copy-actions-1.2.0.zip",
       "dist_checksum_path": "dist/checksums/koz-copy-actions-1.2.0.zip.sha256",
       "dist_package_commit": "33adb8c9dc224f74c5f88b506feb2ad6f678ffb3"
+    },
+    "koz-url-only-comment-spam": {
+      "version": "1.2.0",
+      "status": "GITHUB_SYNC_VERIFIED_WORDPRESS_ORG_UNVERIFIED",
+      "dist_package_status": "SYNCED_VERIFIED",
+      "dist_package_path": "dist/packages/koz-url-only-comment-spam-1.2.0.zip",
+      "dist_checksum_path": "dist/checksums/koz-url-only-comment-spam-1.2.0.zip.sha256",
+      "tested_zip_sha256": "6d99c186045b7a35e715288140946e6a6f0a9a949f9b7cdb94e1eb0d853500e4",
+      "tested_zip_size_bytes": 87069
     }
   }
 }
