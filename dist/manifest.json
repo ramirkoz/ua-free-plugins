@@ -356,7 +356,7 @@
     },
     "koz-static-translate": {
       "version": "0.10.0",
-      "status": "GITHUB_SYNC_VERIFIED_WORDPRESS_ORG_SVN_PENDING",
+      "status": "WORDPRESS_ORG_LIVE_0.10.0",
       "source_path": "koz-static-translate/",
       "dist_package_status": "SYNCED_VERIFIED",
       "dist_package_path": "dist/packages/koz-static-translate-0.10.0.zip",
@@ -366,7 +366,12 @@
       "source_commit": "74c60a0647c3f184865d11d9fe1f1eeddc341982",
       "binary_commit": "bb813a005305fa384f43b9e6f7df4659bc6d7d2d",
       "drive_release_url": "https://drive.google.com/file/d/1YP8pdH9cRXTAlyXUGQeXvTHvrhwrOsEQ/view",
-      "note": "31 files synced exactly from uploaded ZIP. WordPress.org SVN trunk/tag 0.10.0 not yet confirmed. Runtime Azure quota-dependent flows untested until Nov 2026. README.md stale 0.9.38; readme.txt stable tag 0.10.0."
+      "note": "31 release source files and exact tested ZIP/checksum synchronized. WordPress.org 0.10.0 LIVE confirmed by owner screenshot; SVN trunk r3750491 confirmed, tags/0.10.0 creation reported, tag revision unverified. Azure background quota-dependent flow not yet functionally verified. README.md historical version text stale.",
+      "wordpress_org_url": "https://wordpress.org/plugins/koz-static-translate/",
+      "wordpress_org_svn_trunk_revision": 3750491,
+      "wordpress_org_tag": "0.10.0",
+      "wordpress_org_tag_revision_status": "UNVERIFIED",
+      "wordpress_org_live_evidence": "Owner screenshot of WordPress.org Advanced View showing Version 0.10.0 and Download button on 2026-10-16"
     }
   }
 }
