@@ -316,8 +316,11 @@
       "source_commit": "5281b1af5ae4459e63d37b68c73eff0a7b1a7a25",
       "tested_zip_sha256": "7490c8bb20602c1fa429d5e106569d73d9342e2de80b10920dfe13b0c03445c6",
       "tested_zip_drive_url": "https://drive.google.com/file/d/1a8UOxQdtRNVhLxZoAUY4pvZQarf9uPXr/view",
-      "dist_package_status": "PENDING_BINARY_SYNC",
-      "note": "The packages array is a 2026-09-25 Suite 1.0.30 snapshot; its Copy Actions 1.1.14 package is historical and not the current public plugin release."
+      "dist_package_status": "SYNCED_VERIFIED",
+      "note": "The packages array is a 2026-09-25 Suite 1.0.30 snapshot; its Copy Actions 1.1.14 package is historical and not the current public plugin release.",
+      "dist_package_path": "dist/packages/koz-copy-actions-1.2.0.zip",
+      "dist_checksum_path": "dist/checksums/koz-copy-actions-1.2.0.zip.sha256",
+      "dist_package_commit": "33adb8c9dc224f74c5f88b506feb2ad6f678ffb3"
     }
   }
 }
