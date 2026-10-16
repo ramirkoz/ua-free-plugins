@@ -1,10 +1,10 @@
 === KOZ SEO Core ===
 Contributors: ramirkz
-Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=kozyriev%40uafree.org&item_name=Support+KOZ+WordPress+plugin+development&currency_code=USD
+Donate link: https://github.com/ramirkoz/ua-free-plugins#support-plugin-development
 Tags: seo, schema, sitemap, llms, accessibility
 Requires at least: 7.0
 Tested up to: 7.1
-Stable tag: 2.1.22
+Stable tag: 2.2.0
 Requires PHP: 8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -13,7 +13,9 @@ Lightweight SEO metadata, schema, sitemap controls, AI discovery files and acces
 
 == Description ==
 
-KOZ SEO Core generates document titles, meta descriptions, canonical URLs, robots directives, Open Graph and Twitter metadata, JSON-LD schema, hreflang links and WordPress sitemap controls.
+KOZ SEO Core generates document titles, meta descriptions, canonical URLs, robots directives, Open Graph and Twitter metadata, JSON-LD schema (Organization, WebSite, WebPage, Article and BreadcrumbList), hreflang links and WordPress sitemap controls.
+
+The post editor gets a KOZ SEO box with a search snippet preview, character counters and a media library picker for the social image. Posts marked noindex are also left out of the XML sitemap, and canonical URLs never carry tracking parameters.
 
 It also provides `/llms.txt`, `/.well-known/koz-ai-manifest.json`, a read-only inventory of other SEO plugins and a limited accessibility audit. Existing settings and post metadata from the former UA FREE package remain in place and are reused automatically.
 
@@ -21,18 +23,20 @@ The plugin was originally developed for the UA FREE charitable foundation websit
 
 = Part of the KOZ Suite =
 
-KOZ SEO Core is one focused module of the KOZ Suite, a family of independent WordPress plugins with a shared KOZ administration experience and visual identity.
+KOZ SEO Core is **one focused module of the broader KOZ Suite**, a family of independent WordPress plugins that share a common KOZ administration experience and visual identity.
 
-Each KOZ plugin can be installed independently or combined with other KOZ Suite modules.
+Each KOZ plugin remains independently installable, so site owners can use only the modules they need or combine several modules into one toolkit.
 
 Current public KOZ plugins:
 
 * KOZ SEO Core — technical SEO, schema, sitemaps, AI discovery and OpenAI Vision image ALT.
 * [KOZ Copy Actions](https://wordpress.org/plugins/koz-copy-actions/) — accessible copy-to-clipboard actions for selected WordPress content.
 * [KOZ URL-Only Comment Spam](https://wordpress.org/plugins/koz-url-only-comment-spam/) — privacy-first local moderation for URL-only comment spam.
-* [KOZ Static Translate](https://wordpress.org/plugins/koz-static-translate/) — AI-powered multilingual translation with Microsoft Azure Translator and static language routes.
-
-Additional KOZ Suite modules are used in production and may be published separately as they are prepared for public distribution.
+* [KOZ Static Translate](https://wordpress.org/plugins/koz-static-translate/) — AI-powered multilingual translation with Microsoft Azure AI Translator and static language routes.
+* [KOZ Translate Diagnostics](https://wordpress.org/plugins/koz-translate-diagnostics/) — read-only health checks and privacy-safe diagnostic reports for KOZ Static Translate.
+* [KOZ 404 Guard & URL Intelligence](https://wordpress.org/plugins/koz-404-guard/) — privacy-safe 404/410 diagnostics, controlled same-site redirects and URL intelligence.
+* [KOZ Consent Manager](https://wordpress.org/plugins/koz-consent-manager/) — privacy-first visitor consent, optional script control and Google Consent Mode v2 synchronization.
+* [KOZ Donate Stats & Conversions](https://wordpress.org/plugins/koz-donate-stats/) — local donation-journey analytics and consent-aware conversion events for WordPress.
 
 = Main features =
 
@@ -70,8 +74,24 @@ OpenAI Privacy Policy: https://openai.com/policies/privacy-policy/
 
 == Changelog ==
 
+= 2.2.0 =
+* Fixed: canonical URLs of category, tag and other archives with non-Latin (for example Cyrillic) slugs lost the slug and pointed to a non-existent URL.
+* Fixed: canonical URLs no longer include query strings such as utm_*, fbclid or gclid; archives use their WordPress link plus the page number.
+* Fixed: WordPress core no longer prints a second rel=canonical on singular pages while KOZ SEO output is enabled.
+* Fixed: posts marked "Prevent search engine indexing" are now removed from the XML sitemap.
+* New: Article schema with headline, author, publisher, image and dates; WebPage and WebSite carry inLanguage.
+* New: BreadcrumbList schema (home, parent pages or primary category, current page), on by default.
+* New: organization social profiles (sameAs), public email and phone settings.
+* New: og:locale, article:published_time and article:modified_time, and og:image width, height and alt for media library images.
+* New: llms.txt lists key pages with descriptions (configured IDs or the main menu).
+* New: SEO meta box with a search snippet preview, character counters, automatic values as placeholders and a media library picker for the social image.
+* New: AI ALT text follows the site language or a chosen language, and the prompt uses the site name instead of a fixed organisation.
+* Performance: settings are sanitized once per request, the requested post is resolved once, and legacy settings migration runs only on activation and in the admin area.
+* Saving a post no longer creates kozseo_noindex = 0 metadata, and revisions and autosaves are skipped.
+* Removed PayPal from the developer support panel and corrected the BTC and USDT TRC-20 developer wallet addresses.
+
 = 2.1.22 =
-* Updated KOZ Suite documentation to include KOZ Static Translate as the fourth public plugin.
+* Updated KOZ Suite documentation to include all eight current public plugins.
 * WordPress.org compatibility metadata: updated Tested up to to WordPress 7.1.
 
 = 2.1.21 =
@@ -181,6 +201,9 @@ OpenAI Privacy Policy: https://openai.com/policies/privacy-policy/
 * Last stable release under the former UA FREE public branding.
 
 == Upgrade Notice ==
+
+= 2.2.0 =
+Fixes canonical URLs of non-Latin archives and with tracking parameters, removes duplicate canonical tags and noindexed posts from the sitemap, and adds Article and BreadcrumbList schema. Recommended for all sites.
 
 = 2.1.8 =
 Requires WordPress 7.0+ because AI Vision now relies on the native WordPress AI Client and Connectors API.
