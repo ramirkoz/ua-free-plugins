@@ -27,12 +27,12 @@
   "Copy Actions": "コピー操作",
   "Copy BTC address": "BTC アドレスをコピー",
   "Copy ETH and USDC address": "ETH / USDC アドレスをコピー",
-  "Copy PayPal email": "PayPal メールをコピー",
   "Copy USDT address": "USDT アドレスをコピー",
   "Copy targets": "コピー対象",
   "Copy to clipboard": "クリップボードにコピー",
   "Could not copy": "コピーできませんでした",
   "Counter": "カウンター",
+  "Crypto donations support maintenance, testing and new free releases.": "暗号資産の寄付は、保守、テスト、新しい無料リリースを支えます。",
   "Current status": "現在の状態",
   "Delete settings and aggregate counters when the plugin is uninstalled.": "プラグインの削除時に設定と集計カウンターを削除します。",
   "Detected plugin": "検出したプラグイン",
@@ -67,6 +67,7 @@
   "KOZ WordPress Suite": "KOZ WordPress スイート",
   "KOZ project support": "KOZ プロジェクト支援",
   "Last detection": "最終検出",
+  "Leave this field empty": "この欄は空欄のままにしてください",
   "Legacy UA FREE version active": "旧 UA FREE 版が有効",
   "Links": "リンク",
   "Load the copy handler on matching public pages.": "一致する公開ページでコピー処理を読み込む。",
@@ -83,7 +84,6 @@
   "Open": "開く",
   "Optional trusted domains, one per line. A comment is exempt only when every detected URL is trusted.": "任意の信頼済みドメインを 1 行に 1 つ入力します。検出したすべての URL が信頼済みの場合のみ対象外になります。",
   "Optional. One local path per line. Use an ending * for a prefix. Leave empty to allow all public paths. Query strings and external URLs are rejected.": "任意。1 行に 1 つのローカルパスを入力します。末尾の * はプレフィックスです。空欄ならすべての公開パスを許可します。クエリ文字列と外部 URL は拒否されます。",
-  "PayPal and crypto donations support maintenance, testing and new free releases.": "PayPal と暗号資産の寄付は、保守、テスト、新しい無料リリースを支えます。",
   "Pingbacks, trackbacks, administrators and comment moderators are never processed.": "ピンバック、トラックバック、管理者、コメントモデレーターは処理されません。",
   "Preserve formatting": "書式を保持",
   "Prevent navigation when a matching link is clicked.": "一致するリンクをクリックしたときの移動を防ぐ。",
@@ -120,5 +120,6 @@
   "Visual feedback": "視覚的フィードバック",
   "Whitespace": "空白",
   "You do not have permission to access this page.": "このページにアクセスする権限がありません。",
-  "You do not have permission to perform this action.": "この操作を行う権限がありません。"
+  "You do not have permission to perform this action.": "この操作を行う権限がありません。",
+  "Your comment could not be accepted. Please write a few words of your own and try again.": "コメントを受け付けられませんでした。ご自身の言葉を少し書き添えて、もう一度お試しください。"
 }

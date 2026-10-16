@@ -27,12 +27,12 @@
   "Copy Actions": "复制操作",
   "Copy BTC address": "复制 BTC 地址",
   "Copy ETH and USDC address": "复制 ETH 和 USDC 地址",
-  "Copy PayPal email": "复制 PayPal 邮箱",
   "Copy USDT address": "复制 USDT 地址",
   "Copy targets": "复制目标",
   "Copy to clipboard": "复制到剪贴板",
   "Could not copy": "无法复制",
   "Counter": "计数器",
+  "Crypto donations support maintenance, testing and new free releases.": "加密货币捐赠用于维护、测试和发布新的免费版本。",
   "Current status": "当前状态",
   "Delete settings and aggregate counters when the plugin is uninstalled.": "卸载插件时删除设置和汇总计数器。",
   "Detected plugin": "检测到的插件",
@@ -67,6 +67,7 @@
   "KOZ WordPress Suite": "KOZ WordPress 工具套件",
   "KOZ project support": "KOZ 项目支持",
   "Last detection": "最近检测",
+  "Leave this field empty": "请将此字段留空",
   "Legacy UA FREE version active": "旧版 UA FREE 插件已启用",
   "Links": "链接",
   "Load the copy handler on matching public pages.": "在匹配的公开页面上加载复制处理器。",
@@ -83,7 +84,6 @@
   "Open": "打开",
   "Optional trusted domains, one per line. A comment is exempt only when every detected URL is trusted.": "可选可信域名，每行一个。仅当所有检测到的 URL 都可信时才豁免评论。",
   "Optional. One local path per line. Use an ending * for a prefix. Leave empty to allow all public paths. Query strings and external URLs are rejected.": "可选。每行一个本地路径。末尾使用 * 表示前缀。留空则允许所有公开路径。查询字符串和外部 URL 会被拒绝。",
-  "PayPal and crypto donations support maintenance, testing and new free releases.": "PayPal 和加密货币捐赠用于维护、测试和发布新的免费版本。",
   "Pingbacks, trackbacks, administrators and comment moderators are never processed.": "不会处理 Pingback、Trackback、管理员和评论审核员。",
   "Preserve formatting": "保留格式",
   "Prevent navigation when a matching link is clicked.": "点击匹配链接时阻止跳转。",
@@ -120,5 +120,6 @@
   "Visual feedback": "视觉反馈",
   "Whitespace": "空白字符",
   "You do not have permission to access this page.": "你没有权限访问此页面。",
-  "You do not have permission to perform this action.": "你没有权限执行此操作。"
+  "You do not have permission to perform this action.": "你没有权限执行此操作。",
+  "Your comment could not be accepted. Please write a few words of your own and try again.": "无法接受您的评论。请写几句自己的话后再试一次。"
 }

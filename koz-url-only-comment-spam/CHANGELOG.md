@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.2.0
+
+- New rules with their own action: links with very little text, Website field with very little text, hidden honeypot field, submitted too fast and missing comment form token.
+- New action "Reject without saving".
+- Links detected in HTML anchor targets, BBCode and Markdown; hxxp:// and example[.]com disguises are undone.
+- Bare domain names count only with a known top-level domain (no more "Node.js" false positives).
+- Spam reason column and filter on the Comments screen; daily statistics per rule and a dashboard widget.
+- Optional automatic deletion of old spam (off by default).
+- WooCommerce product reviews are checked by default; comment types are configurable.
+- Legacy option migration runs only on activation and in the admin area.
+- Removed PayPal from the developer support panel and corrected the BTC and USDT TRC-20 developer wallet addresses.
+
 ## 1.1.11
 - Updated WordPress compatibility metadata for WordPress 7.1.
 - No functional changes to spam detection, settings, counters or privacy behavior.

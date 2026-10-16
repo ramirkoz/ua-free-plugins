@@ -27,12 +27,12 @@
   "Copy Actions": "Kopieraktionen",
   "Copy BTC address": "BTC-Adresse kopieren",
   "Copy ETH and USDC address": "ETH- und USDC-Adresse kopieren",
-  "Copy PayPal email": "PayPal-E-Mail kopieren",
   "Copy USDT address": "USDT-Adresse kopieren",
   "Copy targets": "Kopierziele",
   "Copy to clipboard": "In die Zwischenablage kopieren",
   "Could not copy": "Kopieren fehlgeschlagen",
   "Counter": "Zähler",
+  "Crypto donations support maintenance, testing and new free releases.": "Krypto-Spenden unterstützen Wartung, Tests und neue kostenlose Versionen.",
   "Current status": "Aktueller Status",
   "Delete settings and aggregate counters when the plugin is uninstalled.": "Einstellungen und Gesamtzähler bei der Deinstallation löschen.",
   "Detected plugin": "Erkanntes Plugin",
@@ -67,6 +67,7 @@
   "KOZ WordPress Suite": "KOZ WordPress Suite",
   "KOZ project support": "Unterstützung des KOZ-Projekts",
   "Last detection": "Letzte Erkennung",
+  "Leave this field empty": "Lassen Sie dieses Feld leer",
   "Legacy UA FREE version active": "Alte UA-FREE-Version aktiv",
   "Links": "Links",
   "Load the copy handler on matching public pages.": "Kopier-Handler auf passenden öffentlichen Seiten laden.",
@@ -83,7 +84,6 @@
   "Open": "Öffnen",
   "Optional trusted domains, one per line. A comment is exempt only when every detected URL is trusted.": "Optionale vertrauenswürdige Domains, eine pro Zeile. Ein Kommentar ist nur ausgenommen, wenn jede erkannte URL vertrauenswürdig ist.",
   "Optional. One local path per line. Use an ending * for a prefix. Leave empty to allow all public paths. Query strings and external URLs are rejected.": "Optional. Ein lokaler Pfad pro Zeile. Verwende ein * am Ende als Präfix. Leer lassen, um alle öffentlichen Pfade zu erlauben. Abfragezeichenfolgen und externe URLs werden abgelehnt.",
-  "PayPal and crypto donations support maintenance, testing and new free releases.": "PayPal- und Krypto-Spenden unterstützen Wartung, Tests und neue kostenlose Versionen.",
   "Pingbacks, trackbacks, administrators and comment moderators are never processed.": "Pingbacks, Trackbacks, Administratoren und Kommentarmoderatoren werden nie verarbeitet.",
   "Preserve formatting": "Formatierung beibehalten",
   "Prevent navigation when a matching link is clicked.": "Navigation verhindern, wenn ein passender Link angeklickt wird.",
@@ -120,5 +120,6 @@
   "Visual feedback": "Visuelle Rückmeldung",
   "Whitespace": "Leerzeichen",
   "You do not have permission to access this page.": "Du hast keine Berechtigung für diese Seite.",
-  "You do not have permission to perform this action.": "Du hast keine Berechtigung für diese Aktion."
+  "You do not have permission to perform this action.": "Du hast keine Berechtigung für diese Aktion.",
+  "Your comment could not be accepted. Please write a few words of your own and try again.": "Ihr Kommentar konnte nicht angenommen werden. Bitte schreiben Sie ein paar eigene Worte und versuchen Sie es erneut."
 }

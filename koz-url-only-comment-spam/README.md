@@ -32,7 +32,7 @@ The plugin was originally developed and production-tested on the UA FREE charita
 
 ## Support
 
-Developer support: PayPal and crypto details are shown inside the plugin administration panel. Ukraine support: https://uafree.org/donate/
+Developer support: crypto details are shown inside the plugin administration panel. Ukraine support: https://uafree.org/donate/
 
 LinkedIn: https://www.linkedin.com/in/tonykoz/
 

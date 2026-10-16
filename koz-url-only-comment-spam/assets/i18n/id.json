@@ -27,12 +27,12 @@
   "Copy Actions": "Tindakan Salin",
   "Copy BTC address": "Salin alamat BTC",
   "Copy ETH and USDC address": "Salin alamat ETH dan USDC",
-  "Copy PayPal email": "Salin email PayPal",
   "Copy USDT address": "Salin alamat USDT",
   "Copy targets": "Target salin",
   "Copy to clipboard": "Salin ke papan klip",
   "Could not copy": "Tidak dapat menyalin",
   "Counter": "Penghitung",
+  "Crypto donations support maintenance, testing and new free releases.": "Donasi kripto mendukung pemeliharaan, pengujian, dan rilis gratis baru.",
   "Current status": "Status saat ini",
   "Delete settings and aggregate counters when the plugin is uninstalled.": "Hapus pengaturan dan penghitung agregat saat plugin dicopot.",
   "Detected plugin": "Plugin terdeteksi",
@@ -67,6 +67,7 @@
   "KOZ WordPress Suite": "KOZ WordPress Suite",
   "KOZ project support": "Dukungan proyek KOZ",
   "Last detection": "Deteksi terakhir",
+  "Leave this field empty": "Biarkan kolom ini kosong",
   "Legacy UA FREE version active": "Versi lama UA FREE aktif",
   "Links": "Tautan",
   "Load the copy handler on matching public pages.": "Muat penangan salin pada halaman publik yang cocok.",
@@ -83,7 +84,6 @@
   "Open": "Buka",
   "Optional trusted domains, one per line. A comment is exempt only when every detected URL is trusted.": "Domain tepercaya opsional, satu per baris. Komentar dikecualikan hanya jika semua URL yang terdeteksi tepercaya.",
   "Optional. One local path per line. Use an ending * for a prefix. Leave empty to allow all public paths. Query strings and external URLs are rejected.": "Opsional. Satu path lokal per baris. Gunakan * di akhir sebagai prefiks. Kosongkan untuk mengizinkan semua path publik. Query string dan URL eksternal ditolak.",
-  "PayPal and crypto donations support maintenance, testing and new free releases.": "Donasi PayPal dan kripto mendukung pemeliharaan, pengujian, dan rilis gratis baru.",
   "Pingbacks, trackbacks, administrators and comment moderators are never processed.": "Pingback, trackback, administrator, dan moderator komentar tidak pernah diproses.",
   "Preserve formatting": "Pertahankan pemformatan",
   "Prevent navigation when a matching link is clicked.": "Cegah navigasi saat tautan yang cocok diklik.",
@@ -120,5 +120,6 @@
   "Visual feedback": "Umpan balik visual",
   "Whitespace": "Spasi",
   "You do not have permission to access this page.": "Anda tidak memiliki izin untuk mengakses halaman ini.",
-  "You do not have permission to perform this action.": "Anda tidak memiliki izin untuk melakukan tindakan ini."
+  "You do not have permission to perform this action.": "Anda tidak memiliki izin untuk melakukan tindakan ini.",
+  "Your comment could not be accepted. Please write a few words of your own and try again.": "Komentar Anda tidak dapat diterima. Tulislah beberapa kata Anda sendiri lalu coba lagi."
 }

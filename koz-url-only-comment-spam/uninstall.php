@@ -14,6 +14,8 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 	$total_option    = 'kozurlspam_total';
 	$last_option     = 'kozurlspam_last';
 
+	wp_clear_scheduled_hook( 'kozurlspam_cleanup' );
+
 	$settings = get_option( $settings_option, array() );
 	if ( ! is_array( $settings ) || empty( $settings['delete_data_on_uninstall'] ) ) {
 		return;
@@ -22,6 +24,8 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 	delete_option( $settings_option );
 	delete_option( $total_option );
 	delete_option( $last_option );
+	delete_option( 'kozurlspam_daily' );
+	delete_metadata( 'comment', 0, '_kozurlspam_reason', '', true );
 
 	foreach ( array( 'settings', 'total', 'last' ) as $suffix ) {
 		delete_option( implode( '_', array( 'uafree', 'url', 'only', 'spam', $suffix ) ) );

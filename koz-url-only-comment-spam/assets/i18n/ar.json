@@ -27,12 +27,12 @@
   "Copy Actions": "إجراءات النسخ",
   "Copy BTC address": "نسخ عنوان BTC",
   "Copy ETH and USDC address": "نسخ عنوان ETH وUSDC",
-  "Copy PayPal email": "نسخ بريد PayPal",
   "Copy USDT address": "نسخ عنوان USDT",
   "Copy targets": "أهداف النسخ",
   "Copy to clipboard": "نسخ إلى الحافظة",
   "Could not copy": "تعذر النسخ",
   "Counter": "العداد",
+  "Crypto donations support maintenance, testing and new free releases.": "تدعم تبرعات العملات المشفرة الصيانة والاختبار والإصدارات المجانية الجديدة.",
   "Current status": "الحالة الحالية",
   "Delete settings and aggregate counters when the plugin is uninstalled.": "حذف الإعدادات والعدادات الإجمالية عند إلغاء تثبيت الإضافة.",
   "Detected plugin": "الإضافة المكتشفة",
@@ -67,6 +67,7 @@
   "KOZ WordPress Suite": "حزمة KOZ لووردبريس",
   "KOZ project support": "دعم مشروع KOZ",
   "Last detection": "آخر اكتشاف",
+  "Leave this field empty": "اترك هذا الحقل فارغًا",
   "Legacy UA FREE version active": "إصدار UA FREE القديم نشط",
   "Links": "الروابط",
   "Load the copy handler on matching public pages.": "تحميل معالج النسخ على الصفحات العامة المطابقة.",
@@ -83,7 +84,6 @@
   "Open": "فتح",
   "Optional trusted domains, one per line. A comment is exempt only when every detected URL is trusted.": "نطاقات موثوقة اختيارية، نطاق واحد في كل سطر. يُستثنى التعليق فقط عندما تكون جميع عناوين URL المكتشفة موثوقة.",
   "Optional. One local path per line. Use an ending * for a prefix. Leave empty to allow all public paths. Query strings and external URLs are rejected.": "اختياري. مسار محلي واحد في كل سطر. استخدم * في النهاية كبادئة. اتركه فارغاً للسماح بكل المسارات العامة. تُرفض سلاسل الاستعلام والروابط الخارجية.",
-  "PayPal and crypto donations support maintenance, testing and new free releases.": "تدعم تبرعات PayPal والعملات المشفرة الصيانة والاختبار والإصدارات المجانية الجديدة.",
   "Pingbacks, trackbacks, administrators and comment moderators are never processed.": "لا تتم معالجة التنبيهات والتتبعات والمسؤولين ومشرفي التعليقات.",
   "Preserve formatting": "الحفاظ على التنسيق",
   "Prevent navigation when a matching link is clicked.": "منع الانتقال عند النقر على رابط مطابق.",
@@ -120,5 +120,6 @@
   "Visual feedback": "التغذية البصرية",
   "Whitespace": "المسافات",
   "You do not have permission to access this page.": "ليس لديك إذن للوصول إلى هذه الصفحة.",
-  "You do not have permission to perform this action.": "ليس لديك إذن لتنفيذ هذا الإجراء."
+  "You do not have permission to perform this action.": "ليس لديك إذن لتنفيذ هذا الإجراء.",
+  "Your comment could not be accepted. Please write a few words of your own and try again.": "تعذّر قبول تعليقك. يُرجى كتابة بضع كلمات من عندك ثم المحاولة مرة أخرى."
 }

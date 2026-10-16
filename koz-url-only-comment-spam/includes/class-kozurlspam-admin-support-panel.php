@@ -95,14 +95,13 @@ final class KOZURLSPAM_Admin_Support_Panel {
 						<span class="dashicons dashicons-admin-tools" aria-hidden="true"></span>
 						<div>
 							<h3><?php echo esc_html__( 'Support the developer', 'koz-url-only-comment-spam' ); ?></h3>
-							<p><?php echo esc_html__( 'PayPal and crypto donations support maintenance, testing and new free releases.', 'koz-url-only-comment-spam' ); ?></p>
+							<p><?php echo esc_html__( 'Crypto donations support maintenance, testing and new free releases.', 'koz-url-only-comment-spam' ); ?></p>
 						</div>
 					</div>
 					<div class="koz-support-wallets">
-						<div class="koz-support-wallet"><span class="koz-support-wallet__network">BTC</span><code>bc1q4dn8e7sz2866g7qp1qtshh98j54tvuau5ghuuk</code><button type="button" class="button button-small koz-support-wallet__copy" data-koz-copy="bc1q4dn8e7sz2866g7qp1qtshh98j54tvuau5ghuuk"><?php echo esc_html__( 'Copy', 'koz-url-only-comment-spam' ); ?></button></div>
+						<div class="koz-support-wallet"><span class="koz-support-wallet__network">BTC</span><code>bc1q4dn8e7sz2866g7qplqtshh98j54tvuau5ghuuk</code><button type="button" class="button button-small koz-support-wallet__copy" data-koz-copy="bc1q4dn8e7sz2866g7qplqtshh98j54tvuau5ghuuk"><?php echo esc_html__( 'Copy', 'koz-url-only-comment-spam' ); ?></button></div>
 						<div class="koz-support-wallet"><span class="koz-support-wallet__network">ETH / USDC</span><code>0x3aE3b23A7BD94b8a65A7E8Ca205A4e29BEF7c229</code><button type="button" class="button button-small koz-support-wallet__copy" data-koz-copy="0x3aE3b23A7BD94b8a65A7E8Ca205A4e29BEF7c229"><?php echo esc_html__( 'Copy', 'koz-url-only-comment-spam' ); ?></button></div>
-						<div class="koz-support-wallet"><span class="koz-support-wallet__network">USDT TRC-20</span><code>TYsGyK7K3XB4NPHprf5w8ZodFafxFfDdbP</code><button type="button" class="button button-small koz-support-wallet__copy" data-koz-copy="TYsGyK7K3XB4NPHprf5w8ZodFafxFfDdbP"><?php echo esc_html__( 'Copy', 'koz-url-only-comment-spam' ); ?></button></div>
-						<div class="koz-support-wallet koz-support-wallet--paypal"><span class="koz-support-wallet__network">PayPal</span><code>kozyriev@uafree.org</code><div class="koz-support-wallet__actions"><a class="button button-small button-primary" href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&amp;business=kozyriev%40uafree.org&amp;item_name=Support+KOZ+WordPress+plugin+development&amp;currency_code=USD" target="_blank" rel="noopener noreferrer"><?php echo esc_html__( 'Donate', 'koz-url-only-comment-spam' ); ?></a><button type="button" class="button button-small koz-support-wallet__copy" data-koz-copy="kozyriev@uafree.org"><?php echo esc_html__( 'Copy', 'koz-url-only-comment-spam' ); ?></button></div></div>
+						<div class="koz-support-wallet"><span class="koz-support-wallet__network">USDT TRC-20</span><code>TYSgyk7K3XB4WPHprf5w8ZodFAfxFfDdbF</code><button type="button" class="button button-small koz-support-wallet__copy" data-koz-copy="TYSgyk7K3XB4WPHprf5w8ZodFAfxFfDdbF"><?php echo esc_html__( 'Copy', 'koz-url-only-comment-spam' ); ?></button></div>
 					</div>
 				</article>
 				<article class="koz-support-card koz-support-card--foundation">

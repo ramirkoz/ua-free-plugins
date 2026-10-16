@@ -171,18 +171,93 @@ final class Admin {
 
 	/** @param mixed $input Raw form data. @return array<string,mixed> */
 	public function sanitize_settings( $input ): array {
-		$input   = is_array( $input ) ? $input : array();
-		$action  = isset( $input['action'] ) && 'hold' === $input['action'] ? 'hold' : 'spam';
-		$domains = isset( $input['trusted_domains'] ) ? $this->sanitize_domains( (string) $input['trusted_domains'] ) : array();
+		$input    = is_array( $input ) ? $input : array();
+		$defaults = Plugin::defaults();
+		$domains  = isset( $input['trusted_domains'] ) ? $this->sanitize_domains( (string) $input['trusted_domains'] ) : array();
+
+		$types = array();
+		foreach ( (array) ( $input['comment_types'] ?? array() ) as $type ) {
+			$type = sanitize_key( (string) $type );
+			if ( '' !== $type ) {
+				$types[ $type ] = true;
+			}
+		}
+		$types['comment'] = true;
+
 		return array(
 			'enabled'                  => ! empty( $input['enabled'] ),
-			'action'                   => $action,
-			'minimum_urls'             => min( 10, max( 1, isset( $input['minimum_urls'] ) ? absint( $input['minimum_urls'] ) : 1 ) ),
+			'action'                   => $this->sanitize_action( 'url_only', $input['action'] ?? null ),
+			'minimum_urls'             => $this->sanitize_int( $input['minimum_urls'] ?? null, 1, 10, 1 ),
 			'exempt_logged_in'         => ! empty( $input['exempt_logged_in'] ),
 			'trust_same_site'          => ! empty( $input['trust_same_site'] ),
 			'trusted_domains'          => $domains,
+			'comment_types'            => array_keys( $types ),
+			'low_text_action'          => $this->sanitize_action( 'low_text', $input['low_text_action'] ?? null ),
+			'low_text_max_chars'       => $this->sanitize_int( $input['low_text_max_chars'] ?? null, 0, 500, (int) $defaults['low_text_max_chars'] ),
+			'author_url_action'        => $this->sanitize_action( 'author_url', $input['author_url_action'] ?? null ),
+			'author_url_max_chars'     => $this->sanitize_int( $input['author_url_max_chars'] ?? null, 0, 500, (int) $defaults['author_url_max_chars'] ),
+			'honeypot_action'          => $this->sanitize_action( 'honeypot', $input['honeypot_action'] ?? null ),
+			'too_fast_action'          => $this->sanitize_action( 'too_fast', $input['too_fast_action'] ?? null ),
+			'min_seconds'              => $this->sanitize_int( $input['min_seconds'] ?? null, 0, 60, (int) $defaults['min_seconds'] ),
+			'missing_token_action'     => $this->sanitize_action( 'missing_token', $input['missing_token_action'] ?? null ),
+			'auto_delete_days'         => $this->sanitize_int( $input['auto_delete_days'] ?? null, 0, 365, 0 ),
 			'delete_data_on_uninstall' => ! empty( $input['delete_data_on_uninstall'] ),
 		);
+	}
+
+	/** @param mixed $value */
+	private function sanitize_action( string $rule, $value ): string {
+		$allowed = Plugin::RULE_ACTIONS[ $rule ];
+		$value   = is_string( $value ) ? sanitize_key( $value ) : '';
+		if ( in_array( $value, $allowed, true ) ) {
+			return $value;
+		}
+		$key = 'url_only' === $rule ? 'action' : $rule . '_action';
+		return (string) Plugin::defaults()[ $key ];
+	}
+
+	/** @param mixed $value */
+	private function sanitize_int( $value, int $min, int $max, int $fallback ): int {
+		if ( null === $value || '' === $value || ! is_numeric( $value ) ) {
+			return $fallback;
+		}
+		return min( $max, max( $min, (int) $value ) );
+	}
+
+	/** @return array<string,string> */
+	private function action_labels(): array {
+		return array(
+			'off'    => __( 'Off', 'koz-url-only-comment-spam' ),
+			'hold'   => __( 'Hold for moderation', 'koz-url-only-comment-spam' ),
+			'spam'   => __( 'Mark as spam', 'koz-url-only-comment-spam' ),
+			'reject' => __( 'Reject without saving', 'koz-url-only-comment-spam' ),
+		);
+	}
+
+	/** @param array<string,mixed> $settings */
+	private function action_select( string $rule, array $settings, string $id ): void {
+		$key = 'url_only' === $rule ? 'action' : $rule . '_action';
+		$labels = $this->action_labels();
+		printf( '<select id="%1$s" name="%2$s[%3$s]">', esc_attr( $id ), esc_attr( Plugin::SETTINGS_OPTION ), esc_attr( $key ) );
+		foreach ( Plugin::RULE_ACTIONS[ $rule ] as $action ) {
+			printf( '<option value="%1$s" %2$s>%3$s</option>', esc_attr( $action ), selected( $settings[ $key ], $action, false ), esc_html( $labels[ $action ] ) );
+		}
+		echo '</select>';
+	}
+
+	/** @return array<string,string> Comment type => label. */
+	private function available_comment_types(): array {
+		$types = array(
+			'comment' => __( 'Comments', 'koz-url-only-comment-spam' ),
+			'review'  => __( 'Product reviews (WooCommerce)', 'koz-url-only-comment-spam' ),
+		);
+
+		/**
+		 * Filter the comment types offered on the settings screen.
+		 *
+		 * @param array<string,string> $types Comment type => label.
+		 */
+		return (array) apply_filters( 'kozurlspam_comment_type_choices', $types );
 	}
 
 	public function enqueue_assets( string $hook ): void {
@@ -205,15 +280,24 @@ final class Admin {
 		}
 		$plugin      = Plugin::instance();
 		$settings    = $plugin->get_settings();
+		$option      = Plugin::SETTINGS_OPTION;
 		$total       = (int) get_option( Plugin::TOTAL_OPTION, 0 );
 		$last        = get_option( Plugin::LAST_OPTION, array() );
 		$last        = is_array( $last ) ? $last : array();
-		$test_text   = $this->get_test_text();
-		$test_result = null !== $test_text ? Detector::analyze( $test_text, $settings ) : null;
+		$labels      = Maintenance::rule_labels();
+		$totals_30   = Maintenance::totals( 30 );
+		$test        = $this->get_test_input();
+		$test_result = null;
+		if ( null !== $test ) {
+			$summary     = Detector::analyze( $test['text'], $settings );
+			$test_result = $plugin->evaluate_text_rules( $summary, $test['author_url'], $settings );
+		}
+		$cleanup_now = Maintenance::cleanup_candidates( (int) $settings['auto_delete_days'] );
+		$next_run    = wp_next_scheduled( Maintenance::CLEANUP_HOOK );
 		?>
 		<div class="wrap koz-url-spam-wrap">
 			<h1><?php esc_html_e( 'KOZ URL-Only Comment Spam', 'koz-url-only-comment-spam' ); ?> <code><?php echo esc_html( KOZURLSPAM_VERSION ); ?></code></h1>
-			<p class="description"><?php esc_html_e( 'Privacy-first moderation for comments whose visible content consists only of one or more URLs.', 'koz-url-only-comment-spam' ); ?></p>
+			<p class="description"><?php esc_html_e( 'Privacy-first local moderation for link-only and low-effort comment spam, with honeypot and form-timing traps.', 'koz-url-only-comment-spam' ); ?></p>
 
 			<div class="koz-grid">
 				<div class="koz-card">
@@ -221,14 +305,18 @@ final class Admin {
 					<table class="widefat striped"><tbody>
 						<tr><th><?php esc_html_e( 'Filtering', 'koz-url-only-comment-spam' ); ?></th><td><?php echo esc_html( $settings['enabled'] ? __( 'Enabled', 'koz-url-only-comment-spam' ) : __( 'Disabled', 'koz-url-only-comment-spam' ) ); ?></td></tr>
 						<tr><th><?php esc_html_e( 'Handled comments', 'koz-url-only-comment-spam' ); ?></th><td><?php echo esc_html( number_format_i18n( $total ) ); ?></td></tr>
-						<tr><th><?php esc_html_e( 'Last detection', 'koz-url-only-comment-spam' ); ?></th><td><?php echo ! empty( $last['caught_at'] ) ? esc_html( (string) $last['caught_at'] ) : esc_html__( 'None yet', 'koz-url-only-comment-spam' ); ?></td></tr>
+						<tr><th><?php esc_html_e( 'Last detection', 'koz-url-only-comment-spam' ); ?></th><td><?php echo ! empty( $last['caught_at'] ) ? esc_html( (string) $last['caught_at'] ) : esc_html__( 'None yet', 'koz-url-only-comment-spam' ); ?><?php if ( ! empty( $last['rule'] ) && isset( $labels[ $last['rule'] ] ) ) : ?> · <?php echo esc_html( $labels[ $last['rule'] ] ); ?><?php endif; ?></td></tr>
 						<tr><th><?php esc_html_e( 'Stored personal data', 'koz-url-only-comment-spam' ); ?></th><td><?php esc_html_e( 'None. No IP, user agent, comment text or detected URL is stored.', 'koz-url-only-comment-spam' ); ?></td></tr>
 					</tbody></table>
 				</div>
 				<div class="koz-card">
-					<h2><?php esc_html_e( 'How detection works', 'koz-url-only-comment-spam' ); ?></h2>
-					<p><?php esc_html_e( 'HTML and invisible spacing characters are removed. If the remaining text contains only URLs and punctuation, the configured action is applied.', 'koz-url-only-comment-spam' ); ?></p>
-					<p><?php esc_html_e( 'Pingbacks, trackbacks, administrators and comment moderators are never processed.', 'koz-url-only-comment-spam' ); ?></p>
+					<h2><?php esc_html_e( 'Last 30 days by rule', 'koz-url-only-comment-spam' ); ?></h2>
+					<table class="widefat striped"><tbody>
+					<?php foreach ( $totals_30 as $rule => $count ) : ?>
+						<tr><th><?php echo esc_html( $labels[ $rule ] ); ?></th><td><?php echo esc_html( number_format_i18n( $count ) ); ?></td></tr>
+					<?php endforeach; ?>
+					</tbody></table>
+					<p class="description"><?php esc_html_e( 'Daily counts per rule only. Each handled comment also gets its rule in the Spam reason column on the Comments screen.', 'koz-url-only-comment-spam' ); ?></p>
 				</div>
 			</div>
 
@@ -236,27 +324,62 @@ final class Admin {
 				<?php settings_fields( 'kozurlspam_group' ); ?>
 				<h2><?php esc_html_e( 'Settings', 'koz-url-only-comment-spam' ); ?></h2>
 				<table class="form-table" role="presentation">
-					<tr><th scope="row"><?php esc_html_e( 'Enable filtering', 'koz-url-only-comment-spam' ); ?></th><td><label><input type="checkbox" name="<?php echo esc_attr( Plugin::SETTINGS_OPTION ); ?>[enabled]" value="1" <?php checked( ! empty( $settings['enabled'] ) ); ?>> <?php esc_html_e( 'Process new standard comments.', 'koz-url-only-comment-spam' ); ?></label></td></tr>
-					<tr><th scope="row"><label for="koz-url-spam-action"><?php esc_html_e( 'Action', 'koz-url-only-comment-spam' ); ?></label></th><td><select id="koz-url-spam-action" name="<?php echo esc_attr( Plugin::SETTINGS_OPTION ); ?>[action]"><option value="spam" <?php selected( $settings['action'], 'spam' ); ?>><?php esc_html_e( 'Mark as spam', 'koz-url-only-comment-spam' ); ?></option><option value="hold" <?php selected( $settings['action'], 'hold' ); ?>><?php esc_html_e( 'Hold for moderation', 'koz-url-only-comment-spam' ); ?></option></select></td></tr>
-					<tr><th scope="row"><label for="koz-url-spam-minimum"><?php esc_html_e( 'Minimum URL count', 'koz-url-only-comment-spam' ); ?></label></th><td><input id="koz-url-spam-minimum" type="number" min="1" max="10" name="<?php echo esc_attr( Plugin::SETTINGS_OPTION ); ?>[minimum_urls]" value="<?php echo esc_attr( (string) $settings['minimum_urls'] ); ?>"></td></tr>
-					<tr><th scope="row"><?php esc_html_e( 'Logged-in users', 'koz-url-only-comment-spam' ); ?></th><td><label><input type="checkbox" name="<?php echo esc_attr( Plugin::SETTINGS_OPTION ); ?>[exempt_logged_in]" value="1" <?php checked( ! empty( $settings['exempt_logged_in'] ) ); ?>> <?php esc_html_e( 'Do not process comments from any logged-in user.', 'koz-url-only-comment-spam' ); ?></label></td></tr>
-					<tr><th scope="row"><?php esc_html_e( 'Trusted destinations', 'koz-url-only-comment-spam' ); ?></th><td><label><input type="checkbox" name="<?php echo esc_attr( Plugin::SETTINGS_OPTION ); ?>[trust_same_site]" value="1" <?php checked( ! empty( $settings['trust_same_site'] ) ); ?>> <?php esc_html_e( 'Do not flag comments when every URL points to this site.', 'koz-url-only-comment-spam' ); ?></label><p><textarea class="large-text code" rows="4" name="<?php echo esc_attr( Plugin::SETTINGS_OPTION ); ?>[trusted_domains]" placeholder="example.org&#10;docs.example.org"><?php echo esc_textarea( implode( "\n", (array) $settings['trusted_domains'] ) ); ?></textarea></p><p class="description"><?php esc_html_e( 'Optional trusted domains, one per line. A comment is exempt only when every detected URL is trusted.', 'koz-url-only-comment-spam' ); ?></p></td></tr>
-					<tr><th scope="row"><?php esc_html_e( 'Uninstall', 'koz-url-only-comment-spam' ); ?></th><td><label><input type="checkbox" name="<?php echo esc_attr( Plugin::SETTINGS_OPTION ); ?>[delete_data_on_uninstall]" value="1" <?php checked( ! empty( $settings['delete_data_on_uninstall'] ) ); ?>> <?php esc_html_e( 'Delete settings and aggregate counters when the plugin is uninstalled.', 'koz-url-only-comment-spam' ); ?></label></td></tr>
+					<tr><th scope="row"><?php esc_html_e( 'Enable filtering', 'koz-url-only-comment-spam' ); ?></th><td><label><input type="checkbox" name="<?php echo esc_attr( $option ); ?>[enabled]" value="1" <?php checked( ! empty( $settings['enabled'] ) ); ?>> <?php esc_html_e( 'Process new comments of the selected types.', 'koz-url-only-comment-spam' ); ?></label></td></tr>
+					<tr><th scope="row"><?php esc_html_e( 'Comment types', 'koz-url-only-comment-spam' ); ?></th><td>
+						<?php foreach ( $this->available_comment_types() as $type => $label ) : ?>
+							<label class="koz-inline-check"><input type="checkbox" name="<?php echo esc_attr( $option ); ?>[comment_types][]" value="<?php echo esc_attr( $type ); ?>" <?php checked( in_array( $type, (array) $settings['comment_types'], true ) ); ?> <?php disabled( 'comment' === $type ); ?>> <?php echo esc_html( $label ); ?></label>
+						<?php endforeach; ?>
+						<input type="hidden" name="<?php echo esc_attr( $option ); ?>[comment_types][]" value="comment">
+						<p class="description"><?php esc_html_e( 'Pingbacks, trackbacks, administrators and comment moderators are never processed.', 'koz-url-only-comment-spam' ); ?></p>
+					</td></tr>
+					<tr><th scope="row"><?php esc_html_e( 'Logged-in users', 'koz-url-only-comment-spam' ); ?></th><td><label><input type="checkbox" name="<?php echo esc_attr( $option ); ?>[exempt_logged_in]" value="1" <?php checked( ! empty( $settings['exempt_logged_in'] ) ); ?>> <?php esc_html_e( 'Do not process comments from any logged-in user.', 'koz-url-only-comment-spam' ); ?></label></td></tr>
+					<tr><th scope="row"><?php esc_html_e( 'Trusted destinations', 'koz-url-only-comment-spam' ); ?></th><td><label><input type="checkbox" name="<?php echo esc_attr( $option ); ?>[trust_same_site]" value="1" <?php checked( ! empty( $settings['trust_same_site'] ) ); ?>> <?php esc_html_e( 'Do not flag comments when every URL points to this site.', 'koz-url-only-comment-spam' ); ?></label><p><textarea class="large-text code" rows="3" name="<?php echo esc_attr( $option ); ?>[trusted_domains]" placeholder="example.org&#10;docs.example.org"><?php echo esc_textarea( implode( "\n", (array) $settings['trusted_domains'] ) ); ?></textarea></p><p class="description"><?php esc_html_e( 'Optional trusted domains, one per line. A comment is exempt only when every detected URL is trusted. Trusted domains also apply to the website field.', 'koz-url-only-comment-spam' ); ?></p></td></tr>
+				</table>
+
+				<h3><?php esc_html_e( 'Content rules', 'koz-url-only-comment-spam' ); ?></h3>
+				<p class="description"><?php esc_html_e( 'Links are found in text, HTML, BBCode and Markdown, including simple disguises such as hxxp:// and example[.]com. Bare names like example.com count only with a known top-level domain, so "Node.js" alone is not a link.', 'koz-url-only-comment-spam' ); ?></p>
+				<table class="form-table" role="presentation">
+					<tr><th scope="row"><label for="koz-url-spam-action"><?php esc_html_e( 'Only links', 'koz-url-only-comment-spam' ); ?></label></th><td><?php $this->action_select( 'url_only', $settings, 'koz-url-spam-action' ); ?> <label for="koz-url-spam-minimum"><?php esc_html_e( 'Minimum URL count', 'koz-url-only-comment-spam' ); ?></label> <input id="koz-url-spam-minimum" class="small-text" type="number" min="1" max="10" name="<?php echo esc_attr( $option ); ?>[minimum_urls]" value="<?php echo esc_attr( (string) $settings['minimum_urls'] ); ?>"><p class="description"><?php esc_html_e( 'The visible content is nothing but one or more links.', 'koz-url-only-comment-spam' ); ?></p></td></tr>
+					<tr><th scope="row"><label for="koz-url-spam-low"><?php esc_html_e( 'Links with very little text', 'koz-url-only-comment-spam' ); ?></label></th><td><?php $this->action_select( 'low_text', $settings, 'koz-url-spam-low' ); ?> <label for="koz-url-spam-low-chars"><?php esc_html_e( 'Up to', 'koz-url-only-comment-spam' ); ?></label> <input id="koz-url-spam-low-chars" class="small-text" type="number" min="0" max="500" name="<?php echo esc_attr( $option ); ?>[low_text_max_chars]" value="<?php echo esc_attr( (string) $settings['low_text_max_chars'] ); ?>"> <?php esc_html_e( 'letters', 'koz-url-only-comment-spam' ); ?><p class="description"><?php esc_html_e( 'At least one untrusted link plus a short phrase such as "Great post!". Letters and digits are counted; spaces, punctuation and emoji are not.', 'koz-url-only-comment-spam' ); ?></p></td></tr>
+					<tr><th scope="row"><label for="koz-url-spam-author"><?php esc_html_e( 'Website field with very little text', 'koz-url-only-comment-spam' ); ?></label></th><td><?php $this->action_select( 'author_url', $settings, 'koz-url-spam-author' ); ?> <label for="koz-url-spam-author-chars"><?php esc_html_e( 'Up to', 'koz-url-only-comment-spam' ); ?></label> <input id="koz-url-spam-author-chars" class="small-text" type="number" min="0" max="500" name="<?php echo esc_attr( $option ); ?>[author_url_max_chars]" value="<?php echo esc_attr( (string) $settings['author_url_max_chars'] ); ?>"> <?php esc_html_e( 'letters', 'koz-url-only-comment-spam' ); ?><p class="description"><?php esc_html_e( 'No links in the text, but the Website field points to an untrusted site and the text is very short.', 'koz-url-only-comment-spam' ); ?></p></td></tr>
+				</table>
+
+				<h3><?php esc_html_e( 'Bot traps', 'koz-url-only-comment-spam' ); ?></h3>
+				<p class="description"><?php esc_html_e( 'Applies to the standard comment form. Nothing is stored and no cookies are set. Pages served from a cache keep working.', 'koz-url-only-comment-spam' ); ?></p>
+				<table class="form-table" role="presentation">
+					<tr><th scope="row"><label for="koz-url-spam-hp"><?php esc_html_e( 'Hidden trap field filled', 'koz-url-only-comment-spam' ); ?></label></th><td><?php $this->action_select( 'honeypot', $settings, 'koz-url-spam-hp' ); ?><p class="description"><?php esc_html_e( 'An invisible field that people never see; automated scripts often fill it in.', 'koz-url-only-comment-spam' ); ?></p></td></tr>
+					<tr><th scope="row"><label for="koz-url-spam-fast"><?php esc_html_e( 'Submitted too fast', 'koz-url-only-comment-spam' ); ?></label></th><td><?php $this->action_select( 'too_fast', $settings, 'koz-url-spam-fast' ); ?> <label for="koz-url-spam-seconds"><?php esc_html_e( 'Faster than', 'koz-url-only-comment-spam' ); ?></label> <input id="koz-url-spam-seconds" class="small-text" type="number" min="0" max="60" name="<?php echo esc_attr( $option ); ?>[min_seconds]" value="<?php echo esc_attr( (string) $settings['min_seconds'] ); ?>"> <?php esc_html_e( 'seconds after the page was generated', 'koz-url-only-comment-spam' ); ?></td></tr>
+					<tr><th scope="row"><label for="koz-url-spam-token"><?php esc_html_e( 'Comment form token missing', 'koz-url-only-comment-spam' ); ?></label></th><td><?php $this->action_select( 'missing_token', $settings, 'koz-url-spam-token' ); ?><p class="description"><?php esc_html_e( 'The submission did not come from this site\'s comment form, typical for bots posting directly. Keep this off if your theme builds its own comment form without the comment_form action.', 'koz-url-only-comment-spam' ); ?></p></td></tr>
+				</table>
+
+				<h3><?php esc_html_e( 'Maintenance', 'koz-url-only-comment-spam' ); ?></h3>
+				<table class="form-table" role="presentation">
+					<tr><th scope="row"><label for="koz-url-spam-cleanup"><?php esc_html_e( 'Delete old spam', 'koz-url-only-comment-spam' ); ?></label></th><td><input id="koz-url-spam-cleanup" class="small-text" type="number" min="0" max="365" name="<?php echo esc_attr( $option ); ?>[auto_delete_days]" value="<?php echo esc_attr( (string) $settings['auto_delete_days'] ); ?>"> <?php esc_html_e( 'days (0 = never)', 'koz-url-only-comment-spam' ); ?><p class="description"><?php esc_html_e( 'Once a day, permanently deletes comments that have been in the Spam folder longer than this. Other comments are never touched.', 'koz-url-only-comment-spam' ); ?>
+					<?php if ( (int) $settings['auto_delete_days'] > 0 ) : ?>
+						<?php echo esc_html( sprintf( /* translators: %s: number of comments. */ __( 'Comments that would be deleted now: %s.', 'koz-url-only-comment-spam' ), number_format_i18n( $cleanup_now ) ) ); ?>
+						<?php if ( $next_run ) : ?><?php echo esc_html( sprintf( /* translators: %s: date and time. */ __( 'Next run: %s.', 'koz-url-only-comment-spam' ), wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), (int) $next_run ) ) ); ?><?php endif; ?>
+					<?php endif; ?></p></td></tr>
+					<tr><th scope="row"><?php esc_html_e( 'Uninstall', 'koz-url-only-comment-spam' ); ?></th><td><label><input type="checkbox" name="<?php echo esc_attr( $option ); ?>[delete_data_on_uninstall]" value="1" <?php checked( ! empty( $settings['delete_data_on_uninstall'] ) ); ?>> <?php esc_html_e( 'Delete settings, aggregate counters and spam reasons when the plugin is uninstalled.', 'koz-url-only-comment-spam' ); ?></label></td></tr>
 				</table>
 				<?php submit_button(); ?>
 			</form>
 
 			<div class="koz-grid">
 				<div class="koz-card">
-					<h2><?php esc_html_e( 'Test the detector', 'koz-url-only-comment-spam' ); ?></h2>
-					<p><?php esc_html_e( 'The sample is analyzed in this request only and is never saved.', 'koz-url-only-comment-spam' ); ?></p>
+					<h2><?php esc_html_e( 'Test the content rules', 'koz-url-only-comment-spam' ); ?></h2>
+					<p><?php esc_html_e( 'The sample is analyzed in this request only and is never saved. Bot traps are not part of this test.', 'koz-url-only-comment-spam' ); ?></p>
 					<form method="post">
 						<?php wp_nonce_field( 'koz_url_spam_test', 'koz_url_spam_test_nonce' ); ?>
-						<textarea class="large-text" rows="4" name="koz_url_spam_test_text" placeholder="https://spam.example/"><?php echo esc_textarea( $test_text ?? '' ); ?></textarea>
+						<textarea class="large-text" rows="4" name="koz_url_spam_test_text" placeholder="https://spam.example/"><?php echo esc_textarea( $test['text'] ?? '' ); ?></textarea>
+						<p><label for="koz-url-spam-test-author"><?php esc_html_e( 'Website field (optional)', 'koz-url-only-comment-spam' ); ?></label><br><input id="koz-url-spam-test-author" class="regular-text" type="url" name="koz_url_spam_test_author_url" value="<?php echo esc_attr( $test['author_url'] ?? '' ); ?>" placeholder="https://"></p>
 						<p><button type="submit" class="button button-secondary"><?php esc_html_e( 'Analyze sample', 'koz-url-only-comment-spam' ); ?></button></p>
 					</form>
-					<?php if ( null !== $test_result ) : ?>
-						<div class="notice inline <?php echo ! empty( $test_result['is_url_only'] ) ? 'notice-warning' : 'notice-success'; ?>"><p><?php echo ! empty( $test_result['is_url_only'] ) ? esc_html__( 'Result: the comment would be handled by the plugin.', 'koz-url-only-comment-spam' ) : esc_html__( 'Result: the comment would continue through normal WordPress moderation.', 'koz-url-only-comment-spam' ); ?></p></div>
+					<?php if ( null !== $test ) : ?>
+						<?php if ( null !== $test_result ) : ?>
+							<div class="notice inline notice-warning"><p><?php echo esc_html( sprintf( /* translators: 1: rule name, 2: action. */ __( 'Result: rule "%1$s" would apply: %2$s.', 'koz-url-only-comment-spam' ), $labels[ $test_result['rule'] ], $this->action_labels()[ $test_result['action'] ] ) ); ?></p></div>
+						<?php else : ?>
+							<div class="notice inline notice-success"><p><?php esc_html_e( 'Result: the comment would continue through normal WordPress moderation.', 'koz-url-only-comment-spam' ); ?></p></div>
+						<?php endif; ?>
 					<?php endif; ?>
 				</div>
 				<div class="koz-card">
@@ -280,7 +403,8 @@ final class Admin {
 		exit;
 	}
 
-	private function get_test_text(): ?string {
+	/** @return array{text:string,author_url:string}|null */
+	private function get_test_input(): ?array {
 		if ( ! isset( $_POST['koz_url_spam_test_nonce'] ) ) {
 			return null;
 		}
@@ -288,7 +412,11 @@ final class Admin {
 		if ( ! wp_verify_nonce( $nonce, 'koz_url_spam_test' ) ) {
 			return null;
 		}
-		return isset( $_POST['koz_url_spam_test_text'] ) ? sanitize_textarea_field( wp_unslash( (string) $_POST['koz_url_spam_test_text'] ) ) : '';
+		return array(
+			// Comment-level HTML is kept, exactly as WordPress keeps it in a comment, so links in anchors are tested too.
+			'text'       => isset( $_POST['koz_url_spam_test_text'] ) ? wp_kses_data( wp_unslash( (string) $_POST['koz_url_spam_test_text'] ) ) : '',
+			'author_url' => isset( $_POST['koz_url_spam_test_author_url'] ) ? esc_url_raw( wp_unslash( (string) $_POST['koz_url_spam_test_author_url'] ) ) : '',
+		);
 	}
 
 	/** @return string[] */

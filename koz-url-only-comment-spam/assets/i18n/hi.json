@@ -27,12 +27,12 @@
   "Copy Actions": "कॉपी क्रियाएँ",
   "Copy BTC address": "BTC पता कॉपी करें",
   "Copy ETH and USDC address": "ETH और USDC पता कॉपी करें",
-  "Copy PayPal email": "PayPal ईमेल कॉपी करें",
   "Copy USDT address": "USDT पता कॉपी करें",
   "Copy targets": "कॉपी लक्ष्य",
   "Copy to clipboard": "क्लिपबोर्ड पर कॉपी करें",
   "Could not copy": "कॉपी नहीं हो सका",
   "Counter": "काउंटर",
+  "Crypto donations support maintenance, testing and new free releases.": "क्रिप्टो दान रखरखाव, परीक्षण और नए निःशुल्क रिलीज़ में सहायता करते हैं।",
   "Current status": "वर्तमान स्थिति",
   "Delete settings and aggregate counters when the plugin is uninstalled.": "प्लगइन अनइंस्टॉल होने पर सेटिंग्स और कुल काउंटर हटाएँ।",
   "Detected plugin": "मिला प्लगइन",
@@ -67,6 +67,7 @@
   "KOZ WordPress Suite": "KOZ WordPress सुइट",
   "KOZ project support": "KOZ परियोजना सहायता",
   "Last detection": "अंतिम पहचान",
+  "Leave this field empty": "इस फ़ील्ड को खाली छोड़ें",
   "Legacy UA FREE version active": "पुराना UA FREE संस्करण सक्रिय",
   "Links": "लिंक",
   "Load the copy handler on matching public pages.": "मिलते सार्वजनिक पृष्ठों पर कॉपी हैंडलर लोड करें।",
@@ -83,7 +84,6 @@
   "Open": "खोलें",
   "Optional trusted domains, one per line. A comment is exempt only when every detected URL is trusted.": "वैकल्पिक विश्वसनीय डोमेन, प्रत्येक पंक्ति में एक। टिप्पणी तभी मुक्त होगी जब हर पहचाना गया URL विश्वसनीय हो।",
   "Optional. One local path per line. Use an ending * for a prefix. Leave empty to allow all public paths. Query strings and external URLs are rejected.": "वैकल्पिक। प्रति पंक्ति एक स्थानीय पथ। प्रीफ़िक्स के लिए अंत में * लगाएँ। सभी सार्वजनिक पथों की अनुमति के लिए खाली छोड़ें। क्वेरी स्ट्रिंग और बाहरी URL अस्वीकार किए जाते हैं।",
-  "PayPal and crypto donations support maintenance, testing and new free releases.": "PayPal और क्रिप्टो दान रखरखाव, परीक्षण और नए निःशुल्क रिलीज़ में सहायता करते हैं।",
   "Pingbacks, trackbacks, administrators and comment moderators are never processed.": "पिंगबैक, ट्रैकबैक, प्रशासक और टिप्पणी मॉडरेटर संसाधित नहीं होते।",
   "Preserve formatting": "फ़ॉर्मेटिंग बनाए रखें",
   "Prevent navigation when a matching link is clicked.": "मिलते लिंक पर क्लिक होने पर नेविगेशन रोकें।",
@@ -120,5 +120,6 @@
   "Visual feedback": "दृश्य प्रतिक्रिया",
   "Whitespace": "रिक्त स्थान",
   "You do not have permission to access this page.": "आपको इस पृष्ठ तक पहुँचने की अनुमति नहीं है।",
-  "You do not have permission to perform this action.": "आपको यह कार्रवाई करने की अनुमति नहीं है।"
+  "You do not have permission to perform this action.": "आपको यह कार्रवाई करने की अनुमति नहीं है।",
+  "Your comment could not be accepted. Please write a few words of your own and try again.": "आपकी टिप्पणी स्वीकार नहीं की जा सकी। कृपया अपने कुछ शब्द लिखें और फिर से प्रयास करें।"
 }
