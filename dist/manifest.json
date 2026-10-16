@@ -335,6 +335,19 @@
       "wordpress_org_tag": "1.2.0",
       "wordpress_org_tag_revision_status": "UNVERIFIED",
       "wordpress_org_live_evidence": "Owner screenshot of WordPress.org Advanced View showing Version 1.2.0 on 2026-10-16"
+    },
+    "koz-seo-core": {
+      "version": "2.2.0",
+      "status": "GITHUB_SYNC_VERIFIED_WORDPRESS_ORG_UNPUBLISHED",
+      "source_path": "koz-seo-core/",
+      "dist_package_status": "SYNCED_VERIFIED",
+      "dist_package_path": "dist/packages/koz-seo-core-2.2.0.zip",
+      "dist_checksum_path": "dist/checksums/koz-seo-core-2.2.0.zip.sha256",
+      "tested_zip_sha256": "70725320bf705efdb679abb57fb02e2a39013aadbef1cf3c2566a092a99756b9",
+      "tested_zip_size_bytes": 96129,
+      "drive_release_url": "https://drive.google.com/file/d/1-CSHBXLtubtSYAkxTtfQphHQ6yhF88dv/view",
+      "binary_commit": "c707fd2dcd985a63bb647b7a9d6c1092b6896356",
+      "note": "28 source files match the tested release ZIP. WordPress.org SVN publication not yet confirmed. Historical Suite package records remain snapshots."
     }
   }
 }
