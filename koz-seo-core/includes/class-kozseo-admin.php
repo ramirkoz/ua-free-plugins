@@ -181,8 +181,11 @@ final class KOZSEO_Admin {
 					<tr><th><?php esc_html_e( 'Organization name', 'koz-seo-core' ); ?></th><td><input class="regular-text" name="<?php echo esc_attr( KOZSEO_Core::OPTION ); ?>[organization_name]" value="<?php echo esc_attr( $settings['organization_name'] ); ?>"></td></tr>
 					<tr><th><?php esc_html_e( 'Organization type', 'koz-seo-core' ); ?></th><td><select name="<?php echo esc_attr( KOZSEO_Core::OPTION ); ?>[organization_type]"><?php foreach ( array( 'Organization', 'NGO', 'EducationalOrganization', 'GovernmentOrganization' ) as $type ) : ?><option value="<?php echo esc_attr( $type ); ?>" <?php selected( $settings['organization_type'], $type ); ?>><?php echo esc_html( $type ); ?></option><?php endforeach; ?></select></td></tr>
 					<tr><th><?php esc_html_e( 'Organization description', 'koz-seo-core' ); ?></th><td><textarea class="large-text" rows="3" name="<?php echo esc_attr( KOZSEO_Core::OPTION ); ?>[organization_description]"><?php echo esc_textarea( $settings['organization_description'] ); ?></textarea></td></tr>
-					<tr><th><?php esc_html_e( 'Organization logo attachment ID', 'koz-seo-core' ); ?></th><td><input type="number" min="0" name="<?php echo esc_attr( KOZSEO_Core::OPTION ); ?>[organization_logo_id]" value="<?php echo esc_attr( (string) $settings['organization_logo_id'] ); ?>"></td></tr>
-					<tr><th><?php esc_html_e( 'Default social image attachment ID', 'koz-seo-core' ); ?></th><td><input type="number" min="0" name="<?php echo esc_attr( KOZSEO_Core::OPTION ); ?>[default_social_image_id]" value="<?php echo esc_attr( (string) $settings['default_social_image_id'] ); ?>"></td></tr>
+					<tr><th><?php esc_html_e( 'Organization logo attachment ID', 'koz-seo-core' ); ?></th><td><input type="number" min="0" name="<?php echo esc_attr( KOZSEO_Core::OPTION ); ?>[organization_logo_id]" value="<?php echo esc_attr( (string) $settings['organization_logo_id'] ); ?>"> <?php self::attachment_thumb( (int) $settings['organization_logo_id'] ); ?></td></tr>
+					<tr><th><?php esc_html_e( 'Default social image attachment ID', 'koz-seo-core' ); ?></th><td><input type="number" min="0" name="<?php echo esc_attr( KOZSEO_Core::OPTION ); ?>[default_social_image_id]" value="<?php echo esc_attr( (string) $settings['default_social_image_id'] ); ?>"> <?php self::attachment_thumb( (int) $settings['default_social_image_id'] ); ?></td></tr>
+					<tr><th><label for="kozseo-social-profiles"><?php esc_html_e( 'Social profiles', 'koz-seo-core' ); ?></label></th><td><textarea id="kozseo-social-profiles" class="large-text code" rows="4" name="<?php echo esc_attr( KOZSEO_Core::OPTION ); ?>[social_profiles]" placeholder="https://www.facebook.com/…&#10;https://t.me/…"><?php echo esc_textarea( implode( "\n", (array) $settings['social_profiles'] ) ); ?></textarea><p class="description"><?php esc_html_e( 'One URL per line. Added to the organization schema as sameAs so search engines can connect your official profiles.', 'koz-seo-core' ); ?></p></td></tr>
+					<tr><th><label for="kozseo-contact-email"><?php esc_html_e( 'Public contact', 'koz-seo-core' ); ?></label></th><td><input id="kozseo-contact-email" class="regular-text" type="email" name="<?php echo esc_attr( KOZSEO_Core::OPTION ); ?>[contact_email]" value="<?php echo esc_attr( $settings['contact_email'] ); ?>" placeholder="info@example.org"> <input class="regular-text" type="tel" name="<?php echo esc_attr( KOZSEO_Core::OPTION ); ?>[contact_phone]" value="<?php echo esc_attr( $settings['contact_phone'] ); ?>" placeholder="+380 …" aria-label="<?php esc_attr_e( 'Public phone', 'koz-seo-core' ); ?>"><p class="description"><?php esc_html_e( 'Optional public email and phone for the organization schema. Leave empty to omit.', 'koz-seo-core' ); ?></p></td></tr>
+					<tr><th><?php esc_html_e( 'Breadcrumbs', 'koz-seo-core' ); ?></th><td><input type="hidden" name="<?php echo esc_attr( KOZSEO_Core::OPTION ); ?>[breadcrumbs_schema]" value="0"><label><input type="checkbox" name="<?php echo esc_attr( KOZSEO_Core::OPTION ); ?>[breadcrumbs_schema]" value="1" <?php checked( ! empty( $settings['breadcrumbs_schema'] ) ); ?>> <?php esc_html_e( 'Add BreadcrumbList schema (home, parent pages or category, current page)', 'koz-seo-core' ); ?></label></td></tr>
 					<tr><th><?php esc_html_e( 'Noindex', 'koz-seo-core' ); ?></th><td>
 						<label><input type="checkbox" name="<?php echo esc_attr( KOZSEO_Core::OPTION ); ?>[noindex_search]" value="1" <?php checked( ! empty( $settings['noindex_search'] ) ); ?>> <?php esc_html_e( 'Search pages', 'koz-seo-core' ); ?></label><br>
 						<label><input type="checkbox" name="<?php echo esc_attr( KOZSEO_Core::OPTION ); ?>[noindex_author]" value="1" <?php checked( ! empty( $settings['noindex_author'] ) ); ?>> <?php esc_html_e( 'Author archives', 'koz-seo-core' ); ?></label><br>
@@ -192,6 +195,8 @@ final class KOZSEO_Admin {
 						<label><input type="checkbox" name="<?php echo esc_attr( KOZSEO_Core::OPTION ); ?>[llms_txt]" value="1" <?php checked( ! empty( $settings['llms_txt'] ) ); ?>> <?php esc_html_e( 'Provide llms.txt', 'koz-seo-core' ); ?></label><br>
 						<label><input type="checkbox" name="<?php echo esc_attr( KOZSEO_Core::OPTION ); ?>[ai_manifest]" value="1" <?php checked( ! empty( $settings['ai_manifest'] ) ); ?>> <?php esc_html_e( 'Provide a public AI manifest', 'koz-seo-core' ); ?></label>
 					</td></tr>
+					<tr><th><label for="kozseo-llms-pages"><?php esc_html_e( 'Key pages for llms.txt', 'koz-seo-core' ); ?></label></th><td><input id="kozseo-llms-pages" class="regular-text code" name="<?php echo esc_attr( KOZSEO_Core::OPTION ); ?>[llms_page_ids]" value="<?php echo esc_attr( implode( ', ', (array) $settings['llms_page_ids'] ) ); ?>" placeholder="12, 34, 56"><p class="description"><?php esc_html_e( 'Comma-separated page or post IDs listed in llms.txt with their descriptions. Leave empty to use the top-level items of the main menu.', 'koz-seo-core' ); ?></p></td></tr>
+					<tr><th><label for="kozseo-alt-language"><?php esc_html_e( 'AI ALT language', 'koz-seo-core' ); ?></label></th><td><select id="kozseo-alt-language" name="<?php echo esc_attr( KOZSEO_Core::OPTION ); ?>[alt_language]"><?php foreach ( KOZSEO_Core::alt_languages() as $code => $name ) : ?><option value="<?php echo esc_attr( $code ); ?>" <?php selected( $settings['alt_language'], $code ); ?>><?php echo esc_html( '' === $code ? __( 'Site language', 'koz-seo-core' ) : $name ); ?></option><?php endforeach; ?></select></td></tr>
 				</table>
 				<?php submit_button(); ?>
 			</form>
@@ -234,11 +239,21 @@ final class KOZSEO_Admin {
 			<?php KOZSEO_Alt_Manager::render_panel(); ?>
 
 			<h2><?php esc_html_e( 'System endpoints', 'koz-seo-core' ); ?></h2>
-			<ul><li><code>/wp-sitemap.xml</code></li><li><code>/llms.txt</code></li><li><code>/.well-known/koz-ai-manifest.json</code></li></ul>
+			<ul><li><a href="<?php echo esc_url( home_url( '/wp-sitemap.xml' ) ); ?>" target="_blank" rel="noopener"><code>/wp-sitemap.xml</code></a></li><li><a href="<?php echo esc_url( home_url( '/llms.txt' ) ); ?>" target="_blank" rel="noopener"><code>/llms.txt</code></a></li><li><a href="<?php echo esc_url( home_url( '/.well-known/koz-ai-manifest.json' ) ); ?>" target="_blank" rel="noopener"><code>/.well-known/koz-ai-manifest.json</code></a></li></ul>
 			<p><a class="button" href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=' . self::EXPORT_ACTION ), self::EXPORT_ACTION ) ); ?>"><?php esc_html_e( 'Export privacy-safe JSON report', 'koz-seo-core' ); ?></a></p>
 
 		</div>
 		<?php
+	}
+
+	private static function attachment_thumb( int $attachment_id ): void {
+		if ( $attachment_id <= 0 ) {
+			return;
+		}
+		$url = wp_get_attachment_image_url( $attachment_id, 'thumbnail' );
+		if ( is_string( $url ) ) {
+			echo '<img src="' . esc_url( $url ) . '" alt="" style="width:40px;height:40px;object-fit:contain;vertical-align:middle;border:1px solid #dcdcde;border-radius:4px">';
+		}
 	}
 
 	public static function export_report(): void {
