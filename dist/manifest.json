@@ -353,6 +353,20 @@
       "wordpress_org_tag": "2.2.0",
       "wordpress_org_tag_revision_status": "UNVERIFIED",
       "wordpress_org_live_evidence": "Owner screenshot of WordPress.org Advanced View showing Version 2.2.0 and Download button on 2026-10-16"
+    },
+    "koz-static-translate": {
+      "version": "0.10.0",
+      "status": "GITHUB_SYNC_VERIFIED_WORDPRESS_ORG_SVN_PENDING",
+      "source_path": "koz-static-translate/",
+      "dist_package_status": "SYNCED_VERIFIED",
+      "dist_package_path": "dist/packages/koz-static-translate-0.10.0.zip",
+      "dist_checksum_path": "dist/checksums/koz-static-translate-0.10.0.zip.sha256",
+      "tested_zip_sha256": "859c84d76da0710415a154b11d2075d8d97b3d280261187449c2c41cc289077f",
+      "tested_zip_size_bytes": 167246,
+      "source_commit": "74c60a0647c3f184865d11d9fe1f1eeddc341982",
+      "binary_commit": "bb813a005305fa384f43b9e6f7df4659bc6d7d2d",
+      "drive_release_url": "https://drive.google.com/file/d/1YP8pdH9cRXTAlyXUGQeXvTHvrhwrOsEQ/view",
+      "note": "31 files synced exactly from uploaded ZIP. WordPress.org SVN trunk/tag 0.10.0 not yet confirmed. Runtime Azure quota-dependent flows untested until Nov 2026. README.md stale 0.9.38; readme.txt stable tag 0.10.0."
     }
   }
 }
