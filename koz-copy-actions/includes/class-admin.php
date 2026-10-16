@@ -125,6 +125,19 @@ final class KOZCOAC_Admin {
 							<th scope="row"><label for="kozcoac-copy-paths"><?php esc_html_e( 'Allowed paths', 'koz-copy-actions' ); ?></label></th>
 							<td><textarea id="kozcoac-copy-paths" name="<?php echo esc_attr( KOZCOAC_Plugin::OPTION ); ?>[path_rules]" rows="5" class="large-text code" spellcheck="false"><?php echo esc_textarea( (string) $settings['path_rules'] ); ?></textarea><p class="description"><?php esc_html_e( 'Optional. One local path per line. Use an ending * for a prefix. Leave empty to allow all public paths.', 'koz-copy-actions' ); ?></p></td>
 						</tr>
+						<tr>
+							<th scope="row"><?php esc_html_e( 'Post types', 'koz-copy-actions' ); ?></th>
+							<td>
+								<?php foreach ( get_post_types( array( 'public' => true ), 'objects' ) as $post_type ) : ?>
+									<label class="kozcoac-inline-check"><input type="checkbox" name="<?php echo esc_attr( KOZCOAC_Plugin::OPTION ); ?>[post_types][]" value="<?php echo esc_attr( $post_type->name ); ?>" <?php checked( in_array( $post_type->name, (array) $settings['post_types'], true ) ); ?>> <?php echo esc_html( $post_type->labels->singular_name ); ?></label>
+								<?php endforeach; ?>
+								<p class="description"><?php esc_html_e( 'Optional. Load on single views of the selected post types.', 'koz-copy-actions' ); ?></p>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row"><label for="kozcoac-copy-post-ids"><?php esc_html_e( 'Post or page IDs', 'koz-copy-actions' ); ?></label></th>
+							<td><input id="kozcoac-copy-post-ids" type="text" class="regular-text code" name="<?php echo esc_attr( KOZCOAC_Plugin::OPTION ); ?>[post_ids]" value="<?php echo esc_attr( (string) $settings['post_ids'] ); ?>" placeholder="12, 345"><p class="description"><?php esc_html_e( 'Optional. Comma-separated IDs. When paths, post types or IDs are set, the handler loads where any of them matches.', 'koz-copy-actions' ); ?></p></td>
+						</tr>
 					</table>
 				</div>
 
@@ -135,6 +148,14 @@ final class KOZCOAC_Admin {
 							<th scope="row"><label for="kozcoac-copy-selectors"><?php esc_html_e( 'CSS selectors', 'koz-copy-actions' ); ?></label></th>
 							<td><textarea id="kozcoac-copy-selectors" name="<?php echo esc_attr( KOZCOAC_Plugin::OPTION ); ?>[selectors]" rows="12" class="large-text code" spellcheck="false"><?php echo esc_textarea( (string) $settings['selectors'] ); ?></textarea><p class="description"><?php esc_html_e( 'One simple class, ID or approved data attribute selector per line.', 'koz-copy-actions' ); ?></p></td>
 						</tr>
+						<tr>
+							<th scope="row"><label for="kozcoac-copy-inject"><?php esc_html_e( 'Add a copy button to', 'koz-copy-actions' ); ?></label></th>
+							<td><textarea id="kozcoac-copy-inject" name="<?php echo esc_attr( KOZCOAC_Plugin::OPTION ); ?>[inject_selectors]" rows="4" class="large-text code" spellcheck="false" placeholder="pre"><?php echo esc_textarea( (string) $settings['inject_selectors'] ); ?></textarea><p class="description"><?php esc_html_e( 'Optional. A separate Copy button is added to each matching element, for example code blocks. Allowed: pre, code, blockquote, kbd, samp, a class or ID, or a tag with a class or ID. Whitespace inside these elements is always preserved.', 'koz-copy-actions' ); ?></p></td>
+						</tr>
+						<tr>
+							<th scope="row"><?php esc_html_e( 'Shortcode and block', 'koz-copy-actions' ); ?></th>
+							<td><p><code>[koz_copy text="PROMO-2026" label="Copy code" /]</code></p><p><code>[koz_copy display="inline"]UA123456789[/koz_copy]</code></p><p class="description"><?php esc_html_e( 'The shortcode and the Copy button block work on any page, independently of the selectors and display conditions above. Close single shortcodes with /] so a later [/koz_copy] does not swallow them. Attributes: text, target, label, display (button or inline), format (text or html), key, class.', 'koz-copy-actions' ); ?></p></td>
+						</tr>
 					</table>
 				</div>
 
@@ -142,6 +163,7 @@ final class KOZCOAC_Admin {
 					<h2><?php esc_html_e( 'Behaviour and accessibility', 'koz-copy-actions' ); ?></h2>
 					<table class="form-table" role="presentation">
 						<tr><th scope="row"><?php esc_html_e( 'Whitespace', 'koz-copy-actions' ); ?></th><td><select name="<?php echo esc_attr( KOZCOAC_Plugin::OPTION ); ?>[whitespace]"><option value="collapse" <?php selected( 'collapse', $settings['whitespace'] ); ?>><?php esc_html_e( 'Collapse repeated whitespace', 'koz-copy-actions' ); ?></option><option value="preserve" <?php selected( 'preserve', $settings['whitespace'] ); ?>><?php esc_html_e( 'Preserve formatting', 'koz-copy-actions' ); ?></option></select></td></tr>
+						<tr><th scope="row"><?php esc_html_e( 'Copy format', 'koz-copy-actions' ); ?></th><td><select name="<?php echo esc_attr( KOZCOAC_Plugin::OPTION ); ?>[copy_format]"><option value="text" <?php selected( 'text', $settings['copy_format'] ); ?>><?php esc_html_e( 'Plain text', 'koz-copy-actions' ); ?></option><option value="html" <?php selected( 'html', $settings['copy_format'] ); ?>><?php esc_html_e( 'Formatted (HTML and text)', 'koz-copy-actions' ); ?></option></select><p class="description"><?php esc_html_e( 'Formatted copying keeps links, bold text and lists when pasting into editors that support it. Explicit values and form fields are always copied as plain text. Override per element with data-copy-format="text" or "html".', 'koz-copy-actions' ); ?></p></td></tr>
 						<tr><th scope="row"><?php esc_html_e( 'Visual feedback', 'koz-copy-actions' ); ?></th><td><label><input type="checkbox" name="<?php echo esc_attr( KOZCOAC_Plugin::OPTION ); ?>[show_icon]" value="1" <?php checked( 1, (int) $settings['show_icon'] ); ?>> <?php esc_html_e( 'Show copy icon', 'koz-copy-actions' ); ?></label><br><label><input type="checkbox" name="<?php echo esc_attr( KOZCOAC_Plugin::OPTION ); ?>[show_toast]" value="1" <?php checked( 1, (int) $settings['show_toast'] ); ?>> <?php esc_html_e( 'Show success or error message', 'koz-copy-actions' ); ?></label></td></tr>
 						<tr><th scope="row"><label for="kozcoac-copy-duration"><?php esc_html_e( 'Message duration', 'koz-copy-actions' ); ?></label></th><td><input id="kozcoac-copy-duration" type="number" min="500" max="5000" step="100" name="<?php echo esc_attr( KOZCOAC_Plugin::OPTION ); ?>[toast_duration]" value="<?php echo esc_attr( (string) $settings['toast_duration'] ); ?>"> ms</td></tr>
 						<tr><th scope="row"><?php esc_html_e( 'Message position', 'koz-copy-actions' ); ?></th><td><select name="<?php echo esc_attr( KOZCOAC_Plugin::OPTION ); ?>[toast_position]"><option value="bottom-center" <?php selected( 'bottom-center', $settings['toast_position'] ); ?>><?php esc_html_e( 'Bottom centre', 'koz-copy-actions' ); ?></option><option value="bottom-left" <?php selected( 'bottom-left', $settings['toast_position'] ); ?>><?php esc_html_e( 'Bottom left', 'koz-copy-actions' ); ?></option><option value="bottom-right" <?php selected( 'bottom-right', $settings['toast_position'] ); ?>><?php esc_html_e( 'Bottom right', 'koz-copy-actions' ); ?></option></select></td></tr>
@@ -160,6 +182,13 @@ final class KOZCOAC_Admin {
 						/* translators: %d: number of configured CSS selectors. */
 						__( 'Configured selectors: %d', 'koz-copy-actions' ),
 						count( KOZCOAC_Plugin::selectors() )
+					)
+				); ?></p>
+				<p><?php echo esc_html(
+					sprintf(
+						/* translators: %d: number of configured copy-button selectors. */
+						__( 'Copy-button selectors: %d', 'koz-copy-actions' ),
+						count( KOZCOAC_Plugin::inject_selectors() )
 					)
 				); ?></p>
 				<p><?php esc_html_e( 'Copied values stored by this plugin: no. External requests: no. Cookies: no. Telemetry: no.', 'koz-copy-actions' ); ?></p>

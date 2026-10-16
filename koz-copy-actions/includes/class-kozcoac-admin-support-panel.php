@@ -28,12 +28,22 @@ final class KOZCOAC_Admin_Support_Panel {
 			return false;
 		}
 
+		// The settings page slug is koz-copy-actions (screen ID "koz-suite_page_koz-copy-actions");
+		// kozcoac-suite is the fallback top-level page when no other KOZ plugin provides the menu.
 		$id = strtolower( (string) $screen->id );
-		return str_contains( $id, 'kozcoac-copy-actions' );
+		return str_contains( $id, 'koz-copy-actions' ) || str_contains( $id, 'kozcoac-suite' );
+	}
+
+	/**
+	 * The shared KOZ panel (for example from KOZ Suite Control Center) replaces this one,
+	 * matching the other KOZ plugins, so the support block is never shown twice.
+	 */
+	private static function shared_panel_available(): bool {
+		return class_exists( 'KOZ_Admin_Support_Panel_V1', false );
 	}
 
 	public static function render(): void {
-		if ( self::$rendered || ! current_user_can( 'manage_options' ) || ! self::is_plugin_screen() ) {
+		if ( self::$rendered || self::shared_panel_available() || ! current_user_can( 'manage_options' ) || ! self::is_plugin_screen() ) {
 			return;
 		}
 
@@ -51,10 +61,9 @@ final class KOZCOAC_Admin_Support_Panel {
 					<h2><?php esc_html_e( 'Support development', 'koz-copy-actions' ); ?></h2>
 					<p><?php esc_html_e( 'Developer support is separate from donations to the foundation.', 'koz-copy-actions' ); ?></p>
 					<p><a href="https://www.linkedin.com/in/tonykoz/" target="_blank" rel="noopener noreferrer">LinkedIn: Tony Kozyriev</a></p>
-					<p><strong>PayPal:</strong> <code>kozyriev@uafree.org</code></p>
-					<p><strong>BTC:</strong> <code>bc1q4dn8e7sz2866g7qp1qtshh98j54tvuau5ghuuk</code></p>
+					<p><strong>BTC:</strong> <code>bc1q4dn8e7sz2866g7qplqtshh98j54tvuau5ghuuk</code></p>
 					<p><strong>ETH / USDC:</strong> <code>0x3aE3b23A7BD94b8a65A7E8Ca205A4e29BEF7c229</code></p>
-					<p><strong>USDT TRC-20:</strong> <code>TYsGyK7K3XB4NPHprf5w8ZodFafxFfDdbP</code></p>
+					<p><strong>USDT TRC-20:</strong> <code>TYSgyk7K3XB4WPHprf5w8ZodFAfxFfDdbF</code></p>
 				</article>
 			</div>
 		</section>

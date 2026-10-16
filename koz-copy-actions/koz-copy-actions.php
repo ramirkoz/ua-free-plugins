@@ -2,7 +2,7 @@
 /**
  * Plugin Name: KOZ Copy Actions
  * Description: Accessible, privacy-safe copy-to-clipboard actions for WordPress.
- * Version: 1.1.14
+ * Version: 1.2.0
  * Author: Tony Kozyriev
  * Author URI: https://www.linkedin.com/in/tonykoz/
  * Plugin URI: https://github.com/ramirkoz/ua-free-plugins
@@ -18,12 +18,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'KOZCOAC_VERSION', '1.1.14' );
+define( 'KOZCOAC_VERSION', '1.2.0' );
 define( 'KOZCOAC_FILE', __FILE__ );
 define( 'KOZCOAC_DIR', plugin_dir_path( __FILE__ ) );
 
 require_once KOZCOAC_DIR . 'includes/class-kozcoac-runtime-i18n.php';
 require_once KOZCOAC_DIR . 'includes/class-plugin.php';
+require_once KOZCOAC_DIR . 'includes/class-kozcoac-shortcode.php';
 require_once KOZCOAC_DIR . 'includes/class-environment-scanner.php';
 require_once KOZCOAC_DIR . 'includes/class-admin.php';
 
@@ -38,6 +39,7 @@ add_action(
 	'plugins_loaded',
 	static function (): void {
 		\ramirkz\kozcopyactions\KOZCOAC_Plugin::init();
+		\ramirkz\kozcopyactions\KOZCOAC_Shortcode::init();
 		\ramirkz\kozcopyactions\KOZCOAC_Admin::init();
 	}
 );

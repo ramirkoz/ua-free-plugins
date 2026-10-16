@@ -8,3 +8,4 @@
 .kozcoac-support-grid h2{margin-top:0}
 .kozcoac-support-grid code{word-break:break-all}
 @media(max-width:780px){.kozcoac-support-grid{grid-template-columns:1fr}}
+.kozcoac-inline-check{display:inline-block;margin:0 16px 6px 0}

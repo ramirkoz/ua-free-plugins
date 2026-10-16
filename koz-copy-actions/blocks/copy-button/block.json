@@ -1,0 +1,24 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "kozcoac/copy-button",
+	"title": "Copy button",
+	"category": "widgets",
+	"icon": "clipboard",
+	"description": "A button or inline text that copies a value to the clipboard.",
+	"keywords": [ "copy", "clipboard", "koz" ],
+	"textdomain": "koz-copy-actions",
+	"attributes": {
+		"text": { "type": "string", "default": "" },
+		"target": { "type": "string", "default": "" },
+		"label": { "type": "string", "default": "" },
+		"display": { "type": "string", "enum": [ "button", "inline" ], "default": "button" },
+		"format": { "type": "string", "enum": [ "", "text", "html" ], "default": "" }
+	},
+	"supports": {
+		"html": false,
+		"align": [ "left", "center", "right" ],
+		"spacing": { "margin": true }
+	},
+	"editorScript": "file:./index.js"
+}

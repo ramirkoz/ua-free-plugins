@@ -4,7 +4,7 @@ Tags: clipboard, copy, accessibility, privacy, tools
 Requires at least: 6.2
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 1.1.14
+Stable tag: 1.2.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -20,18 +20,20 @@ No copied content is sent to the developer or to an external service.
 
 = Part of the KOZ Suite =
 
-KOZ Copy Actions is one focused module of the KOZ Suite, a family of independent WordPress plugins with a shared KOZ administration experience and visual identity.
+KOZ Copy Actions is **one focused module of the broader KOZ Suite**, a family of independent WordPress plugins that share a common KOZ administration experience and visual identity.
 
-Each KOZ plugin can be installed independently or combined with other KOZ Suite modules.
+Each KOZ plugin remains independently installable, so site owners can use only the modules they need or combine several modules into one toolkit.
 
 Current public KOZ plugins:
 
 * [KOZ SEO Core](https://wordpress.org/plugins/koz-seo-core/) — technical SEO, schema, sitemaps, AI discovery and OpenAI Vision image ALT.
 * KOZ Copy Actions — accessible copy-to-clipboard actions for selected WordPress content.
 * [KOZ URL-Only Comment Spam](https://wordpress.org/plugins/koz-url-only-comment-spam/) — privacy-first local moderation for URL-only comment spam.
-* [KOZ Static Translate](https://wordpress.org/plugins/koz-static-translate/) — AI-powered multilingual translation with Microsoft Azure Translator and static language routes.
-
-Additional KOZ Suite modules are used in production and may be published separately as they are prepared for public distribution.
+* [KOZ Static Translate](https://wordpress.org/plugins/koz-static-translate/) — AI-powered multilingual translation with Microsoft Azure AI Translator and static language routes.
+* [KOZ Translate Diagnostics](https://wordpress.org/plugins/koz-translate-diagnostics/) — read-only health checks and privacy-safe diagnostic reports for KOZ Static Translate.
+* [KOZ 404 Guard & URL Intelligence](https://wordpress.org/plugins/koz-404-guard/) — privacy-safe 404/410 diagnostics, controlled same-site redirects and URL intelligence.
+* [KOZ Consent Manager](https://wordpress.org/plugins/koz-consent-manager/) — privacy-first visitor consent, optional script control and Google Consent Mode v2 synchronization.
+* [KOZ Donate Stats & Conversions](https://wordpress.org/plugins/koz-donate-stats/) — local donation-journey analytics and consent-aware conversion events for WordPress.
 
 = Typical uses =
 
@@ -91,6 +93,40 @@ If a matching element is an input, textarea or select field, the plugin copies i
 
 For other matching elements, the plugin copies the element's visible text content.
 
+= Shortcode and block =
+
+Place a copy button anywhere, without configuring selectors:
+
+`[koz_copy text="PROMO-2026" label="Copy code" /]`
+
+Show the value itself as clickable inline text:
+
+`[koz_copy display="inline"]UA123456789[/koz_copy]`
+
+Copy the current value of another element:
+
+`[koz_copy target="#account-number" label="Copy account number" /]`
+
+Close single shortcodes with ` /]`. Without it, WordPress treats a later `[/koz_copy]` on the same page as the end of the earlier shortcode and the enclosed shortcodes disappear.
+
+Attributes: `text`, `target`, `label`, `display` (`button` or `inline`), `format` (`text` or `html`), `key` (sent with the copy event) and `class`.
+
+In the block editor, add the **Copy button** block and set the value, label and display in the block settings.
+
+The shortcode and block work on every page where they are placed, independently of the selector settings and display conditions.
+
+= Copy buttons for code blocks =
+
+In **Add a copy button to**, list elements that should receive a separate Copy button, for example:
+
+`pre`
+
+Allowed entries: `pre`, `code`, `blockquote`, `kbd`, `samp`, a class or ID, or one of these tags combined with a class or ID (for example `pre.wp-block-code`). Whitespace inside these elements is always preserved, so copied code keeps its indentation.
+
+= Formatted copying =
+
+With **Copy format** set to **Formatted (HTML and text)**, element content is copied as HTML and plain text together, so links, bold text and lists survive when pasting into editors that support formatting. Explicit values and form fields are always plain text. Override one element with `data-copy-format="text"` or `data-copy-format="html"`.
+
 = Supported selectors =
 
 For safety and predictable behaviour, settings accept simple selectors only:
@@ -116,6 +152,8 @@ Examples:
 `/products/*`
 
 An ending `*` matches all paths beginning with that prefix.
+
+You can also limit the handler to single views of selected **post types**, or to specific **post or page IDs**. When paths, post types or IDs are set, the handler loads where any of them matches.
 
 For multilingual sites with language-specific URLs, add each required language path, for example:
 
@@ -219,8 +257,19 @@ Yes. Enable **Prevent navigation when a matching link is clicked** in the plugin
 
 == Changelog ==
 
+= 1.2.0 =
+* New: `[koz_copy]` shortcode and **Copy button** block (Block API v3, compatible with the iframe editor) for copy buttons or inline copy text without CSS selectors.
+* New: "Add a copy button to" mode adds a separate Copy button to matching elements such as `pre` code blocks.
+* New: optional formatted copying (HTML and plain text together) with a per-element `data-copy-format` override.
+* New: display conditions by post type and post or page ID, combined with the existing allowed paths.
+* Performance: dynamic content is scanned only where new nodes were added, and click targets are matched with one native `closest()` call.
+* Performance: the frontend script loads with the `defer` strategy on WordPress 6.3+, and settings migration runs only in the administration area.
+* Accessibility: Space now activates copy targets on key release, matching native button behaviour.
+* Fixed: the plugin's own support panel now appears on its settings page and steps aside when the shared KOZ support panel is present, so it is never shown twice.
+* Removed PayPal from the developer support panel and corrected the BTC and USDT TRC-20 developer wallet addresses.
+
 = 1.1.14 =
-* Updated KOZ Suite documentation to include KOZ Static Translate as the fourth public plugin.
+* Updated KOZ Suite documentation to include all eight current public plugins.
 * Updated WordPress compatibility metadata for WordPress 7.1.
 * No changes to clipboard, selector, path, privacy or multilingual runtime behavior.
 
