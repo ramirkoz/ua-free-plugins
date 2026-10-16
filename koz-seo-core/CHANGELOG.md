@@ -1,5 +1,22 @@
 # Changelog
 
+## 2.2.0
+
+- Fixed: canonical URLs of category, tag and other archives with non-Latin (for example Cyrillic) slugs lost the slug and pointed to a non-existent URL.
+- Fixed: canonical URLs no longer include query strings such as utm_*, fbclid or gclid; archives use their WordPress link plus the page number.
+- Fixed: WordPress core no longer prints a second rel=canonical on singular pages while KOZ SEO output is enabled.
+- Fixed: posts marked "Prevent search engine indexing" are now removed from the XML sitemap.
+- New: Article schema with headline, author, publisher, image and dates; WebPage and WebSite carry inLanguage.
+- New: BreadcrumbList schema (home, parent pages or primary category, current page), on by default.
+- New: organization social profiles (sameAs), public email and phone settings.
+- New: og:locale, article:published_time and article:modified_time, and og:image width, height and alt for media library images.
+- New: llms.txt lists key pages with descriptions (configured IDs or the main menu).
+- New: SEO meta box with a search snippet preview, character counters, automatic values as placeholders and a media library picker for the social image.
+- New: AI ALT text follows the site language or a chosen language, and the prompt uses the site name instead of a fixed organisation.
+- Performance: settings are sanitized once per request, the requested post is resolved once, and legacy settings migration runs only on activation and in the admin area.
+- Saving a post no longer creates kozseo_noindex = 0 metadata, and revisions and autosaves are skipped.
+- Removed PayPal from the developer support panel and corrected the BTC and USDT TRC-20 developer wallet addresses.
+
 ## 2.1.22
 - Updated WordPress.org `Tested up to` metadata to WordPress 7.1.
 
