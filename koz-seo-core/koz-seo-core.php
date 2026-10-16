@@ -3,7 +3,7 @@
  * Plugin Name: KOZ SEO Core
  * Plugin URI: https://github.com/ramirkoz/ua-free-plugins
  * Description: Lightweight standalone SEO, metadata, schema, sitemap integration, AI discovery and accessibility audit.
- * Version: 2.1.22
+ * Version: 2.2.0
  * Author: Tony Kozyriev
  * Author URI: https://www.linkedin.com/in/tonykoz/
  * Text Domain: koz-seo-core
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'KOZSEO_VERSION', '2.1.22' );
+define( 'KOZSEO_VERSION', '2.2.0' );
 define( 'KOZSEO_FILE', __FILE__ );
 define( 'KOZSEO_DIR', plugin_dir_path( __FILE__ ) );
 define( 'KOZSEO_URL', plugin_dir_url( __FILE__ ) );
@@ -52,7 +52,10 @@ register_deactivation_hook( KOZSEO_FILE, array( 'KOZSEO_Core', 'deactivate' ) );
 add_action(
 	'plugins_loaded',
 	static function (): void {
-		KOZSEO_Core::migrate_legacy_settings();
+		// Copying the former UA FREE settings is a one-time task; activation and the admin area cover it.
+		if ( is_admin() ) {
+			KOZSEO_Core::migrate_legacy_settings();
+		}
 		KOZSEO_Core::init();
 		KOZSEO_Admin::init();
 		KOZSEO_Alt_Manager::init();
