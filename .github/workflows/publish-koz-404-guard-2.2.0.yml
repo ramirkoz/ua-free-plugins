@@ -1,0 +1,92 @@
+name: Publish KOZ 404 Guard 2.2.0
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/publish-koz-404-guard-2.2.0.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Synchronize exact plugin sources and metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          import shutil
+          import tempfile
+          import zipfile
+          from pathlib import Path
+
+          package = Path('releases/koz-404-guard-2.2.0.zip')
+          with tempfile.TemporaryDirectory() as tmp:
+              with zipfile.ZipFile(package, 'r') as z:
+                  z.extractall(tmp)
+              source = Path(tmp) / 'koz-404-guard'
+              target = Path('koz-404-guard')
+              if target.exists():
+                  shutil.rmtree(target)
+              shutil.copytree(source, target)
+
+          notes = Path('releases/koz-404-guard-2.2.0.zip.sha256')
+          notes.write_text('8ea07dfd09d46e0ec0324bd2b99850078a7f5303989e4da8ffe6b87de2edfc60  koz-404-guard-2.2.0.zip\n', encoding='utf-8')
+
+          readme_path = Path('README.md')
+          text = readme_path.read_text(encoding='utf-8')
+          text = text.replace('| koz-404-guard | 2.1.4 |', '| koz-404-guard | 2.2.0 (WordPress.org: 2.1.4 live) |')
+          readme_path.write_text(text, encoding='utf-8')
+
+          release = {
+              'slug': 'koz-404-guard',
+              'candidate_version': '2.2.0',
+              'wordpress_org_live': '2.1.4',
+              'zip': 'releases/koz-404-guard-2.2.0.zip',
+              'sha256': '8ea07dfd09d46e0ec0324bd2b99850078a7f5303989e4da8ffe6b87de2edfc60',
+              'drive_folder': 'https://drive.google.com/drive/folders/1TdzI0s1lxp2Zf3rGj4yTqcRY-1u0TRhS',
+              'status': 'GitHub source synced; WordPress.org SVN publication by owner pending',
+              'suite_bundle': '1.0.30 unchanged'
+          }
+          Path('releases/KOZ_404_GUARD_2.2.0_RELEASE.json').write_text(
+              json.dumps(release, indent=2, ensure_ascii=False) + '\n',
+              encoding='utf-8'
+          )
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add koz-404-guard README.md releases/koz-404-guard-2.2.0.zip.sha256 releases/KOZ_404_GUARD_2.2.0_RELEASE.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'Sync KOZ 404 Guard 2.2.0 sources from exact release ZIP'
+            git push origin HEAD:main
+          fi
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          TAG='koz-404-guard-v2.2.0'
+          TARGET="$(git rev-parse HEAD)"
+          if ! gh release view "$TAG" >/dev/null 2>&1; then
+            gh release create "$TAG" \
+              releases/koz-404-guard-2.2.0.zip \
+              releases/koz-404-guard-2.2.0.zip.sha256 \
+              releases/KOZ_404_GUARD_2.2.0_CHANGES.md \
+              releases/KOZ_404_GUARD_2.2.0_RELEASE.json \
+              --target "$TARGET" \
+              --title 'KOZ 404 Guard & URL Intelligence 2.2.0' \
+              --notes-file releases/KOZ_404_GUARD_2.2.0_CHANGES.md \
+              --latest=false
+          fi
+          gh release view "$TAG" --json tagName,assets,isDraft
