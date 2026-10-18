@@ -1,0 +1,40 @@
+name: Publish KOZ Translate Diagnostics 0.4.0
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/publish-koz-translate-diagnostics-0.4.0.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  github-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact release source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create GitHub plugin tag and release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          TAG='koz-translate-diagnostics-v0.4.0'
+          if ! gh release view "$TAG" >/dev/null 2>&1; then
+            gh release create "$TAG" \
+              releases/koz-translate-diagnostics-0.4.0.zip \
+              releases/koz-translate-diagnostics-0.4.0.zip.sha256 \
+              releases/KOZ_TRANSLATE_DIAGNOSTICS_0.4.0_CHANGES.md \
+              releases/KOZ_TRANSLATE_DIAGNOSTICS_0.4.0_RELEASE.json \
+              --target "$GITHUB_SHA" \
+              --title "KOZ Translate Diagnostics 0.4.0" \
+              --notes-file releases/KOZ_TRANSLATE_DIAGNOSTICS_0.4.0_CHANGES.md \
+              --latest=false
+          fi
+          gh release view "$TAG" --json tagName,isDraft,assets
