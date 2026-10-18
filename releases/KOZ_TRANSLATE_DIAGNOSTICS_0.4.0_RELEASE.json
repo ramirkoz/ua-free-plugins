@@ -1,10 +1,12 @@
 {
   "slug": "koz-translate-diagnostics",
   "candidate_version": "0.4.0",
-  "wordpress_org_live": "0.3.6",
+  "wordpress_org_live": "0.4.0",
   "zip": "releases/koz-translate-diagnostics-0.4.0.zip",
   "sha256": "4ab427a118155e1ef3c09f77ea687e4de1e373fad91fcc292030788447307fc9",
   "drive_folder": "https://drive.google.com/drive/folders/1p7BOlFOG7fdYB4leXtEycJ7AD75RcB1C",
-  "status": "GitHub source synced; WordPress.org publication by owner pending",
-  "suite_bundle": "1.0.30 unchanged"
+  "status": "WordPress.org LIVE 0.4.0 confirmed by owner Advanced View screenshot on 2026-10-18; GitHub and Google Drive synchronized",
+  "suite_bundle": "1.0.30 unchanged",
+  "wordpress_org_evidence": "Owner-supplied 2026-10-18 Advanced View screenshot: Version 0.4.0; Download available",
+  "wordpress_org_svn_revision": "not independently verified"
 }
