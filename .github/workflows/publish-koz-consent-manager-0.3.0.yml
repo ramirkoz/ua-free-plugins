@@ -1,0 +1,92 @@
+name: Publish KOZ Consent Manager 0.3.0
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/publish-koz-consent-manager-0.3.0.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  synchronize-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout existing repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Synchronize original release files
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo '1dd3c1afd6c9d77e5b42f2015aa2d3931e48c64eccb8c0332a122c2f49815d0b  releases/koz-consent-manager-0.3.0.zip' | sha256sum -c -
+          python3 - <<'PY'
+          import json, shutil, tempfile, zipfile
+          from pathlib import Path
+
+          archive = Path("releases/koz-consent-manager-0.3.0.zip")
+          with tempfile.TemporaryDirectory() as tmp:
+              with zipfile.ZipFile(archive) as z:
+                  z.extractall(tmp)
+              source = Path(tmp) / "koz-consent-manager"
+              target = Path("koz-consent-manager")
+              if target.exists():
+                  shutil.rmtree(target)
+              shutil.copytree(source, target)
+
+          Path("releases/koz-consent-manager-0.3.0.zip.sha256").write_text(
+              "1dd3c1afd6c9d77e5b42f2015aa2d3931e48c64eccb8c0332a122c2f49815d0b  koz-consent-manager-0.3.0.zip\n",
+              encoding="utf-8"
+          )
+          readme = Path("README.md")
+          text = readme.read_text(encoding="utf-8")
+          text = text.replace(
+              "| koz-consent-manager | 0.2.12 |",
+              "| koz-consent-manager | 0.3.0 (WordPress.org: 0.2.12 live) |"
+          )
+          readme.write_text(text, encoding="utf-8")
+
+          release = {
+              "slug": "koz-consent-manager",
+              "candidate_version": "0.3.0",
+              "wordpress_org_live": "0.2.12",
+              "zip": "releases/koz-consent-manager-0.3.0.zip",
+              "sha256": "1dd3c1afd6c9d77e5b42f2015aa2d3931e48c64eccb8c0332a122c2f49815d0b",
+              "drive_folder": "https://drive.google.com/drive/folders/12SiV19byjXaPuTwZ9iQK4QbykuT-xnnt",
+              "status": "GitHub source synchronized; WordPress.org SVN publication by owner pending",
+              "suite_bundle": "1.0.30 unchanged"
+          }
+          Path("releases/KOZ_CONSENT_MANAGER_0.3.0_RELEASE.json").write_text(
+              json.dumps(release, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+          )
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add koz-consent-manager README.md releases/koz-consent-manager-0.3.0.zip.sha256 releases/KOZ_CONSENT_MANAGER_0.3.0_RELEASE.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'Sync KOZ Consent Manager 0.3.0 original source files'
+            git push origin HEAD:main
+          fi
+
+      - name: Publish GitHub tag and release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG="koz-consent-manager-v0.3.0"
+          if ! gh release view "$TAG" >/dev/null 2>&1; then
+            gh release create "$TAG" \
+              releases/koz-consent-manager-0.3.0.zip \
+              releases/koz-consent-manager-0.3.0.zip.sha256 \
+              releases/KOZ_CONSENT_MANAGER_0.3.0_CHANGES.md \
+              releases/KOZ_CONSENT_MANAGER_0.3.0_RELEASE.json \
+              --target "$(git rev-parse HEAD)" \
+              --title "KOZ Consent Manager 0.3.0" \
+              --notes-file releases/KOZ_CONSENT_MANAGER_0.3.0_CHANGES.md \
+              --latest=false
+          fi
+          gh release view "$TAG" --json tagName,isDraft,assets
