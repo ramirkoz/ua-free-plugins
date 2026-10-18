@@ -6,10 +6,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 final class KOZTDIAG_Translate_Diagnostics {
-	private const PAGE_SLUG = 'koz-translate-diagnostics';
-	private const EXPORT_ACTION = 'koztdiag_export';
-	private const DEEP_SCAN_QUERY = 'koztdiag_deep';
-	private const DEEP_SCAN_NONCE = 'koztdiag_deep';
+	public const PAGE_SLUG = 'koz-translate-diagnostics';
+	public const EXPORT_ACTION = 'koztdiag_export';
+	public const DEEP_SCAN_QUERY = 'koztdiag_deep';
+	public const DEEP_SCAN_NONCE = 'koztdiag_deep';
 	private const TEXT_DOMAIN = 'koz-translate-diagnostics';
 	private const CURRENT_TRANSLATOR_CLASS = '\\ramirkz\\kozstx\\KOZSTX_Static_Translate';
 	private const LEGACY_TRANSLATOR_CLASS = 'UAFree_Static_Translate_Autonomous';
@@ -19,31 +19,9 @@ final class KOZTDIAG_Translate_Diagnostics {
 	private static array $table_status_cache = array();
 
 	public static function init(): void {
-		add_action( 'admin_menu', array( __CLASS__, 'admin_menu' ), 30 );
-		add_action( 'admin_post_' . self::EXPORT_ACTION, array( __CLASS__, 'export_json' ) );
-		add_filter( 'plugin_action_links_' . plugin_basename( KOZTDIAG_FILE ), array( __CLASS__, 'action_links' ) );
-	}
-
-	public static function admin_menu(): void {
-		$parent = KOZTDIAG_Suite_Registry::suite_page();
-		add_submenu_page(
-			$parent,
-			__( 'Translation Diagnostics', 'koz-translate-diagnostics' ),
-			__( 'Translation Diagnostics', 'koz-translate-diagnostics' ),
-			'manage_options',
-			self::PAGE_SLUG,
-			array( __CLASS__, 'admin_page' )
-		);
-	}
-
-	public static function action_links( array $links ): array {
-		array_unshift(
-			$links,
-			'<a href="' . esc_url( admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ) . '">' .
-			esc_html__( 'Diagnostics', 'koz-translate-diagnostics' ) .
-			'</a>'
-		);
-		return $links;
+		KOZTDIAG_Admin_Page::init();
+		KOZTDIAG_Export::init();
+		KOZTDIAG_Site_Health::init();
 	}
 
 	private static function preferred_table( string $current_suffix, string $legacy_suffix ): string {
@@ -278,6 +256,7 @@ final class KOZTDIAG_Translate_Diagnostics {
 			'auto_enabled', 'routes_enabled', 'switcher_enabled', 'dynamic_content_enabled',
 			'azure_key_enc', 'azure_key', 'azure_endpoint', 'azure_region', 'monthly_limit',
 		);
+		$known_keys = array_merge( $known_keys, KOZTDIAG_Budget::known_setting_keys() );
 		return array(
 			'source_language' => sanitize_key( (string) ( $settings['source_language'] ?? '' ) ),
 			'target_languages' => self::normalize_languages( (array) ( $settings['target_languages'] ?? array() ) ),
@@ -302,6 +281,7 @@ final class KOZTDIAG_Translate_Diagnostics {
 			'manual_paused', 'pause_until', 'pause_reason', 'last_error', 'last_run_at',
 			'last_success_at', 'last_inventory_at', 'last_core_rescan_at',
 			'active_source_language', 'last_worker_started_at', 'last_worker_finished_at',
+			'last_cache_purge_at', 'last_log_cleanup_at', 'last_recent_reports_at',
 		);
 		$safe = array();
 		foreach ( $allowed as $key ) {
@@ -316,7 +296,9 @@ final class KOZTDIAG_Translate_Diagnostics {
 			}
 			$safe[ $key ] = is_scalar( $value ) || null === $value ? $value : self::sanitize_recursive( $value );
 		}
-		$safe['unknown_key_count'] = count( array_diff( array_keys( $runtime ), $allowed ) );
+		// Report cursors are known translator state but are not exported.
+		$known_private = array( 'report_cursor_date', 'report_cursor_id', 'report_bootstrap_complete' );
+		$safe['unknown_key_count'] = count( array_diff( array_keys( $runtime ), $allowed, $known_private ) );
 		return $safe;
 	}
 
@@ -942,6 +924,9 @@ final class KOZTDIAG_Translate_Diagnostics {
 		if ( 'monthly_limit' === (string) ( $runtime['pause_reason'] ?? '' ) ) {
 			$hints[] = __( 'Automatic translation is paused because the configured monthly character limit was reached.', 'koz-translate-diagnostics' );
 		}
+		if ( 'daily_limit' === (string) ( $runtime['pause_reason'] ?? '' ) ) {
+			$hints[] = __( 'Automatic translation is paused until midnight UTC because the daily character budget was used.', 'koz-translate-diagnostics' );
+		}
 		if ( 0 === (int) ( $sources['total'] ?? 0 ) ) {
 			$hints[] = __( 'No translation sources were found.', 'koz-translate-diagnostics' );
 		}
@@ -1217,7 +1202,7 @@ final class KOZTDIAG_Translate_Diagnostics {
 		return $result;
 	}
 
-	private static function readiness_blocker_label( string $code ): string {
+	public static function readiness_blocker_label( string $code ): string {
 		$labels = array(
 			'source_scan_not_ready' => __( 'Source scan not ready', 'koz-translate-diagnostics' ),
 			'translation_coverage_incomplete' => __( 'Translation coverage incomplete', 'koz-translate-diagnostics' ),
@@ -1227,7 +1212,7 @@ final class KOZTDIAG_Translate_Diagnostics {
 		return (string) ( $labels[ $code ] ?? $code );
 	}
 
-	private static function translated_route_url( int $post_id, string $language ): string {
+	public static function translated_route_url( int $post_id, string $language ): string {
 		$permalink = get_permalink( $post_id );
 		if ( ! is_string( $permalink ) || '' === $permalink ) {
 			return '';
@@ -1307,7 +1292,17 @@ final class KOZTDIAG_Translate_Diagnostics {
 			'transients' => self::transient_snapshot( $deep ),
 			'suite' => self::safe_suite_status(),
 		);
-		$report['hints'] = self::hints( $translator, $api_status, $settings, $runtime, $tables, $sources, $languages, $queue, $deep );
+		$budget_findings = array();
+		if ( ! empty( $translator['matches'] ) ) {
+			$report['budget'] = KOZTDIAG_Budget::snapshot();
+			$budget_findings = array_column( KOZTDIAG_Budget::findings(), 'message' );
+		}
+		$hints = self::hints( $translator, $api_status, $settings, $runtime, $tables, $sources, $languages, $queue, $deep );
+		if ( 'monthly' === ( $report['budget']['blocked_by'] ?? '' ) ) {
+			// The budget finding already says that the monthly limit is used up.
+			$hints = array_diff( $hints, array( __( 'Automatic translation is paused because the configured monthly character limit was reached.', 'koz-translate-diagnostics' ) ) );
+		}
+		$report['hints'] = array_values( array_unique( array_merge( $budget_findings, $hints ) ) );
 		$filtered = apply_filters( 'koztdiag_generated_report', $report, $deep );
 		if ( is_array( $filtered ) ) {
 			$report = self::merge_filter_values( $report, $filtered );
@@ -1317,7 +1312,7 @@ final class KOZTDIAG_Translate_Diagnostics {
 
 
 
-	private static function is_migration_pause_reason( string $reason ): bool {
+	public static function is_migration_pause_reason( string $reason ): bool {
 		return str_starts_with( $reason, 'UA FREE Suite Migration Bridge:' )
 			|| str_starts_with( $reason, 'KOZ WordPress Suite Migration Bridge:' );
 	}
@@ -1354,8 +1349,8 @@ final class KOZTDIAG_Translate_Diagnostics {
 		}
 
 		if ( 'pause_reason' === $key ) {
-			if ( 'monthly_limit' === $value ) {
-				return 'monthly_limit';
+			if ( in_array( $value, array( 'monthly_limit', 'daily_limit' ), true ) ) {
+				return $value;
 			}
 			if ( self::is_migration_pause_reason( $value ) ) {
 				return 'migration_bridge';
@@ -1373,7 +1368,7 @@ final class KOZTDIAG_Translate_Diagnostics {
 		return self::redact_preview( $value, 500 );
 	}
 
-	private static function privacy_safe_report( array $report, bool $strict_export = false ): array {
+	public static function privacy_safe_report( array $report, bool $strict_export = false ): array {
 		$safe = self::sanitize_recursive( $report );
 		if ( ! is_array( $safe ) ) {
 			return array();
@@ -1383,6 +1378,16 @@ final class KOZTDIAG_Translate_Diagnostics {
 		}
 		$strict = self::strict_export_recursive( $safe );
 		return is_array( $strict ) ? $strict : array();
+	}
+
+	/** Allowlisted translator settings, for the admin page, Site Health and the short report. */
+	public static function settings_snapshot(): array {
+		return self::safe_settings();
+	}
+
+	/** Allowlisted translator runtime state. */
+	public static function runtime_snapshot(): array {
+		return self::safe_runtime();
 	}
 
 	public static function public_status(): array {
@@ -1399,6 +1404,8 @@ final class KOZTDIAG_Translate_Diagnostics {
 		$basic_hints += empty( $translator['matches'] ) ? 1 : 0;
 		$basic_hints += empty( $settings['azure_key_configured'] ) ? 1 : 0;
 		$basic_hints += ! empty( $runtime['manual_paused'] ) || '' !== (string) ( $runtime['pause_reason'] ?? '' ) ? 1 : 0;
+		$budget = KOZTDIAG_Budget::is_supported() ? KOZTDIAG_Budget::snapshot() : array();
+		$basic_hints += count( KOZTDIAG_Budget::is_supported() ? KOZTDIAG_Budget::findings() : array() );
 
 		return array(
 			'version' => KOZTDIAG_VERSION,
@@ -1416,233 +1423,13 @@ final class KOZTDIAG_Translate_Diagnostics {
 			'languages_scope' => 'configured',
 			'basic_hint_count' => $basic_hints,
 			'hint_count_scope' => 'basic',
+			'budget_blocked_by' => $budget['blocked_by'] ?? '',
+			'budget_monthly_percent' => (float) ( $budget['monthly']['percent'] ?? 0 ),
+			'worker_enabled' => ! empty( $budget['worker']['enabled'] ),
+			'page_text_waiting' => (int) ( $budget['residual_queue']['total'] ?? 0 ),
 			'database_writes' => false,
 			'external_requests' => false,
 		);
 	}
 
-	public static function export_json(): void {
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( esc_html__( 'You do not have permission to export this report.', 'koz-translate-diagnostics' ) );
-		}
-		check_admin_referer( self::EXPORT_ACTION );
-
-		// Legacy export URLs must not trigger a second deep scan. A deep scan now
-		// prepares the strict privacy-safe payload once and the browser downloads
-		// that same in-memory result without another origin request.
-		wp_safe_redirect( self::deep_scan_url() );
-		exit;
-	}
-
-	private static function export_url(): string {
-		return wp_nonce_url(
-			add_query_arg( array( 'action' => self::EXPORT_ACTION ), admin_url( 'admin-post.php' ) ),
-			self::EXPORT_ACTION
-		);
-	}
-
-	private static function deep_scan_url(): string {
-		return wp_nonce_url(
-			add_query_arg(
-				array(
-					'page' => self::PAGE_SLUG,
-					self::DEEP_SCAN_QUERY => '1',
-				),
-				admin_url( 'admin.php' )
-			),
-			self::DEEP_SCAN_NONCE
-		);
-	}
-
-	private static function status_label( bool $condition, string $success, string $failure ): string {
-		return $condition ? $success : $failure;
-	}
-
-	public static function admin_page(): void {
-		if ( ! current_user_can( 'manage_options' ) ) {
-			return;
-		}
-		$deep = false;
-		if ( isset( $_GET[ self::DEEP_SCAN_QUERY ] ) && '1' === sanitize_text_field( wp_unslash( $_GET[ self::DEEP_SCAN_QUERY ] ) ) ) {
-			$deep = (bool) check_admin_referer( self::DEEP_SCAN_NONCE, '_wpnonce' );
-		}
-		$report = self::report( $deep );
-		$translator = $report['translator_plugin'];
-		$languages = $report['languages'];
-		$export_json = '';
-		$export_filename = '';
-		if ( $deep ) {
-			$strict_report = self::privacy_safe_report( $report, true );
-			$encoded = wp_json_encode(
-				$strict_report,
-				JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
-			);
-			$export_json = is_string( $encoded ) ? $encoded : '';
-			$export_filename = 'koz-translate-diagnostics-' . gmdate( 'Ymd-His' ) . '.json';
-		}
-		?>
-		<div class="wrap">
-			<h1><?php esc_html_e( 'KOZ Translate Diagnostics', 'koz-translate-diagnostics' ); ?></h1>
-			<div class="notice notice-info inline"><p><strong><?php esc_html_e( 'Read-only:', 'koz-translate-diagnostics' ); ?></strong> <?php esc_html_e( 'this plugin does not call Azure, run the translation queue, change options, alter cron, clear caches or modify translation data.', 'koz-translate-diagnostics' ); ?></p></div>
-			<p><?php esc_html_e( 'The plugin first uses the translator public diagnostics API. For older translator versions it automatically falls back to a read-only compatibility scan.', 'koz-translate-diagnostics' ); ?></p>
-			<?php if ( $deep ) : ?>
-				<div class="notice notice-warning inline"><p><?php esc_html_e( 'Deep scan completed. It compares source hashes and uses heavier read-only database queries.', 'koz-translate-diagnostics' ); ?></p></div>
-			<?php else : ?>
-				<div class="notice notice-info inline"><p><?php esc_html_e( 'Quick scan is active. It uses metadata and limited recent-row reads only; full-table aggregates and hash joins are deferred to deep mode.', 'koz-translate-diagnostics' ); ?></p></div>
-			<?php endif; ?>
-			<p>
-				<?php if ( $deep && '' !== $export_json ) : ?>
-					<button class="button button-primary" type="button" id="koztdiag-download-report"><?php esc_html_e( 'Download deep privacy-safe JSON report', 'koz-translate-diagnostics' ); ?></button>
-				<?php else : ?>
-					<a class="button button-primary" href="<?php echo esc_url( self::deep_scan_url() ); ?>"><?php esc_html_e( 'Run deep hash scan', 'koz-translate-diagnostics' ); ?></a>
-				<?php endif; ?>
-			</p>
-			<?php if ( $deep && '' !== $export_json ) : ?>
-				<textarea id="koztdiag-export-payload" hidden><?php echo esc_textarea( $export_json ); ?></textarea>
-				<script>
-				(function () {
-					'use strict';
-					var button = document.getElementById('koztdiag-download-report');
-					var payload = document.getElementById('koztdiag-export-payload');
-					if (!button || !payload) { return; }
-					button.addEventListener('click', function () {
-						var blob = new Blob([payload.value], { type: 'application/json;charset=utf-8' });
-						var url = URL.createObjectURL(blob);
-						var link = document.createElement('a');
-						link.href = url;
-						link.download = <?php echo wp_json_encode( $export_filename ); ?>;
-						document.body.appendChild(link);
-						link.click();
-						link.remove();
-						URL.revokeObjectURL(url);
-					});
-				}());
-				</script>
-			<?php endif; ?>
-
-			<h2><?php esc_html_e( 'Translator status', 'koz-translate-diagnostics' ); ?></h2>
-			<table class="widefat striped" style="max-width:1180px"><tbody>
-				<tr><th style="width:330px"><?php esc_html_e( 'Installed', 'koz-translate-diagnostics' ); ?></th><td><?php echo esc_html( self::status_label( ! empty( $translator['matches'] ), __( 'Yes', 'koz-translate-diagnostics' ), __( 'No', 'koz-translate-diagnostics' ) ) ); ?></td></tr>
-				<tr><th><?php esc_html_e( 'Active', 'koz-translate-diagnostics' ); ?></th><td><?php echo esc_html( self::status_label( ! empty( array_filter( array_column( $translator['matches'], 'active' ) ) ), __( 'Yes', 'koz-translate-diagnostics' ), __( 'No', 'koz-translate-diagnostics' ) ) ); ?></td></tr>
-				<tr><th><?php esc_html_e( 'Detected version', 'koz-translate-diagnostics' ); ?></th><td><code><?php echo esc_html( (string) ( $translator['constant_version'] ?: ( $translator['matches'][0]['version'] ?? '' ) ) ); ?></code></td></tr>
-				<tr><th><?php esc_html_e( 'Public diagnostics API', 'koz-translate-diagnostics' ); ?></th><td><?php echo esc_html( self::status_label( ! empty( $translator['public_api_available'] ), __( 'Available', 'koz-translate-diagnostics' ), __( 'Compatibility mode', 'koz-translate-diagnostics' ) ) ); ?></td></tr>
-				<tr><th><?php esc_html_e( 'Diagnostic mode', 'koz-translate-diagnostics' ); ?></th><td><code><?php echo esc_html( (string) $report['report']['diagnostic_mode'] ); ?></code></td></tr>
-				<tr><th><?php esc_html_e( 'Migration freeze', 'koz-translate-diagnostics' ); ?></th><td><?php echo esc_html( self::status_label( ( ! empty( $report['translator_api_status']['migration_frozen'] ) || ( ! empty( $report['runtime']['manual_paused'] ) && self::is_migration_pause_reason( (string) ( $report['runtime']['pause_reason'] ?? '' ) ) ) ), __( 'Active', 'koz-translate-diagnostics' ), __( 'Inactive', 'koz-translate-diagnostics' ) ) ); ?></td></tr>
-				<tr><th><?php esc_html_e( 'Source language', 'koz-translate-diagnostics' ); ?></th><td><code><?php echo esc_html( (string) ( $report['settings']['source_language'] ?? '' ) ); ?></code></td></tr>
-				<tr><th><?php esc_html_e( 'Azure key configured', 'koz-translate-diagnostics' ); ?></th><td><?php echo esc_html( self::status_label( ! empty( $report['settings']['azure_key_configured'] ), __( 'Yes', 'koz-translate-diagnostics' ), __( 'No', 'koz-translate-diagnostics' ) ) ); ?></td></tr>
-				<tr><th><?php esc_html_e( 'Manual pause', 'koz-translate-diagnostics' ); ?></th><td><?php echo esc_html( self::status_label( ! empty( $report['runtime']['manual_paused'] ), __( 'Yes', 'koz-translate-diagnostics' ), __( 'No', 'koz-translate-diagnostics' ) ) ); ?></td></tr>
-				<tr><th><?php esc_html_e( 'Pause reason', 'koz-translate-diagnostics' ); ?></th><td><code><?php echo esc_html( (string) ( $report['runtime']['pause_reason'] ?? '' ) ); ?></code></td></tr>
-				<tr><th><?php esc_html_e( 'Last runtime error', 'koz-translate-diagnostics' ); ?></th><td><?php echo esc_html( (string) ( $report['runtime']['last_error'] ?? '' ) ); ?></td></tr>
-			</tbody></table>
-
-			<h2><?php esc_html_e( 'Data inventory', 'koz-translate-diagnostics' ); ?></h2>
-			<table class="widefat striped" style="max-width:1180px"><thead><tr><th><?php esc_html_e( 'Table', 'koz-translate-diagnostics' ); ?></th><th><?php esc_html_e( 'Exists', 'koz-translate-diagnostics' ); ?></th><th><?php esc_html_e( 'Rows', 'koz-translate-diagnostics' ); ?></th></tr></thead><tbody>
-			<?php foreach ( $report['tables'] as $key => $table ) : ?>
-				<tr><td><code><?php echo esc_html( $key ); ?></code></td><td><?php echo esc_html( $table['exists'] ? __( 'Yes', 'koz-translate-diagnostics' ) : __( 'No', 'koz-translate-diagnostics' ) ); ?></td><td><?php echo esc_html( number_format_i18n( (int) $table['rows'] ) ); ?><?php if ( ! empty( $table['rows_estimated'] ) ) : ?> <span class="description"><?php esc_html_e( '(estimate)', 'koz-translate-diagnostics' ); ?></span><?php endif; ?></td></tr>
-			<?php endforeach; ?>
-			</tbody></table>
-			<p><strong><?php esc_html_e( 'Translation sources:', 'koz-translate-diagnostics' ); ?></strong> <?php echo esc_html( number_format_i18n( (int) $report['sources']['total'] ) ); ?></p>
-
-			<h2><?php esc_html_e( 'Languages', 'koz-translate-diagnostics' ); ?></h2>
-			<table class="widefat striped" style="max-width:1500px"><thead><tr>
-				<th><?php esc_html_e( 'Language', 'koz-translate-diagnostics' ); ?></th>
-				<th><?php esc_html_e( 'Expected segments', 'koz-translate-diagnostics' ); ?></th>
-				<th><?php esc_html_e( 'Ready', 'koz-translate-diagnostics' ); ?></th>
-				<th><?php esc_html_e( 'Missing estimate', 'koz-translate-diagnostics' ); ?></th>
-				<th><?php esc_html_e( 'Stale', 'koz-translate-diagnostics' ); ?></th>
-				<th><?php esc_html_e( 'Memory', 'koz-translate-diagnostics' ); ?></th>
-				<th><?php esc_html_e( 'Queue', 'koz-translate-diagnostics' ); ?></th>
-			</tr></thead><tbody>
-			<?php if ( empty( $languages ) ) : ?><tr><td colspan="7"><?php esc_html_e( 'No target languages were detected.', 'koz-translate-diagnostics' ); ?></td></tr><?php endif; ?>
-			<?php foreach ( $languages as $language => $data ) :
-				$queue_total = 0;
-				$queue_parts = array();
-				foreach ( (array) ( $report['queue'][ $language ] ?? array() ) as $status => $queue_data ) {
-					$queue_total += (int) $queue_data['total'];
-					$queue_parts[] = $status . ': ' . (int) $queue_data['total'];
-				}
-				?>
-				<tr>
-					<td><strong><?php echo esc_html( $data['name'] ); ?></strong><br><code><?php echo esc_html( $language ); ?></code></td>
-					<td><?php echo null === $data['expected_translatable_segments'] ? esc_html__( 'Not checked', 'koz-translate-diagnostics' ) : esc_html( number_format_i18n( (int) $data['expected_translatable_segments'] ) ); ?></td>
-					<td><?php echo null === $data['exact_ready_rows'] ? esc_html__( 'Not checked', 'koz-translate-diagnostics' ) : esc_html( number_format_i18n( (int) $data['exact_ready_rows'] ) ); ?></td>
-					<td><strong><?php echo null === $data['missing_estimate'] ? esc_html__( 'Not checked', 'koz-translate-diagnostics' ) : esc_html( number_format_i18n( (int) $data['missing_estimate'] ) ); ?></strong></td>
-					<td><?php echo null === $data['stale_rows'] ? esc_html__( 'Not checked', 'koz-translate-diagnostics' ) : esc_html( number_format_i18n( (int) $data['stale_rows'] ) ); ?></td>
-					<td><?php echo null === $data['memory_ready_rows'] ? esc_html__( 'Not checked', 'koz-translate-diagnostics' ) : esc_html( number_format_i18n( (int) $data['memory_ready_rows'] ) ); ?></td>
-					<td><?php echo esc_html( $queue_total > 0 ? implode( ', ', $queue_parts ) : __( 'No queue rows', 'koz-translate-diagnostics' ) ); ?></td>
-				</tr>
-			<?php endforeach; ?>
-			</tbody></table>
-			<p class="description"><?php esc_html_e( 'Quick mode does not calculate completeness totals. Deep mode calculates the missing estimate from current translatable segments and exact ready translation rows; translation memory may reduce the work required.', 'koz-translate-diagnostics' ); ?></p>
-
-
-			<h2><?php esc_html_e( 'Translation index readiness', 'koz-translate-diagnostics' ); ?></h2>
-			<?php $readiness = (array) ( $report['translation_readiness'] ?? array() ); ?>
-			<?php if ( empty( $readiness['checked'] ) ) : ?>
-				<p><?php esc_html_e( 'Run the deep scan to calculate page-level translation coverage, critical metadata/H1 readiness and mixed-language blockers.', 'koz-translate-diagnostics' ); ?></p>
-			<?php elseif ( empty( $readiness['available'] ) ) : ?>
-				<div class="notice notice-warning inline"><p><?php esc_html_e( 'Translation readiness could not be calculated because the required translator tables or columns were not available.', 'koz-translate-diagnostics' ); ?></p></div>
-			<?php else : ?>
-				<table class="widefat striped" style="max-width:1180px"><thead><tr>
-					<th><?php esc_html_e( 'Language', 'koz-translate-diagnostics' ); ?></th>
-					<th><?php esc_html_e( 'Pages checked', 'koz-translate-diagnostics' ); ?></th>
-					<th><?php esc_html_e( 'Ready for indexing', 'koz-translate-diagnostics' ); ?></th>
-					<th><?php esc_html_e( 'Keep noindex', 'koz-translate-diagnostics' ); ?></th>
-					<th><?php esc_html_e( 'Mixed-language critical fields', 'koz-translate-diagnostics' ); ?></th>
-				</tr></thead><tbody>
-				<?php foreach ( (array) ( $readiness['summary'] ?? array() ) as $language => $summary ) : ?>
-					<tr>
-						<td><strong><?php echo esc_html( (string) ( $summary['name'] ?? strtoupper( (string) $language ) ) ); ?></strong><br><code><?php echo esc_html( (string) $language ); ?></code></td>
-						<td><?php echo esc_html( number_format_i18n( (int) ( $summary['pages_checked'] ?? 0 ) ) ); ?></td>
-						<td><?php echo esc_html( number_format_i18n( (int) ( $summary['pages_ready_for_indexing'] ?? 0 ) ) ); ?></td>
-						<td><strong><?php echo esc_html( number_format_i18n( (int) ( $summary['pages_blocked'] ?? 0 ) ) ); ?></strong></td>
-						<td><?php echo esc_html( number_format_i18n( (int) ( $summary['pages_with_mixed_language_critical_fields'] ?? 0 ) ) ); ?></td>
-					</tr>
-				<?php endforeach; ?>
-				</tbody></table>
-				<p class="description"><?php esc_html_e( '“Ready for indexing” is a diagnostic recommendation only. It requires complete current translation rows plus translated title, meta description, Open Graph title/description and H1 when those fields exist in the source. The plugin does not change robots directives.', 'koz-translate-diagnostics' ); ?></p>
-
-				<?php if ( ! empty( $readiness['blockers'] ) ) : ?>
-					<h3><?php esc_html_e( 'Highest-priority blockers', 'koz-translate-diagnostics' ); ?></h3>
-					<table class="widefat striped" style="max-width:1500px"><thead><tr>
-						<th><?php esc_html_e( 'Page', 'koz-translate-diagnostics' ); ?></th>
-						<th><?php esc_html_e( 'Language', 'koz-translate-diagnostics' ); ?></th>
-						<th><?php esc_html_e( 'Coverage', 'koz-translate-diagnostics' ); ?></th>
-						<th><?php esc_html_e( 'Missing critical fields', 'koz-translate-diagnostics' ); ?></th>
-						<th><?php esc_html_e( 'Mixed-language fields', 'koz-translate-diagnostics' ); ?></th>
-						<th><?php esc_html_e( 'Reason', 'koz-translate-diagnostics' ); ?></th>
-						<th><?php esc_html_e( 'Recommendation', 'koz-translate-diagnostics' ); ?></th>
-					</tr></thead><tbody>
-					<?php foreach ( (array) $readiness['blockers'] as $blocker ) :
-						$post_id = (int) ( $blocker['post_id'] ?? 0 );
-						$language = sanitize_key( (string) ( $blocker['language'] ?? '' ) );
-						$route = self::translated_route_url( $post_id, $language );
-						$title = $post_id > 0 ? get_the_title( $post_id ) : '';
-						$reason_labels = array_map( array( __CLASS__, 'readiness_blocker_label' ), (array) ( $blocker['blockers'] ?? array() ) );
-						?>
-						<tr>
-							<td><?php if ( '' !== $route ) : ?><a href="<?php echo esc_url( $route ); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html( '' !== $title ? $title : '#' . $post_id ); ?></a><?php else : ?><?php echo esc_html( '#' . $post_id ); ?><?php endif; ?></td>
-							<td><code><?php echo esc_html( strtoupper( $language ) ); ?></code></td>
-							<td><?php echo esc_html( number_format_i18n( (float) ( $blocker['coverage_percent'] ?? 0 ), 1 ) . '%' ); ?></td>
-							<td><?php echo esc_html( empty( $blocker['missing_critical_fields'] ) ? '—' : implode( ', ', (array) $blocker['missing_critical_fields'] ) ); ?></td>
-							<td><?php echo esc_html( empty( $blocker['mixed_language_fields'] ) ? '—' : implode( ', ', (array) $blocker['mixed_language_fields'] ) ); ?></td>
-							<td><?php echo esc_html( empty( $reason_labels ) ? '—' : implode( '; ', $reason_labels ) ); ?></td>
-							<td><strong><?php esc_html_e( 'Keep noindex', 'koz-translate-diagnostics' ); ?></strong></td>
-						</tr>
-					<?php endforeach; ?>
-					</tbody></table>
-				<?php endif; ?>
-			<?php endif; ?>
-
-			<h2><?php esc_html_e( 'Diagnostic findings', 'koz-translate-diagnostics' ); ?></h2>
-			<ul style="max-width:1150px;background:#fff;border:1px solid #dcdcde;padding:18px 18px 18px 36px">
-			<?php if ( empty( $report['hints'] ) ) : ?><li><?php esc_html_e( 'No automatic findings were generated.', 'koz-translate-diagnostics' ); ?></li><?php endif; ?>
-			<?php foreach ( $report['hints'] as $hint ) : ?><li><?php echo esc_html( $hint ); ?></li><?php endforeach; ?>
-			</ul>
-
-			<h2><?php esc_html_e( 'Privacy', 'koz-translate-diagnostics' ); ?></h2>
-			<p><?php esc_html_e( 'The exported report uses an allowlisted translator API contract, removes raw plugin paths and table names, fingerprints operational identifiers, and applies a final privacy pass after third-party filters.', 'koz-translate-diagnostics' ); ?></p>
-		</div>
-		<?php
-	}
 }

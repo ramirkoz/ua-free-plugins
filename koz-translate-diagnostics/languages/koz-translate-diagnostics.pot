@@ -4,7 +4,7 @@
 
 msgid ""
 msgstr ""
-"Project-Id-Version: KOZ Translate Diagnostics 0.3.4\n"
+"Project-Id-Version: KOZ Translate Diagnostics 0.4.0\n"
 "Report-Msgid-Bugs-To: https://github.com/ramirkoz/ua-free-plugins\n"
 "POT-Creation-Date: 2026-08-12 17:25+0000\n"
 "MIME-Version: 1.0\n"
@@ -75,9 +75,6 @@ msgid "Copy BTC address"
 msgstr ""
 
 msgid "Copy ETH and USDC address"
-msgstr ""
-
-msgid "Copy PayPal email"
 msgstr ""
 
 msgid "Copy USDT address"
@@ -216,7 +213,7 @@ msgstr ""
 msgid "Pause reason"
 msgstr ""
 
-msgid "PayPal and crypto donations support maintenance, testing and new free releases."
+msgid "Crypto donations support maintenance, testing and new free releases."
 msgstr ""
 
 msgid "Privacy"

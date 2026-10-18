@@ -1,9 +1,23 @@
 # Changelog
 
+## 0.4.0
+
+- Fixed: the plugin registers its admin screen, plugin action link and JSON export again. The 0.3.6 compliance build was missing the start-up call, so the plugin was active but showed nothing.
+- New: Azure budget section for KOZ Static Translate 0.10.0 and later: monthly and daily usage, characters available now, which budget stopped translation, and usage by source for the last 30 days.
+- New: background worker status (on/off, next run, overdue run, WP-Cron disabled), page text waiting for the worker by language, segments no longer sent after two rejections, and the translation sitemap rewrite rule.
+- New: findings for a used-up monthly or daily budget, 80% and 95% of the monthly limit, a missing or overdue worker event, queued page text with the worker off, a leftover UA FREE cron event and a missing sitemap rule.
+- New: Tools > Site Health tests (translator setup; Azure budget and background worker) and a KOZ Translate section in Site Health info.
+- New: short plain-text report for support chats with a copy button.
+- Changed: the deep JSON report is produced on the server in one deep scan and downloaded as a file; the page no longer embeds the whole report.
+- Changed: translator settings and runtime keys added in KOZ Static Translate 0.10.0 are recognised and no longer counted as unknown keys; the daily_limit pause reason is kept in strict exports.
+- Changed: the main class is split into report, budget, export, Site Health and admin screen classes (first step, no change to the report format).
+- Changed: the former UA FREE diagnostics plugin is no longer deactivated automatically; a notice asks to deactivate it manually.
+- Added Ukrainian translations for all new and previously untranslated admin strings.
+- Removed PayPal from the developer support panel and corrected the BTC and USDT TRC-20 developer wallet addresses (from 0.3.7).
+
 ## 0.3.7
-- Adds an independent Settings > KOZ Translate Diagnostics fallback route for administrators.
-- Keeps the normal KOZ Suite navigation while preventing page lockout when another independently installed KOZ component owns or changes the shared Suite menu.
-- No diagnostic data, database write, external-request, queue, cache or robots behavior changes.
+
+- Removed PayPal from the developer support panel and corrected the BTC and USDT TRC-20 developer wallet addresses.
 
 ## 0.3.6
 - Updated WordPress compatibility metadata for WordPress 7.1.

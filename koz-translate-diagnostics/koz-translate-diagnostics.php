@@ -2,8 +2,8 @@
 /**
  * Plugin Name: KOZ Translate Diagnostics
  * Plugin URI: https://github.com/ramirkoz/ua-free-plugins
- * Description: Read-only diagnostics and privacy-safe reports for KOZ Static Translate installations.
- * Version: 0.3.7
+ * Description: Read-only diagnostics, Site Health checks and privacy-safe reports for KOZ Static Translate installations.
+ * Version: 0.4.0
  * Author: Tony Kozyriev
  * Author URI: https://www.linkedin.com/in/tonykoz/
  * Text Domain: koz-translate-diagnostics
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'KOZTDIAG_VERSION', '0.3.7' );
+define( 'KOZTDIAG_VERSION', '0.4.0' );
 define( 'KOZTDIAG_FILE', __FILE__ );
 define( 'KOZTDIAG_DIR', plugin_dir_path( __FILE__ ) );
 define( 'KOZTDIAG_URL', plugin_dir_url( __FILE__ ) );
@@ -26,6 +26,10 @@ define( 'KOZTDIAG_URL', plugin_dir_url( __FILE__ ) );
 require_once KOZTDIAG_DIR . 'includes/class-koztdiag-runtime-i18n.php';
 require_once KOZTDIAG_DIR . 'includes/class-koztdiag-suite-registry.php';
 require_once KOZTDIAG_DIR . 'includes/class-koztdiag-translate-diagnostics.php';
+require_once KOZTDIAG_DIR . 'includes/class-koztdiag-budget.php';
+require_once KOZTDIAG_DIR . 'includes/class-koztdiag-export.php';
+require_once KOZTDIAG_DIR . 'includes/class-koztdiag-site-health.php';
+require_once KOZTDIAG_DIR . 'includes/class-koztdiag-admin-page.php';
 
 \ramirkz\koztdiag\KOZTDIAG_Runtime_I18n::register( 'koz-translate-diagnostics', KOZTDIAG_DIR );
 \ramirkz\koztdiag\KOZTDIAG_Suite_Registry::register(
@@ -37,47 +41,7 @@ require_once KOZTDIAG_DIR . 'includes/class-koztdiag-translate-diagnostics.php';
 	)
 );
 
-register_activation_hook(
-	KOZTDIAG_FILE,
-	static function (): void {
-		if ( ! function_exists( 'deactivate_plugins' ) ) {
-			require_once ABSPATH . 'wp-admin/includes/plugin.php';
-		}
-		$legacy = array();
-		foreach ( (array) get_option( 'active_plugins', array() ) as $plugin_file ) {
-			$plugin_file = (string) $plugin_file;
-			if ( str_starts_with( $plugin_file, 'ua-free-translate-diagnostics/' ) ) {
-				$legacy[] = $plugin_file;
-			}
-		}
-		if ( ! empty( $legacy ) ) {
-			deactivate_plugins( $legacy, true );
-			set_transient( 'koztdiag_legacy_deactivated', count( $legacy ), MINUTE_IN_SECONDS );
-		}
-	}
-);
-
 \ramirkz\koztdiag\KOZTDIAG_Translate_Diagnostics::init();
-
-/*
- * Independent plugins cannot rely on another component owning a shared parent menu forever.
- * Keep the normal KOZ Suite entry and also expose a Settings fallback with its own page hook.
- * This prevents an administrator lockout when Suite menu ownership/load order changes.
- */
-add_action(
-	'admin_menu',
-	static function (): void {
-		add_submenu_page(
-			'options-general.php',
-			__( 'KOZ Translate Diagnostics', 'koz-translate-diagnostics' ),
-			__( 'KOZ Translate Diagnostics', 'koz-translate-diagnostics' ),
-			'manage_options',
-			'koz-translate-diagnostics-fallback',
-			array( '\\ramirkz\\koztdiag\\KOZTDIAG_Translate_Diagnostics', 'admin_page' )
-		);
-	},
-	99
-);
 
 add_action(
 	'admin_notices',
@@ -85,14 +49,14 @@ add_action(
 		if ( ! current_user_can( 'activate_plugins' ) ) {
 			return;
 		}
-		$count = (int) get_transient( 'koztdiag_legacy_deactivated' );
-		if ( $count <= 0 ) {
-			return;
+		foreach ( (array) get_option( 'active_plugins', array() ) as $plugin_file ) {
+			if ( str_starts_with( (string) $plugin_file, 'ua-free-translate-diagnostics/' ) ) {
+				?>
+				<div class="notice notice-warning"><p><?php echo esc_html__( 'The former UA FREE Translate Diagnostics plugin is still active. Deactivate it manually; KOZ Translate Diagnostics replaces it.', 'koz-translate-diagnostics' ); ?></p></div>
+				<?php
+				return;
+			}
 		}
-		delete_transient( 'koztdiag_legacy_deactivated' );
-		?>
-		<div class="notice notice-success is-dismissible"><p><?php echo esc_html__( 'KOZ Translate Diagnostics activated. The former UA FREE package was deactivated without deleting data.', 'koz-translate-diagnostics' ); ?></p></div>
-		<?php
 	}
 );
 
