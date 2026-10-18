@@ -18,7 +18,7 @@ A practical collection of 12 privacy-first WordPress plugins independently maint
 |---|---:|
 | koz-migration-cleanup | 0.9.7 |
 | koz-static-translate | 0.9.39 |
-| koz-translate-diagnostics | 0.4.0 (WordPress.org: 0.3.6 live) |
+| koz-translate-diagnostics | 0.4.0 (WordPress.org: LIVE) |
 | koz-seo-core | 2.1.22 |
 | koz-404-guard | 2.1.4 |
 | koz-site-bridge | 0.5.7 |
