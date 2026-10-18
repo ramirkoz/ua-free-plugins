@@ -149,15 +149,19 @@ final class KOZ404_Environment_Scanner {
 					continue;
 				}
 				$seen[ $key ] = true;
-				if ( 0 !== url_to_postid( home_url( $path ) ) ) {
+				$status = self::route_status( $path );
+				if ( 'ok' === $status ) {
 					continue;
 				}
 				$item = array(
 					'path_fingerprint' => KOZ404_Guard::fingerprint( $path, 'internal-link' ),
+					'status'           => $status,
+					'log_hits'         => KOZ404_Log::hits_for_path( $path ),
 				);
 				if ( $include_items ) {
 					$item['post_id']    = $post_id;
 					$item['post_title'] = $post_id > 0 ? get_the_title( $post_id ) : '';
+					$item['path']       = $path;
 					$item['url']        = home_url( $path );
 				}
 				$items[] = $item;
@@ -178,6 +182,61 @@ final class KOZ404_Environment_Scanner {
 			'items'                   => $include_items ? $items : array(),
 			'candidate_fingerprints'  => $include_items ? array() : array_column( $items, 'path_fingerprint' ),
 		);
+	}
+
+	/**
+	 * What happens to an internal path: 'ok' (content, archive or translated route),
+	 * 'redirect' or 'gone' (a rule handles it) or 'missing'.
+	 */
+	public static function route_status( string $path, bool $nested = false ): string {
+		$rule = KOZ404_Rules::describe_path( $path );
+		if ( '' !== $rule ) {
+			return $rule;
+		}
+		$trimmed = trim( $path, '/' );
+		if ( '' === $trimmed ) {
+			return 'ok';
+		}
+		$segments = explode( '/', $trimmed );
+		if ( ! $nested && in_array( strtolower( $segments[0] ), KOZ404_Request::translator_languages(), true ) ) {
+			return self::route_status( '/' . implode( '/', array_slice( $segments, 1 ) ), true );
+		}
+		if ( preg_match( '#^(.*?)/(?:page/\d+|feed(?:/[a-z0-9]+)?|amp)$#', '/' . $trimmed, $match ) ) {
+			return '' === $match[1] ? 'ok' : self::route_status( $match[1], true );
+		}
+		if ( preg_match( '#^\d{4}(?:/\d{2}(?:/\d{2})?)?$#', $trimmed ) || 'feed' === $trimmed ) {
+			return 'ok';
+		}
+		if ( 0 !== url_to_postid( home_url( user_trailingslashit( $path ) ) ) ) {
+			return 'ok';
+		}
+		$last = sanitize_title( (string) end( $segments ) );
+		if ( count( $segments ) >= 2 ) {
+			$bases = array(
+				'category' => '' !== (string) get_option( 'category_base' ) ? trim( (string) get_option( 'category_base' ), '/' ) : 'category',
+				'post_tag' => '' !== (string) get_option( 'tag_base' ) ? trim( (string) get_option( 'tag_base' ), '/' ) : 'tag',
+			);
+			foreach ( get_taxonomies( array( 'public' => true ), 'objects' ) as $taxonomy ) {
+				if ( ! isset( $bases[ $taxonomy->name ] ) && is_array( $taxonomy->rewrite ) && ! empty( $taxonomy->rewrite['slug'] ) ) {
+					$bases[ $taxonomy->name ] = trim( (string) $taxonomy->rewrite['slug'], '/' );
+				}
+			}
+			foreach ( $bases as $taxonomy => $base ) {
+				if ( $base === $segments[0] && term_exists( $last, $taxonomy ) ) {
+					return 'ok';
+				}
+			}
+			if ( 'author' === $segments[0] && false !== get_user_by( 'slug', $last ) ) {
+				return 'ok';
+			}
+		}
+		foreach ( get_post_types( array( 'public' => true, 'has_archive' => true ) ) as $post_type ) {
+			$archive = get_post_type_archive_link( $post_type );
+			if ( is_string( $archive ) && KOZ404_Guard::normalise_path( (string) wp_parse_url( $archive, PHP_URL_PATH ) ) === $path ) {
+				return 'ok';
+			}
+		}
+		return 'missing';
 	}
 
 	public static function internal_link_not_performed(): array {

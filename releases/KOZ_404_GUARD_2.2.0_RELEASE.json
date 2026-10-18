@@ -1,0 +1,10 @@
+{
+  "slug": "koz-404-guard",
+  "candidate_version": "2.2.0",
+  "wordpress_org_live": "2.1.4",
+  "zip": "releases/koz-404-guard-2.2.0.zip",
+  "sha256": "8ea07dfd09d46e0ec0324bd2b99850078a7f5303989e4da8ffe6b87de2edfc60",
+  "drive_folder": "https://drive.google.com/drive/folders/1TdzI0s1lxp2Zf3rGj4yTqcRY-1u0TRhS",
+  "status": "GitHub source synced; WordPress.org SVN publication by owner pending",
+  "suite_bundle": "1.0.30 unchanged"
+}

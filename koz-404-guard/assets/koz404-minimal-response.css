@@ -1,0 +1,4 @@
+body{font-family:system-ui,sans-serif;background:#f6f7f7;color:#1d2327;margin:0}
+main{max-width:700px;margin:12vh auto;padding:32px;background:#fff;border-radius:12px;text-align:center}
+h1{font-size:56px;margin:0 0 12px}
+a{display:inline-block;padding:12px 20px;background:#2271b1;color:#fff;text-decoration:none;border-radius:8px}

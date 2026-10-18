@@ -20,7 +20,7 @@ A practical collection of 12 privacy-first WordPress plugins independently maint
 | koz-static-translate | 0.9.39 |
 | koz-translate-diagnostics | 0.4.0 (WordPress.org: LIVE) |
 | koz-seo-core | 2.1.22 |
-| koz-404-guard | 2.1.4 |
+| koz-404-guard | 2.2.0 (WordPress.org: 2.1.4 live) |
 | koz-site-bridge | 0.5.7 |
 | koz-consent-manager | 0.2.12 |
 | koz-donate-stats | 1.3.11 |

@@ -1,20 +1,19 @@
-# KOZ 404 Guard & URL Intelligence 2.1.4
+# KOZ 404 Guard & URL Intelligence 2.2.0
 
 Privacy-safe 404/410 diagnostics, controlled same-site redirects and URL intelligence for WordPress.
 
 ## Safety model
 
-- no automatic redirect or 410 rules;
+- no automatic redirect or 410 rules, except optional 301 redirects for changed addresses (suggested for approval by default);
 - no IP logging;
-- no raw query values, User-Agent strings or referrers in new log rows;
+- no raw query values, User-Agent strings or external referrers in log rows; paths and same-site linking pages only while "Show paths" is on;
 - no raw paths, option names, option values, rules, post identifiers or content in JSON export;
 - same-origin HTTP/HTTPS redirect targets only;
 - protected WordPress system paths cannot be redirected or marked gone;
 - duplicate redirect sources and complete redirect cycles are rejected;
 - normal admin-page loads do not scan post content;
 - deep link scanning requires an explicit nonce-protected action and has request budgets;
-- persistent request logging exists only inside an administrator-started ten-minute capture window;
-- capture sampling is fixed at 1 in 128 requests and grouped storage writes are globally limited to one every 30 seconds;
+- grouped log in its own table: one query per hit, daily cleanup by age and size;
 - no direct external requests or telemetry;
 - plugin data is preserved on uninstall.
 
