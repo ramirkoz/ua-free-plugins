@@ -1,3 +1,25 @@
+## 0.3.0
+
+- New: WP Consent API support. The plugin declares an opt-in consent type, registers as a consent provider and passes every choice to wp_set_consent(), so Site Kit, WooCommerce, WP Statistics and other API-aware plugins follow the visitor's choice (necessary → functional; analytics → statistics, statistics-anonymous, preferences; advertising → marketing).
+- New: YouTube, Vimeo, Google Maps, Spotify, SoundCloud, Facebook, Instagram, TikTok and X embeds are blocked until "External media" is allowed. The embed keeps its size and shows a local notice with "Load content" and "Always allow external media"; YouTube can load from youtube-nocookie.com. Works with page caching.
+- New: Google Consent Mode v2 sends all seven consent types, wait_for_update, optional ads_data_redaction and url_passthrough, and can deny by default for every visitor or only in the EEA, the UK and Switzerland.
+- New: Microsoft Clarity consentv2 and Microsoft Advertising UET consent signals.
+- New: kozconsent_default and kozconsent_update dataLayer events for Google Tag Manager triggers.
+- New: Global Privacy Control: when the browser sends GPC, advertising stays off even after "Accept all" and the banner says so.
+- New: banner layouts (bottom bar, corner box, centred dialog with focus trap), accent colour, equal-prominence Accept and Reject buttons, right-to-left layout for Arabic, and the option to hide the floating button and open settings from any #kozconsent link or the [kozconsent_settings] shortcode.
+- New: optional consent records (off by default): random consent ID, latest choice, policy version, time, language and GPC flag, without IP address or User-Agent; 30-day statistics, CSV export and automatic deletion after the retention period.
+- New: home-page service scan showing which services wait for consent (Consent Mode, Microsoft signal, blocked embed or not controlled), a Site Health test and a [kozconsent_services] shortcode for the privacy policy page.
+- New: script handles can be assigned to a category in the admin screen.
+- Changed: banner texts of all 11 languages can be edited from language tabs; the admin screen is split into General, Banner texts, Signals and services and Consent records.
+- Changed: the banner is always rendered hidden and shown by JavaScript, so cached pages never carry another visitor's state; settings are autoloaded.
+- Changed: the main class is split into settings, consent state, Consent Mode, WP Consent API, front end, media, records, scanner, Site Health and admin classes; the KOZ Suite menu uses the shared registry.
+- Added translations for the new visitor texts in all 11 languages and Ukrainian admin translations.
+- Removed PayPal from the developer support panel and corrected the BTC and USDT TRC-20 developer wallet addresses (from 0.2.13).
+
+## 0.2.13
+
+- Removed PayPal from the developer support panel and corrected the BTC and USDT TRC-20 developer wallet addresses.
+
 ## 0.2.12
 - Updated WordPress compatibility metadata for WordPress 7.1.
 - No functional changes.

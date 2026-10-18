@@ -1,0 +1,10 @@
+{
+  "slug": "koz-consent-manager",
+  "candidate_version": "0.3.0",
+  "wordpress_org_live": "0.2.12",
+  "zip": "releases/koz-consent-manager-0.3.0.zip",
+  "sha256": "1dd3c1afd6c9d77e5b42f2015aa2d3931e48c64eccb8c0332a122c2f49815d0b",
+  "drive_folder": "https://drive.google.com/drive/folders/12SiV19byjXaPuTwZ9iQK4QbykuT-xnnt",
+  "status": "GitHub source synchronized; WordPress.org SVN publication by owner pending",
+  "suite_bundle": "1.0.30 unchanged"
+}

@@ -22,7 +22,7 @@ A practical collection of 12 privacy-first WordPress plugins independently maint
 | koz-seo-core | 2.1.22 |
 | koz-404-guard | 2.2.0 (WordPress.org: 2.1.4 live) |
 | koz-site-bridge | 0.5.7 |
-| koz-consent-manager | 0.2.12 |
+| koz-consent-manager | 0.3.0 (WordPress.org: 0.2.12 live) |
 | koz-donate-stats | 1.3.11 |
 | koz-google-ads-campaign-builder | 1.4.13 |
 | koz-copy-actions | 1.1.14 |

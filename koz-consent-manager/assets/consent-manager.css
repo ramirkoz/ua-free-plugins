@@ -1,3 +1,7 @@
+:root {
+	--kozconsent-accent: #2271b1;
+}
+
 .kozconsent[hidden],
 .kozconsent [hidden],
 .kozconsent-reopen[hidden] {
@@ -11,7 +15,15 @@
 	right: 0;
 	bottom: 0;
 	padding: 16px;
-	background: rgba(0, 0, 0, 0.55);
+	box-sizing: border-box;
+	font-size: 15px;
+	line-height: 1.5;
+}
+
+.kozconsent *,
+.kozconsent *::before,
+.kozconsent *::after {
+	box-sizing: border-box;
 }
 
 .kozconsent__panel {
@@ -20,20 +32,72 @@
 	padding: 20px;
 	background: #fff;
 	color: #1d2327;
-	border-radius: 8px;
+	border-radius: 10px;
 	box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+	outline: none;
+	max-height: calc(100vh - 32px);
+	overflow-y: auto;
+}
+
+/* Box: a compact card in the bottom corner. */
+.kozconsent--box {
+	left: auto;
+	right: 16px;
+	bottom: 16px;
+	padding: 0;
+	max-width: 420px;
+	width: calc(100% - 32px);
+}
+
+[dir="rtl"].kozconsent--box {
+	right: auto;
+	left: 16px;
+}
+
+/* Modal: centred dialog over a dimmed page. */
+.kozconsent--modal {
+	top: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: rgba(0, 0, 0, 0.55);
+}
+
+.kozconsent--modal .kozconsent__panel {
+	max-width: 640px;
+	width: 100%;
+}
+
+html.kozconsent-locked {
+	overflow: hidden;
 }
 
 .kozconsent__panel h2 {
 	margin: 0 0 8px;
-	font-size: 1.35rem;
+	font-size: 1.3rem;
+	line-height: 1.3;
+	color: inherit;
+}
+
+.kozconsent__panel p {
+	margin: 0 0 8px;
+}
+
+.kozconsent__gpc {
+	padding: 8px 12px;
+	border-left: 4px solid var(--kozconsent-accent);
+	background: #f6f7f7;
 }
 
 .kozconsent__preferences {
 	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
 	gap: 10px;
 	margin: 16px 0;
+}
+
+.kozconsent--box .kozconsent__preferences {
+	grid-template-columns: 1fr;
 }
 
 .kozconsent__choice {
@@ -44,10 +108,19 @@
 	padding: 12px;
 	border: 1px solid #dcdcde;
 	border-radius: 6px;
+	cursor: pointer;
+}
+
+.kozconsent__choice input {
+	accent-color: var(--kozconsent-accent);
+	width: 18px;
+	height: 18px;
+	margin: 2px 0 0;
 }
 
 .kozconsent__choice small {
 	grid-column: 2;
+	color: #50575e;
 }
 
 .kozconsent__actions {
@@ -57,41 +130,72 @@
 	margin-top: 16px;
 }
 
-.kozconsent__button,
-.kozconsent-reopen {
-	border: 1px solid #2271b1;
-	border-radius: 4px;
-	padding: 10px 14px;
+.kozconsent__button {
+	flex: 1 1 auto;
+	min-height: 44px;
+	padding: 10px 16px;
+	border: 2px solid var(--kozconsent-accent);
+	border-radius: 6px;
 	background: #fff;
-	color: #135e96;
+	color: var(--kozconsent-accent);
 	font: inherit;
-	line-height: 1.2;
+	font-weight: 600;
 	cursor: pointer;
 }
 
+/* Accept and reject share the same style: equal prominence. */
 .kozconsent__button--primary {
-	background: #2271b1;
+	background: var(--kozconsent-accent);
 	color: #fff;
 }
 
+.kozconsent__button:hover {
+	filter: brightness(0.92);
+}
+
 .kozconsent__button:focus-visible,
+.kozconsent__choice input:focus-visible,
 .kozconsent-reopen:focus-visible,
-.kozconsent__choice input:focus-visible {
-	outline: 3px solid #72aee6;
+.kozconsent__privacy a:focus-visible {
+	outline: 3px solid #1d2327;
 	outline-offset: 2px;
 }
 
 .kozconsent__privacy {
 	margin: 12px 0 0;
+	font-size: 0.9em;
+}
+
+.kozconsent__privacy a {
+	color: var(--kozconsent-accent);
 }
 
 .kozconsent-reopen {
 	position: fixed;
 	z-index: 999998;
-	left: 12px;
-	bottom: 12px;
-	max-width: calc(100vw - 24px);
+	left: 16px;
+	bottom: 16px;
+	padding: 8px 12px;
+	border: 0;
+	border-radius: 999px;
+	background: #1d2327;
+	color: #fff;
 	font-size: 13px;
+	cursor: pointer;
+	box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+}
+
+.kozconsent-open {
+	cursor: pointer;
+}
+
+.kozconsent-services dt {
+	font-weight: 600;
+	margin-top: 8px;
+}
+
+.kozconsent-services dd {
+	margin: 0 0 4px;
 }
 
 @media (max-width: 600px) {
@@ -100,11 +204,27 @@
 	}
 
 	.kozconsent__panel {
-		max-height: 90vh;
-		overflow: auto;
+		padding: 16px;
 	}
 
 	.kozconsent__button {
-		width: 100%;
+		flex: 1 1 100%;
+	}
+}
+
+@media (prefers-reduced-motion: no-preference) {
+	.kozconsent__panel {
+		animation: kozconsent-in 0.18s ease-out;
+	}
+}
+
+@keyframes kozconsent-in {
+	from {
+		opacity: 0;
+		transform: translateY(8px);
+	}
+	to {
+		opacity: 1;
+		transform: none;
 	}
 }

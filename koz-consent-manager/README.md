@@ -27,4 +27,4 @@ The public plugin slug is `koz-consent-manager`. Legacy internal option names an
 - Development contact: `ramir@ua.fm`
 - GitHub: https://github.com/ramirkoz/
 - Support Ukraine through UA FREE: https://uafree.org/donate/
-- Developer PayPal and crypto addresses are displayed in the plugin administration support panel.
+- Developer crypto addresses are displayed in the plugin administration support panel.
