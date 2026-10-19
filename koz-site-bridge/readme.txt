@@ -9,11 +9,15 @@ Requires PHP: 8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Secure read-only diagnostics API with controlled same-site HTTP probes.
+Part of KOZ Suite: secure read-only WordPress diagnostics and controlled same-site HTTP probes.
 
 == Description ==
 
-KOZ Site Bridge is an independent WordPress plugin developed and maintained by Tony Kozyriev. It grew from production tooling used on the UA FREE charitable foundation website.
+KOZ Site Bridge is part of **KOZ Suite**, a family of independently installable WordPress plugins developed and maintained by Tony Kozyriev. Each KOZ Suite plugin works on its own, and the plugins can be combined into one coordinated toolkit.
+
+Within KOZ Suite, Site Bridge provides authenticated read-only REST diagnostics, controlled same-site HTTP probes, and privacy-conscious tools for site analysis and automation. It grew from production tooling used on the UA FREE charitable foundation website.
+
+Other KOZ Suite plugins include KOZ SEO Core, KOZ Static Translate, KOZ Translate Diagnostics, KOZ 404 Guard & URL Intelligence, KOZ Consent Manager, KOZ Donate Stats & Conversions, KOZ Copy Actions, and KOZ URL-Only Comment Spam. Find the complete suite at https://github.com/ramirkoz/ua-free-plugins.
 
 Features:
 
