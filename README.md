@@ -27,7 +27,7 @@ A practical collection of 12 privacy-first WordPress plugins independently maint
 | koz-google-ads-campaign-builder | 1.4.13 |
 | koz-copy-actions | 1.1.14 |
 | koz-url-only-comment-spam | 1.1.11 |
-| koz-suite-control-center | 0.4.7 |
+| koz-suite-control-center | 0.4.7 (WordPress.org: submission pending) |
 
 ## Current bundle
 
