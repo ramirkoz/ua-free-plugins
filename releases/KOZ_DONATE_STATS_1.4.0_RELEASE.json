@@ -1,10 +1,12 @@
 {
   "slug": "koz-donate-stats",
   "candidate_version": "1.4.0",
-  "wordpress_org_live": "1.3.11",
+  "wordpress_org_live": "1.4.0",
   "zip": "releases/koz-donate-stats-1.4.0.zip",
   "sha256": "d04c74872f319dd29a6db187eac7af455e7c919eeac30e41ca468b74d27fda79",
   "drive_folder": "https://drive.google.com/drive/folders/1genDfa6PiXID5ciY4jZALUT1NnXDgED1",
-  "status": "GitHub source synchronized; WordPress.org SVN publication by owner pending",
-  "suite_bundle": "1.0.30 unchanged"
+  "status": "WordPress.org LIVE 1.4.0 confirmed by owner Advanced View screenshot; GitHub and Google Drive synchronized",
+  "suite_bundle": "1.0.30 unchanged",
+  "wordpress_org_evidence": "Owner Advanced View screenshot on 2026-10-19: Version 1.4.0, Download available",
+  "wordpress_org_svn_revision": "not independently verified"
 }
