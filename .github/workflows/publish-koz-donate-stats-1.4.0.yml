@@ -1,0 +1,91 @@
+name: Publish KOZ Donate Stats 1.4.0
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/publish-koz-donate-stats-1.4.0.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  synchronize-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Synchronize exact original release archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo 'd04c74872f319dd29a6db187eac7af455e7c919eeac30e41ca468b74d27fda79  releases/koz-donate-stats-1.4.0.zip' | sha256sum -c -
+          python3 - <<'PY'
+          import json, shutil, tempfile, zipfile
+          from pathlib import Path
+          archive = Path('releases/koz-donate-stats-1.4.0.zip')
+          with tempfile.TemporaryDirectory() as temp:
+              with zipfile.ZipFile(archive) as zip_file:
+                  zip_file.extractall(temp)
+              source = Path(temp) / 'koz-donate-stats'
+              target = Path('koz-donate-stats')
+              if target.exists():
+                  shutil.rmtree(target)
+              shutil.copytree(source, target)
+
+          Path('releases/koz-donate-stats-1.4.0.zip.sha256').write_text(
+              'd04c74872f319dd29a6db187eac7af455e7c919eeac30e41ca468b74d27fda79  koz-donate-stats-1.4.0.zip\n', encoding='utf-8'
+          )
+          overview = Path('README.md')
+          current = overview.read_text(encoding='utf-8')
+          old = '| koz-donate-stats | 1.3.11 |'
+          new = '| koz-donate-stats | 1.4.0 (WordPress.org: 1.3.11 live) |'
+          if old not in current:
+              raise RuntimeError('Expected overview version row not found')
+          overview.write_text(current.replace(old, new), encoding='utf-8')
+
+          release = {
+              'slug': 'koz-donate-stats',
+              'candidate_version': '1.4.0',
+              'wordpress_org_live': '1.3.11',
+              'zip': 'releases/koz-donate-stats-1.4.0.zip',
+              'sha256': 'd04c74872f319dd29a6db187eac7af455e7c919eeac30e41ca468b74d27fda79',
+              'drive_folder': 'https://drive.google.com/drive/folders/1genDfa6PiXID5ciY4jZALUT1NnXDgED1',
+              'status': 'GitHub source synchronized; WordPress.org SVN publication by owner pending',
+              'suite_bundle': '1.0.30 unchanged'
+          }
+          Path('releases/KOZ_DONATE_STATS_1.4.0_RELEASE.json').write_text(
+              json.dumps(release, indent=2, ensure_ascii=False) + '\n', encoding='utf-8'
+          )
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A koz-donate-stats
+          git add README.md releases/koz-donate-stats-1.4.0.zip.sha256 releases/KOZ_DONATE_STATS_1.4.0_RELEASE.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'Sync KOZ Donate Stats 1.4.0 original source files'
+            git push origin HEAD:main
+          fi
+
+      - name: Publish versioned GitHub release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG='koz-donate-stats-v1.4.0'
+          if ! gh release view "$TAG" >/dev/null 2>&1; then
+            gh release create "$TAG" \
+              releases/koz-donate-stats-1.4.0.zip \
+              releases/koz-donate-stats-1.4.0.zip.sha256 \
+              releases/KOZ_DONATE_STATS_1.4.0_CHANGES.md \
+              releases/KOZ_DONATE_STATS_1.4.0_RELEASE.json \
+              --target "$(git rev-parse HEAD)" \
+              --title 'KOZ Donate Stats & Conversions 1.4.0' \
+              --notes-file releases/KOZ_DONATE_STATS_1.4.0_CHANGES.md \
+              --latest=false
+          fi
+          gh release view "$TAG" --json tagName,isDraft,assets
