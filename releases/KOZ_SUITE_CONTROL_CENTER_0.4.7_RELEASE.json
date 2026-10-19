@@ -1,0 +1,11 @@
+{
+  "slug": "koz-suite-control-center",
+  "candidate_version": "0.4.7",
+  "wordpress_org_status": "AWAITING USER SUBMISSION",
+  "original_sha256": "12c73fddbbefbbdf049780177caff1de33b3f0cb02c32aae9950341c591ff4fb",
+  "review_zip_sha256": "c6e62855ee2d2971bf892ca8ad0e225b34defde4fe420048f620de6930cf727c",
+  "review_zip": "releases/koz-suite-control-center-0.4.7-wordpress-review.zip",
+  "only_modified_file": "koz-suite-control-center/readme.txt",
+  "code_modified": false,
+  "suite_bundle": "1.0.30 unchanged"
+}
