@@ -9,17 +9,31 @@ Requires PHP: 8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Part of KOZ Suite: secure read-only WordPress diagnostics and controlled same-site HTTP probes.
+Secure read-only diagnostics API with controlled same-site HTTP probes.
 
 == Description ==
 
-KOZ Site Bridge is part of **KOZ Suite**, a family of independently installable WordPress plugins developed and maintained by Tony Kozyriev. Each KOZ Suite plugin works on its own, and the plugins can be combined into one coordinated toolkit.
+KOZ Site Bridge is an independently installable WordPress plugin developed and maintained by Tony Kozyriev. It provides authenticated read-only diagnostics and controlled same-site HTTP probes for private site analysis and automation. The plugin grew from production tooling used on the UA FREE charitable foundation website.
 
-Within KOZ Suite, Site Bridge provides authenticated read-only REST diagnostics, controlled same-site HTTP probes, and privacy-conscious tools for site analysis and automation. It grew from production tooling used on the UA FREE charitable foundation website.
+= Part of the KOZ Suite =
 
-Other KOZ Suite plugins include KOZ SEO Core, KOZ Static Translate, KOZ Translate Diagnostics, KOZ 404 Guard & URL Intelligence, KOZ Consent Manager, KOZ Donate Stats & Conversions, KOZ Copy Actions, and KOZ URL-Only Comment Spam. Find the complete suite at https://github.com/ramirkoz/ua-free-plugins.
+KOZ Site Bridge is **one focused module of the broader KOZ Suite**, a family of independent WordPress plugins that share a common KOZ administration experience and visual identity.
 
-Features:
+Each KOZ plugin remains independently installable, so site owners can use only the modules they need or combine several modules into one toolkit.
+
+Current public KOZ plugins:
+
+* [KOZ SEO Core](https://wordpress.org/plugins/koz-seo-core/) — technical SEO, schema, sitemaps, AI discovery and OpenAI Vision image ALT.
+* [KOZ Copy Actions](https://wordpress.org/plugins/koz-copy-actions/) — accessible copy-to-clipboard actions for selected WordPress content.
+* [KOZ URL-Only Comment Spam](https://wordpress.org/plugins/koz-url-only-comment-spam/) — privacy-first local moderation for URL-only comment spam.
+* [KOZ Static Translate](https://wordpress.org/plugins/koz-static-translate/) — AI-powered multilingual translation with Microsoft Azure AI Translator and static language routes.
+* [KOZ Translate Diagnostics](https://wordpress.org/plugins/koz-translate-diagnostics/) — read-only health checks and privacy-safe diagnostic reports for KOZ Static Translate.
+* [KOZ 404 Guard & URL Intelligence](https://wordpress.org/plugins/koz-404-guard/) — privacy-safe 404/410 diagnostics, controlled same-site redirects and URL intelligence.
+* [KOZ Consent Manager](https://wordpress.org/plugins/koz-consent-manager/) — privacy-first visitor consent, optional script control and Google Consent Mode v2 synchronization.
+* [KOZ Donate Stats & Conversions](https://wordpress.org/plugins/koz-donate-stats/) — local donation-journey analytics and consent-aware conversion events for WordPress.
+* KOZ Site Bridge — secure read-only WordPress diagnostics, controlled same-site probes and authenticated REST automation.
+
+= Main features =
 
 * authenticated read-only REST diagnostics;
 * canonical KOZ REST namespace and X-KOZ-Key authentication;
@@ -38,7 +52,7 @@ Features:
 
 Existing Site Bridge API keys are preserved. The old REST namespace and X-UAFree-Key header remain accepted during migration, while new integrations should use /wp-json/kozbridge/v1 and X-KOZ-Key. The previous /wp-json/koz-site-bridge/v1 route also remains available.
 
-Access and security:
+= Access and security =
 
 * The X-KOZ-Key is generated locally by the site administrator and is used only to authenticate the read-only REST API. It does not control feature availability.
 * Every built-in plugin feature is available to every installation.
