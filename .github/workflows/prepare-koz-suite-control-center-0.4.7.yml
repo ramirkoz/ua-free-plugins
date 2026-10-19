@@ -1,0 +1,95 @@
+name: Prepare KOZ Suite Control Center 0.4.7 WordPress.org submission
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/prepare-koz-suite-control-center-0.4.7.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-submission:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Repackage exact 0.4.7 source with updated readme
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo '12c73fddbbefbbdf049780177caff1de33b3f0cb02c32aae9950341c591ff4fb  dist/packages/koz-suite-control-center-0.4.7.zip' | sha256sum -c -
+          python3 - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+          from zipfile import ZipFile
+
+          original = Path('dist/packages/koz-suite-control-center-0.4.7.zip')
+          package = Path('releases/koz-suite-control-center-0.4.7-wordpress-review.zip')
+          package.parent.mkdir(parents=True,exist_ok=True)
+          readme = Path('koz-suite-control-center/readme.txt').read_bytes()
+          assert 'Stable tag: 0.4.7' in readme.decode('utf-8')
+          assert readme.count(b'https://wordpress.org/plugins/koz-site-bridge/') == 1
+          with ZipFile(original) as inp, ZipFile(package,'w') as out:
+              for item in inp.infolist():
+                  b = readme if item.filename == 'koz-suite-control-center/readme.txt' else inp.read(item.filename)
+                  out.writestr(item,b)
+          with ZipFile(original) as inp, ZipFile(package) as out:
+              assert set(inp.namelist()) == set(out.namelist())
+              for n in inp.namelist():
+                  if n != 'koz-suite-control-center/readme.txt':
+                      assert inp.read(n)==out.read(n),n
+              assert out.read('koz-suite-control-center/readme.txt') == readme
+          digest=hashlib.sha256(package.read_bytes()).hexdigest()
+          Path(str(package)+'.sha256').write_text(digest+'  '+package.name+'\n',encoding='utf-8')
+          Path('releases/KOZ_SUITE_CONTROL_CENTER_0.4.7_REVIEW_NOTES.md').write_text(
+              '# KOZ Suite Control Center 0.4.7 - Submission candidate\n\n'
+              'Same original source code and runtime assets as 0.4.7. Only the readme.txt directory description has been updated to match KOZ Suite style and include nine public plugin links.\n\n'
+              'WordPress.org application is not submitted or approved by this GitHub prerelease. WordPress artwork goes into SVN root assets/ after approval.\n',
+              encoding='utf-8')
+          meta={'slug':'koz-suite-control-center','candidate_version':'0.4.7',
+                'wordpress_org_status':'AWAITING USER SUBMISSION',
+                'original_sha256':'12c73fddbbefbbdf049780177caff1de33b3f0cb02c32aae9950341c591ff4fb',
+                'review_zip_sha256':digest,'review_zip':str(package),
+                'only_modified_file':'koz-suite-control-center/readme.txt',
+                'code_modified':False,'suite_bundle':'1.0.30 unchanged'}
+          Path('releases/KOZ_SUITE_CONTROL_CENTER_0.4.7_RELEASE.json').write_text(json.dumps(meta,indent=2)+'\n',encoding='utf-8')
+          print(package,package.stat().st_size,digest)
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add releases/koz-suite-control-center-0.4.7-wordpress-review.zip releases/koz-suite-control-center-0.4.7-wordpress-review.zip.sha256 releases/KOZ_SUITE_CONTROL_CENTER_0.4.7_REVIEW_NOTES.md releases/KOZ_SUITE_CONTROL_CENTER_0.4.7_RELEASE.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'Stage Control Center 0.4.7 review ZIP'
+            git push origin HEAD:main
+          fi
+
+      - name: Publish GitHub prerelease
+        shell: bash
+        env:
+          GH_TOKEN: \${{ github.token }}
+        run: |
+          TAG='koz-suite-control-center-v0.4.7'
+          if ! gh release view "$TAG" >/dev/null 2>&1; then
+            gh release create "$TAG" \
+              releases/koz-suite-control-center-0.4.7-wordpress-review.zip \
+              releases/koz-suite-control-center-0.4.7-wordpress-review.zip.sha256 \
+              releases/koz-suite-control-center-0.4.7-assets.zip \
+              releases/KOZ_SUITE_CONTROL_CENTER_0.4.7_REVIEW_NOTES.md \
+              releases/KOZ_SUITE_CONTROL_CENTER_0.4.7_RELEASE.json \
+              --target "$(git rev-parse HEAD)" \
+              --title 'KOZ Suite Control Center 0.4.7 - WordPress.org submission' \
+              --notes-file releases/KOZ_SUITE_CONTROL_CENTER_0.4.7_REVIEW_NOTES.md \
+              --prerelease --latest=false
+          fi
+
+      - name: Expose submission package
+        uses: actions/upload-artifact@v4
+        with:
+          name: koz-suite-control-center-0.4.7-review-zip
+          path: releases/koz-suite-control-center-0.4.7-wordpress-review.zip
+          retention-days: 30
