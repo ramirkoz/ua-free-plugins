@@ -15,7 +15,7 @@ final class KOZDONATE_Plugin {
 	public const ROTATE_SECRET_ACTION = 'kozdonate_rotate_secret';
 	public const RESET_PHRASE = 'DELETE DONATION STATS';
 	public const LAST_CONFIRMATION_OPTION = 'kozdonate_last_confirmation_at';
-	public const SETTINGS_VERSION = 6;
+	public const SETTINGS_VERSION = 7;
 
 	private static function legacy_prefix(): string {
 		return implode( '', array( 'ua', 'free' ) );
@@ -70,7 +70,10 @@ final class KOZDONATE_Plugin {
 		add_filter( 'kozdonate_public_status', array( KOZDONATE_Tracker::class, 'public_status' ) );
 
 		KOZDONATE_Tracker::init();
+		KOZDONATE_Providers::init();
+		KOZDONATE_Insights::init();
 		KOZDONATE_Admin::init();
+		add_action( 'update_option_' . self::OPTION, array( __CLASS__, 'settings_changed' ), 10, 2 );
 	}
 
 	/**
@@ -86,11 +89,19 @@ final class KOZDONATE_Plugin {
 			'tracked_page_ids'    => array(),
 			'tracked_paths'       => array(),
 			'include_static_translations' => 1,
-			'copy_selector'       => '[data-uafree-copy], [class*="copy-this-"]',
-			'donate_selector'     => '[data-uafree-donate]',
-			'payment_selector'    => 'a[data-uafree-payment], .uafree-payment-link',
-			'success_selector'    => '[data-uafree-donation-success]',
+			'copy_selector'       => '[data-kozdonate-copy], [data-uafree-copy], [class*="copy-this-"]',
+			'donate_selector'     => '[data-kozdonate-donate], [data-uafree-donate]',
+			'payment_selector'    => 'a[data-kozdonate-payment], a[data-uafree-payment], .uafree-payment-link',
+			'success_selector'    => '[data-kozdonate-donation-success], [data-uafree-donation-success]',
 			'payment_hosts'       => array(),
+			'auto_payment_hosts'  => 1,
+			'storage_consent'     => 1,
+			'ga4_events'          => 0,
+			'store_amounts'       => 0,
+			'liqpay_enabled'      => 0,
+			'liqpay_private_key'  => '',
+			'paypal_enabled'      => 0,
+			'paypal_receiver'     => '',
 			'allow_client_success'=> 0,
 			'confirmation_mode'   => 'webhook',
 			'confirmation_secret' => '',
@@ -179,6 +190,7 @@ final class KOZDONATE_Plugin {
 
 		$migrated = wp_parse_args( $current, self::defaults() );
 		$migrated['settings_version'] = self::SETTINGS_VERSION;
+		$migrated['liqpay_private_key_keep'] = (string) ( $current['liqpay_private_key'] ?? '' );
 
 		/*
 		 * The version 3 migration intentionally cleared site-specific routes.
@@ -255,6 +267,17 @@ final class KOZDONATE_Plugin {
 			$confirmation_secret = self::new_confirmation_secret();
 		}
 
+		// The LiqPay private key is never printed back into the form: an empty field keeps it.
+		$liqpay_key = trim( sanitize_text_field( (string) ( $input['liqpay_private_key'] ?? '' ) ) );
+		if ( '' === $liqpay_key ) {
+			$liqpay_key = (string) ( $input['liqpay_private_key_keep'] ?? $current['liqpay_private_key'] ?? '' );
+		}
+		if ( ! empty( $input['liqpay_private_key_clear'] ) ) {
+			$liqpay_key = '';
+		}
+		$liqpay_key = substr( preg_replace( '/[^A-Za-z0-9_+=\/-]/', '', $liqpay_key ) ?? '', 0, 200 );
+		$paypal_receiver = sanitize_email( (string) ( $input['paypal_receiver'] ?? '' ) );
+
 		return array(
 			'settings_version'     => self::SETTINGS_VERSION,
 			'enabled'              => empty( $input['enabled'] ) ? 0 : 1,
@@ -277,6 +300,14 @@ final class KOZDONATE_Plugin {
 			'data_layer_event'     => $data_layer_event,
 			'consent_gate'         => $consent_gate,
 			'consent_category'     => sanitize_key( (string) ( $input['consent_category'] ?? 'analytics' ) ) ?: 'analytics',
+			'auto_payment_hosts'   => empty( $input['auto_payment_hosts'] ) ? 0 : 1,
+			'storage_consent'      => empty( $input['storage_consent'] ) ? 0 : 1,
+			'ga4_events'           => empty( $input['ga4_events'] ) ? 0 : 1,
+			'store_amounts'        => empty( $input['store_amounts'] ) ? 0 : 1,
+			'liqpay_enabled'       => empty( $input['liqpay_enabled'] ) ? 0 : 1,
+			'liqpay_private_key'   => $liqpay_key,
+			'paypal_enabled'       => empty( $input['paypal_enabled'] ) ? 0 : 1,
+			'paypal_receiver'      => is_string( $paypal_receiver ) ? $paypal_receiver : '',
 		);
 	}
 
@@ -288,15 +319,21 @@ final class KOZDONATE_Plugin {
 	 * @return array<int,string>
 	 */
 	public static function static_translate_languages(): array {
-		$legacy_status_function = implode( '_', array( 'uafree', 'static', 'translate', 'get', 'status' ) );
-		if ( ! is_callable( $legacy_status_function ) ) {
-			return array();
-		}
-
-		try {
-			$status = call_user_func( $legacy_status_function );
-		} catch ( \Throwable $error ) {
-			return array();
+		// KOZ Static Translate first; the former UA FREE function only as a fallback.
+		$candidates = array( 'kozstx_get_status', implode( '_', array( 'uafree', 'static', 'translate', 'get', 'status' ) ) );
+		$status     = null;
+		foreach ( $candidates as $function ) {
+			if ( ! is_callable( $function ) ) {
+				continue;
+			}
+			try {
+				$status = call_user_func( $function );
+			} catch ( \Throwable $error ) {
+				$status = null;
+			}
+			if ( is_array( $status ) ) {
+				break;
+			}
 		}
 
 		if ( ! is_array( $status ) || empty( $status['routes_enabled'] ) ) {
@@ -369,6 +406,54 @@ final class KOZDONATE_Plugin {
 		$path = '/' . ltrim( $path, '/' );
 		$path = (string) preg_replace( '~/+~', '/', $path );
 		return '/' === $path ? '/' : untrailingslashit( $path ) . '/';
+	}
+
+	/**
+	 * Payment and donation services recognised without configuration.
+	 *
+	 * @return array<string,string> hostname => provider label
+	 */
+	public static function known_payment_hosts(): array {
+		$hosts = array(
+			'liqpay.ua'          => 'LiqPay',
+			'send.monobank.ua'   => 'monobank',
+			'monobank.ua'        => 'monobank',
+			'pay.mbnk.biz'       => 'monobank',
+			'paypal.com'         => 'PayPal',
+			'paypal.me'          => 'PayPal',
+			'secure.wayforpay.com' => 'WayForPay',
+			'wayforpay.com'      => 'WayForPay',
+			'pay.fondy.eu'       => 'Fondy',
+			'fondy.ua'           => 'Fondy',
+			'next.privat24.ua'   => 'Privat24',
+			'privat24.ua'        => 'Privat24',
+			'checkout.stripe.com' => 'Stripe',
+			'buy.stripe.com'     => 'Stripe',
+			'donate.stripe.com'  => 'Stripe',
+			'buymeacoffee.com'   => 'Buy Me a Coffee',
+			'ko-fi.com'          => 'Ko-fi',
+			'patreon.com'        => 'Patreon',
+			'opencollective.com' => 'Open Collective',
+			'donorbox.org'       => 'Donorbox',
+		);
+		$filtered = apply_filters( 'kozdonate_known_payment_hosts', $hosts );
+		return is_array( $filtered ) ? $filtered : $hosts;
+	}
+
+	/** Provider label for a stored target key (hostname or element id). */
+	public static function provider_label( string $target ): string {
+		$target = strtolower( $target );
+		foreach ( self::known_payment_hosts() as $host => $label ) {
+			if ( $target === $host || str_ends_with( $target, '.' . $host ) ) {
+				return $label;
+			}
+		}
+		foreach ( array( 'liqpay' => 'LiqPay', 'monobank' => 'monobank', 'mono' => 'monobank', 'paypal' => 'PayPal', 'wayforpay' => 'WayForPay', 'privat' => 'Privat24', 'stripe' => 'Stripe' ) as $needle => $label ) {
+			if ( str_contains( $target, $needle ) ) {
+				return $label;
+			}
+		}
+		return '' !== $target ? $target : __( 'Other', 'koz-donate-stats' );
 	}
 
 	public static function new_confirmation_secret(): string {
@@ -449,6 +534,13 @@ final class KOZDONATE_Plugin {
 		$value = preg_replace( '/[\x00-\x1F\x7F{}<>]/u', '', $value );
 		$value = trim( substr( (string) $value, 0, 400 ) );
 		return '' !== $value ? $value : $fallback;
+	}
+
+	/** Turning "Store donation amounts" off deletes the stored amounts. */
+	public static function settings_changed( $old, $new ): void {
+		if ( is_array( $old ) && is_array( $new ) && ! empty( $old['store_amounts'] ) && empty( $new['store_amounts'] ) ) {
+			KOZDONATE_Storage::forget_amounts();
+		}
 	}
 
 	public static function cleanup_old_data(): void {

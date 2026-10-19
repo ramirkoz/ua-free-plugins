@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange
 
 final class KOZDONATE_Storage {
-	public const DB_VERSION = '1.1.1';
+	public const DB_VERSION = '1.2.0';
 	public const DAILY_SUFFIX = 'kozdonate_daily';
 	public const SESSIONS_SUFFIX = 'kozdonate_sessions';
 	public const CONFIRMATIONS_SUFFIX = 'kozdonate_confirmations';
@@ -148,6 +148,8 @@ final class KOZDONATE_Storage {
 			provider varchar(40) NOT NULL DEFAULT 'payment',
 			language varchar(16) NOT NULL DEFAULT 'und',
 			context_key varchar(100) NOT NULL DEFAULT 'confirmed-donation',
+			amount decimal(14,2) DEFAULT NULL,
+			currency char(3) NOT NULL DEFAULT '',
 			created_at datetime NOT NULL,
 			PRIMARY KEY  (reference_hash),
 			KEY created_at (created_at),
@@ -290,7 +292,9 @@ final class KOZDONATE_Storage {
 		string $reference_hash,
 		string $provider,
 		string $language,
-		string $context_key
+		string $context_key,
+		?float $amount = null,
+		string $currency = ''
 	): string {
 		global $wpdb;
 		self::ensure_initialized();
@@ -299,19 +303,41 @@ final class KOZDONATE_Storage {
 			return 'error';
 		}
 
-		$result = $wpdb->query(
-			$wpdb->prepare(
-				"INSERT IGNORE INTO %i
-				(reference_hash, provider, language, context_key, created_at)
-				VALUES (%s, %s, %s, %s, %s)",
-				self::$confirmations_table,
-				$reference_hash,
-				$provider,
-				$language,
-				$context_key,
-				current_time( 'mysql', true )
-			)
-		);
+		// Amounts are kept only when the administrator turned on "Store donation amounts".
+		$store_amount = ! empty( KOZDONATE_Plugin::settings()['store_amounts'] ) && null !== $amount && $amount > 0;
+		$currency     = $store_amount && preg_match( '/^[A-Z]{3}$/', strtoupper( $currency ) ) ? strtoupper( $currency ) : '';
+
+		if ( $store_amount ) {
+			$result = $wpdb->query(
+				$wpdb->prepare(
+					"INSERT IGNORE INTO %i
+					(reference_hash, provider, language, context_key, amount, currency, created_at)
+					VALUES (%s, %s, %s, %s, %f, %s, %s)",
+					self::$confirmations_table,
+					$reference_hash,
+					$provider,
+					$language,
+					$context_key,
+					round( (float) $amount, 2 ),
+					$currency,
+					current_time( 'mysql', true )
+				)
+			);
+		} else {
+			$result = $wpdb->query(
+				$wpdb->prepare(
+					"INSERT IGNORE INTO %i
+					(reference_hash, provider, language, context_key, created_at)
+					VALUES (%s, %s, %s, %s, %s)",
+					self::$confirmations_table,
+					$reference_hash,
+					$provider,
+					$language,
+					$context_key,
+					current_time( 'mysql', true )
+				)
+			);
+		}
 
 		if ( false === $result ) {
 			return 'error';
@@ -654,6 +680,127 @@ final class KOZDONATE_Storage {
 			'contexts'         => self::context_rows( $days ),
 			'languages'        => self::language_rows( $days ),
 			'targets'          => self::top_targets( $days ),
+		);
+	}
+
+	/**
+	 * Funnel totals for a window that ended $offset days ago (0 = the current period).
+	 *
+	 * @return array{views:int,sessions:int,donate_clicks:int,payment_opens:int,successes:int}
+	 */
+	public static function period_totals( int $days, int $offset = 0 ): array {
+		global $wpdb;
+		self::ensure_initialized();
+		$days  = max( 1, min( 730, $days ) );
+		$end   = wp_date( 'Y-m-d', time() - $offset * DAY_IN_SECONDS );
+		$start = wp_date( 'Y-m-d', time() - ( $offset + $days - 1 ) * DAY_IN_SECONDS );
+		$row   = $wpdb->get_row(
+			$wpdb->prepare(
+				"SELECT
+					SUM(CASE WHEN event_type = 'page_view' THEN event_count ELSE 0 END) AS views,
+					SUM(CASE WHEN event_type = 'donate_click' THEN event_count ELSE 0 END) AS donate_clicks,
+					SUM(CASE WHEN event_type IN ('payment_open','external_click') THEN event_count ELSE 0 END) AS payment_opens,
+					SUM(CASE WHEN event_type = 'donation_success' THEN event_count ELSE 0 END) AS successes
+				FROM %i WHERE stat_date BETWEEN %s AND %s",
+				self::$daily_table,
+				$start,
+				$end
+			),
+			ARRAY_A
+		);
+		$sessions = (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(DISTINCT CONCAT(stat_date, ':', context_key, ':', session_hash)) FROM %i WHERE stat_date BETWEEN %s AND %s",
+				self::$sessions_table,
+				$start,
+				$end
+			)
+		);
+		return array(
+			'views'         => (int) ( $row['views'] ?? 0 ),
+			'sessions'      => $sessions,
+			'donate_clicks' => (int) ( $row['donate_clicks'] ?? 0 ),
+			'payment_opens' => (int) ( $row['payment_opens'] ?? 0 ),
+			'successes'     => (int) ( $row['successes'] ?? 0 ),
+		);
+	}
+
+	/**
+	 * Payment openings and confirmed donations by payment service.
+	 *
+	 * @return array<string,array{opens:int,successes:int}>
+	 */
+	public static function provider_rows( int $days = 30 ): array {
+		global $wpdb;
+		self::ensure_initialized();
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT event_type, target_key, SUM(event_count) AS total FROM %i
+				WHERE stat_date >= %s AND event_type IN ('payment_open','external_click','donation_success')
+				GROUP BY event_type, target_key",
+				self::$daily_table,
+				self::date_cutoff( $days )
+			),
+			ARRAY_A
+		);
+		$result = array();
+		foreach ( (array) $rows as $row ) {
+			$label = KOZDONATE_Plugin::provider_label( (string) $row['target_key'] );
+			if ( ! isset( $result[ $label ] ) ) {
+				$result[ $label ] = array( 'opens' => 0, 'successes' => 0 );
+			}
+			if ( 'donation_success' === $row['event_type'] ) {
+				$result[ $label ]['successes'] += (int) $row['total'];
+			} else {
+				$result[ $label ]['opens'] += (int) $row['total'];
+			}
+		}
+		uasort( $result, static fn( array $a, array $b ): int => ( $b['opens'] + $b['successes'] ) <=> ( $a['opens'] + $a['successes'] ) );
+		return $result;
+	}
+
+	/**
+	 * Confirmed amounts by currency (only rows stored while "Store donation amounts" was on).
+	 *
+	 * @return array<int,array{currency:string,total:float,count:int}>
+	 */
+	public static function amount_totals( int $days = 30 ): array {
+		global $wpdb;
+		self::ensure_initialized();
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT currency, SUM(amount) AS total, COUNT(*) AS donations FROM %i
+				WHERE created_at >= %s AND amount IS NOT NULL AND currency <> ''
+				GROUP BY currency ORDER BY total DESC",
+				self::$confirmations_table,
+				self::date_cutoff( $days ) . ' 00:00:00'
+			),
+			ARRAY_A
+		);
+		$result = array();
+		foreach ( (array) $rows as $row ) {
+			$result[] = array(
+				'currency' => (string) $row['currency'],
+				'total'    => (float) $row['total'],
+				'count'    => (int) $row['donations'],
+			);
+		}
+		return $result;
+	}
+
+	/** Removes stored amounts when the administrator turns the option off. */
+	public static function forget_amounts(): void {
+		global $wpdb;
+		self::ensure_initialized();
+		$wpdb->query( $wpdb->prepare( "UPDATE %i SET amount = NULL, currency = ''", self::$confirmations_table ) );
+	}
+
+	/** Events recorded in the last $days days, for the Site Health test. */
+	public static function recent_event_count( int $days = 7 ): int {
+		global $wpdb;
+		self::ensure_initialized();
+		return (int) $wpdb->get_var(
+			$wpdb->prepare( 'SELECT SUM(event_count) FROM %i WHERE stat_date >= %s', self::$daily_table, self::date_cutoff( $days ) )
 		);
 	}
 

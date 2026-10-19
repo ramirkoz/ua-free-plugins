@@ -57,6 +57,9 @@ final class KOZDONATE_Tracker {
 			'adAccountMode'      => $settings['ad_account_mode'],
 			'consentGate'        => $settings['consent_gate'],
 			'consentCategory'    => $settings['consent_category'],
+			'knownPaymentHosts'  => ! empty( $settings['auto_payment_hosts'] ) ? array_keys( KOZDONATE_Plugin::known_payment_hosts() ) : array(),
+			'storageConsent'     => ! empty( $settings['storage_consent'] ),
+			'ga4Events'          => ! empty( $settings['ga4_events'] ),
 			'pluginVersion'      => KOZDONATE_VERSION,
 		);
 
@@ -337,7 +340,9 @@ final class KOZDONATE_Tracker {
 			self::confirmation_reference_hash( $reference, $secret ),
 			$provider,
 			$language,
-			$context_key
+			$context_key,
+			isset( $data['amount'] ) && is_numeric( $data['amount'] ) ? (float) $data['amount'] : null,
+			sanitize_text_field( (string) ( $data['currency'] ?? '' ) )
 		);
 
 		if ( 'error' === $status ) {
@@ -414,36 +419,53 @@ final class KOZDONATE_Tracker {
 		return substr( $value, 0, $max_length );
 	}
 
+	/**
+	 * Abuse limits with two counters instead of four writes per event:
+	 * 180 events per session per hour and, per IP address and context, 600 events and
+	 * 60 new sessions per hour. Mobile networks put many visitors behind one IP address
+	 * (CGNAT), so the per-IP limits are generous. A persistent object cache is used
+	 * when available; otherwise transients.
+	 */
 	private static function within_rate_limit( string $session_hash, string $context_key ): bool {
 		$session_key = 'kozdonate_rate_' . substr( $session_hash, 0, 32 );
-		$session_count = (int) get_transient( $session_key );
+		$session_count = (int) self::counter_get( $session_key );
 		if ( $session_count >= 180 ) {
 			return false;
 		}
 
-		$server_bucket = self::server_abuse_bucket( $context_key );
-		$event_key = 'kozdonate_events_' . $server_bucket;
-		$new_session_key = 'kozdonate_new_sessions_' . $server_bucket;
-		$seen_key = 'kozdonate_seen_' . $server_bucket . '_' . substr( $session_hash, 0, 16 );
-
-		$event_count = (int) get_transient( $event_key );
-		if ( $event_count >= 60 ) {
+		$bucket_key = 'kozdonate_bucket_' . self::server_abuse_bucket( $context_key );
+		$bucket     = self::counter_get( $bucket_key );
+		$bucket     = is_array( $bucket ) ? $bucket : array( 'events' => 0, 'sessions' => array() );
+		$short      = substr( $session_hash, 0, 12 );
+		if ( (int) $bucket['events'] >= 600 ) {
 			return false;
 		}
-
-		$seen = (bool) get_transient( $seen_key );
-		if ( ! $seen ) {
-			$new_session_count = (int) get_transient( $new_session_key );
-			if ( $new_session_count >= 4 ) {
+		if ( ! in_array( $short, (array) $bucket['sessions'], true ) ) {
+			if ( count( (array) $bucket['sessions'] ) >= 60 ) {
 				return false;
 			}
-			set_transient( $new_session_key, $new_session_count + 1, HOUR_IN_SECONDS );
-			set_transient( $seen_key, 1, HOUR_IN_SECONDS );
+			$bucket['sessions'][] = $short;
 		}
+		$bucket['events'] = (int) $bucket['events'] + 1;
 
-		set_transient( $event_key, $event_count + 1, HOUR_IN_SECONDS );
-		set_transient( $session_key, $session_count + 1, HOUR_IN_SECONDS );
+		self::counter_set( $bucket_key, $bucket );
+		self::counter_set( $session_key, $session_count + 1 );
 		return true;
+	}
+
+	private static function counter_get( string $key ): mixed {
+		if ( wp_using_ext_object_cache() ) {
+			return wp_cache_get( $key, 'kozdonate' );
+		}
+		return get_transient( $key );
+	}
+
+	private static function counter_set( string $key, mixed $value ): void {
+		if ( wp_using_ext_object_cache() ) {
+			wp_cache_set( $key, $value, 'kozdonate', HOUR_IN_SECONDS );
+			return;
+		}
+		set_transient( $key, $value, HOUR_IN_SECONDS );
 	}
 
 	private static function server_abuse_bucket( string $context_key ): string {

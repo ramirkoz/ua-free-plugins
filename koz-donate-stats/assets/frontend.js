@@ -48,6 +48,14 @@
 		const now = Date.now();
 		let state = null;
 
+		// Before analytics consent the identifier lives only in this page (no browser storage).
+		if (config.storageConsent && !storageAllowed()) {
+			if (!runtime.memoryId) {
+				runtime.memoryId = randomSessionId();
+			}
+			return String(runtime.memoryId).toLowerCase();
+		}
+
 		try {
 			state = JSON.parse(window.sessionStorage.getItem(STORAGE_KEY) || 'null');
 		} catch (error) {
@@ -83,6 +91,15 @@
 	}
 
 
+	const WP_CONSENT_MAP = { analytics: 'statistics', advertising: 'marketing', external_media: 'marketing' };
+
+	function consentSystemPresent() {
+		return Boolean(
+			(window.KOZCONSENT && typeof window.KOZCONSENT.allows === 'function') ||
+			typeof window.wp_has_consent === 'function'
+		);
+	}
+
 	function managerAllows(category) {
 		try {
 			if (
@@ -91,11 +108,19 @@
 			) {
 				return Boolean(window.KOZCONSENT.allows(category));
 			}
+			if (typeof window.wp_has_consent === 'function') {
+				return Boolean(window.wp_has_consent(WP_CONSENT_MAP[category] || category));
+			}
 		} catch (error) {
 			return false;
 		}
 
 		return false;
+	}
+
+	function storageAllowed() {
+		// Without a consent system the site owner decides; keep the previous behaviour.
+		return !consentSystemPresent() || managerAllows('analytics');
 	}
 
 	function localAllowed() {
@@ -130,7 +155,7 @@
 			return fallback;
 		}
 
-		const explicit = element.getAttribute('data-uafree-target');
+		const explicit = element.getAttribute('data-kozdonate-target') || element.getAttribute('data-uafree-target');
 
 		if (explicit) {
 			return cleanTarget(explicit, fallback);
@@ -175,7 +200,10 @@
 			return false;
 		}
 
-		const allowed = Array.isArray(config.paymentHosts) ? config.paymentHosts : [];
+		const allowed = [].concat(
+			Array.isArray(config.paymentHosts) ? config.paymentHosts : [],
+			Array.isArray(config.knownPaymentHosts) ? config.knownPaymentHosts : []
+		);
 
 		return allowed.some(item => {
 			const value = String(item || '').toLowerCase();
@@ -202,7 +230,7 @@
 			return '';
 		}
 
-		const explicit = element.getAttribute('data-uafree-copy');
+		const explicit = element.getAttribute('data-kozdonate-copy') || element.getAttribute('data-uafree-copy');
 
 		if (explicit) {
 			return cleanTarget(explicit, 'copy');
@@ -231,6 +259,19 @@
 		window.dispatchEvent(
 			new CustomEvent('kozdonate:donation-event', { detail })
 		);
+
+		if (config.ga4Events && dataLayerAllowed()) {
+			const ga4Name = eventType === 'payment_open' ? 'begin_checkout' : (eventType === 'donation_success' ? 'purchase' : '');
+			if (ga4Name) {
+				const params = { payment_type: detail.target_key || 'payment', kozdonate_context: detail.context_key, language: detail.language };
+				if (typeof window.gtag === 'function') {
+					window.gtag('event', ga4Name, params);
+				} else {
+					window.dataLayer = window.dataLayer || [];
+					window.dataLayer.push(Object.assign({ event: ga4Name }, params));
+				}
+			}
+		}
 
 		// Google Ads outbound-click conversion must represent one actual payment-provider opening.
 		// Local journey events remain recorded through the REST endpoint and DOM event above.

@@ -4,12 +4,12 @@ Donate link: https://github.com/ramirkoz/ua-free-plugins#support-plugin-developm
 Tags: donations, analytics, conversions, fundraising, privacy
 Requires at least: 6.2
 Tested up to: 7.1
-Stable tag: 1.3.11
+Stable tag: 1.4.0
 Requires PHP: 8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Local donation-journey analytics and consent-aware conversion events for WordPress.
+Donation funnel analytics with confirmed LiqPay and PayPal donations and consent-aware Google Ads events. No personal data.
 
 == Description ==
 
@@ -19,13 +19,32 @@ The plugin was originally developed for the UA FREE charitable foundation. The f
 
 The plugin is developed, owned and maintained by Tony Kozyriev (`ramirkz`). UA FREE does not own the plugin or its source code. Support for the developer and charitable donations to the foundation are presented as separate optional destinations.
 
+= Part of the KOZ Suite =
+
+KOZ Donate Stats & Conversions is **one focused module of the broader KOZ Suite**, a family of independent WordPress plugins that share a common KOZ administration experience and visual identity.
+
+Each KOZ plugin remains independently installable, so site owners can use only the modules they need or combine several modules into one toolkit.
+
+Current public KOZ plugins:
+
+* [KOZ SEO Core](https://wordpress.org/plugins/koz-seo-core/) — technical SEO, schema, sitemaps, AI discovery and OpenAI Vision image ALT.
+* [KOZ Copy Actions](https://wordpress.org/plugins/koz-copy-actions/) — accessible copy-to-clipboard actions for selected WordPress content.
+* [KOZ URL-Only Comment Spam](https://wordpress.org/plugins/koz-url-only-comment-spam/) — privacy-first local moderation for URL-only comment spam.
+* [KOZ Static Translate](https://wordpress.org/plugins/koz-static-translate/) — AI-powered multilingual translation with Microsoft Azure AI Translator and static language routes.
+* [KOZ Translate Diagnostics](https://wordpress.org/plugins/koz-translate-diagnostics/) — read-only health checks and privacy-safe diagnostic reports for KOZ Static Translate.
+* [KOZ 404 Guard & URL Intelligence](https://wordpress.org/plugins/koz-404-guard/) — privacy-safe 404/410 diagnostics, controlled same-site redirects and URL intelligence.
+* [KOZ Consent Manager](https://wordpress.org/plugins/koz-consent-manager/) — privacy-first visitor consent, optional script control and Google Consent Mode v2 synchronization.
+* KOZ Donate Stats & Conversions — local donation-journey analytics and consent-aware conversion events for WordPress.
+
 = Main features =
 
-* Local donation-page and payment-intent reporting.
-* Automatic detection of active multilingual donation routes.
-* One intent event per configured payment action.
-* Optional consent-gated dataLayer events for Google Ads workflows.
-* CSV and JSON reporting designed to limit personal-data collection.
+* Donation funnel: page visits, support clicks, payment openings, copied payment details and confirmed donations, compared with the previous period.
+* Confirmed donations from LiqPay and PayPal, or from any service through a signed callback.
+* Known payment services recognised automatically; languages of KOZ Static Translate tracked as one page.
+* Optional amounts per currency, off by default.
+* Consent-aware Google Ads and GA4 events for Google Tag Manager or gtag.
+* Daily chart, payment services, languages, dashboard widget, Site Health test, CSV and JSON export.
+* No IP addresses, referrers, fingerprinting or donor data.
 
 = Example use cases =
 
@@ -39,7 +58,7 @@ The plugin is designed for limited local reporting. It does not confirm complete
 
 = Support =
 
-* Support independent plugin development through PayPal or the cryptocurrency wallets listed in the administration support panel and project repository.
+* Support independent plugin development through the cryptocurrency wallets listed in the administration support panel and project repository.
 * Support Ukraine through the UA FREE charitable foundation: https://uafree.org/donate/
 * Development contact: ramir@ua.fm
 * Source and issue tracker: https://github.com/ramirkoz/ua-free-plugins
@@ -58,6 +77,18 @@ The KOZ rebrand changes the public plugin folder and slug. Legacy internal optio
 
 == Frequently Asked Questions ==
 
+= Does it count real donations? =
+
+Clicks and payment-page openings are not donations. Connect LiqPay (server callback with signature check), PayPal (IPN) or your own signed callback; only payments the service reports as successful are counted.
+
+= Are donation amounts stored? =
+
+Only when you turn on "Store donation amounts" (off by default). The plugin keeps the amount and currency, never the donor's name, email or card.
+
+= Does it need a consent banner? =
+
+It works with KOZ Consent Manager and with any plugin that supports WP Consent API. Before analytics consent the plugin uses no browser storage; Google Ads and GA4 events are sent only with consent.
+
 = Is this an official UA FREE foundation plugin? =
 
 No. The plugin was originally developed for and tested on the foundation website, but it is independently owned and maintained by Tony Kozyriev.
@@ -72,7 +103,26 @@ No. Every public KOZ plugin is independently installable unless its own descript
 
 == Changelog ==
 
+= 1.4.0 =
+* New: confirmed donations straight from LiqPay (server callback verified with the private key; only status "success" counts) and PayPal (IPN verified with PayPal; only "Completed" counts). Only a hash of the payment reference is stored.
+* New: optional donation amounts and currencies from confirmations (off by default; turning it off deletes them), shown as totals per currency.
+* New: report with a donation funnel and the change against the previous period, a daily chart, payment services and confirmed amounts; dashboard widget for the last 7 days; Site Health test.
+* New: known payment services are recognised without configuration (LiqPay, monobank, PayPal, WayForPay, Fondy, Privat24, Stripe, Buy Me a Coffee, Ko-fi, Patreon, Open Collective, Donorbox).
+* New: optional GA4 recommended events: begin_checkout when a payment page opens and purchase on the success marker, sent only with consent.
+* Changed: before analytics consent the visit identifier stays in the open page only (no sessionStorage); consent is read from KOZ Consent Manager or, if absent, WP Consent API.
+* Changed: abuse limits allow 60 new sessions and 600 events per IP address and hour (mobile networks share addresses) and write two counters instead of four per event, using the object cache when available.
+* Changed: language versions are taken from KOZ Static Translate (kozstx_get_status) first; the former UA FREE function is only a fallback.
+* Changed: new installations use neutral data-kozdonate-* attributes; data-uafree-* attributes keep working and existing settings are kept.
+* Changed: the signed callback accepts optional amount and currency fields.
+* Changed: payment providers and reports are separate classes (KOZDONATE_Providers, KOZDONATE_Insights).
+* Added Ukrainian translations for the new admin strings.
+* Removed PayPal from the developer support panel and readme and corrected the BTC and USDT TRC-20 developer wallet addresses (from 1.3.12).
+
+= 1.3.12 =
+* Removed PayPal from the developer support panel and corrected the BTC and USDT TRC-20 developer wallet addresses.
+
 = 1.3.11 =
+* Updated KOZ Suite documentation to include all eight current public plugins.
 * Updated WordPress compatibility metadata for WordPress 7.1.
 * No functional changes.
 
@@ -124,6 +174,12 @@ No. Every public KOZ plugin is independently installable unless its own descript
 * Last stable release under the former UA FREE public branding.
 
 == Upgrade Notice ==
+
+= 1.4.0 =
+Adds confirmed LiqPay and PayPal donations, a funnel report with period comparison, automatic payment-service detection and storage-free tracking before consent. Existing settings are kept.
+
+= 1.3.12 =
+Developer support details updated: PayPal removed, BTC and USDT TRC-20 addresses corrected.
 
 = 1.3.11 =
 WordPress 7.1 compatibility metadata update; plugin behavior remains unchanged.

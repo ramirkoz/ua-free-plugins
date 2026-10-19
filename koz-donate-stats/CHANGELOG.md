@@ -1,3 +1,23 @@
+## 1.4.0
+
+- New: confirmed donations straight from LiqPay (server callback verified with the private key; only status "success" counts) and PayPal (IPN verified with PayPal; only "Completed" counts). Only a hash of the payment reference is stored.
+- New: optional donation amounts and currencies from confirmations (off by default; turning it off deletes them), shown as totals per currency.
+- New: report with a donation funnel and the change against the previous period, a daily chart, payment services and confirmed amounts; dashboard widget for the last 7 days; Site Health test.
+- New: known payment services are recognised without configuration (LiqPay, monobank, PayPal, WayForPay, Fondy, Privat24, Stripe, Buy Me a Coffee, Ko-fi, Patreon, Open Collective, Donorbox).
+- New: optional GA4 recommended events: begin_checkout when a payment page opens and purchase on the success marker, sent only with consent.
+- Changed: before analytics consent the visit identifier stays in the open page only (no sessionStorage); consent is read from KOZ Consent Manager or, if absent, WP Consent API.
+- Changed: abuse limits allow 60 new sessions and 600 events per IP address and hour (mobile networks share addresses) and write two counters instead of four per event, using the object cache when available.
+- Changed: language versions are taken from KOZ Static Translate (kozstx_get_status) first; the former UA FREE function is only a fallback.
+- Changed: new installations use neutral data-kozdonate-* attributes; data-uafree-* attributes keep working and existing settings are kept.
+- Changed: the signed callback accepts optional amount and currency fields.
+- Changed: payment providers and reports are separate classes (KOZDONATE_Providers, KOZDONATE_Insights).
+- Added Ukrainian translations for the new admin strings.
+- Removed PayPal from the developer support panel and readme and corrected the BTC and USDT TRC-20 developer wallet addresses (from 1.3.12).
+
+## 1.3.12
+
+- Removed PayPal from the developer support panel and corrected the BTC and USDT TRC-20 developer wallet addresses.
+
 ## 1.3.11
 - Updated WordPress compatibility metadata for WordPress 7.1.
 - No functional changes.

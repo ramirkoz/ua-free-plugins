@@ -406,6 +406,10 @@ final class KOZDONATE_Admin {
 			</div>
 		</div>
 
+		<?php KOZDONATE_Insights::render_funnel( $days ); ?>
+		<?php KOZDONATE_Insights::render_chart( $days ); ?>
+		<?php KOZDONATE_Insights::render_providers( $days ); ?>
+
 		<details class="kozdonate-technical">
 			<summary><?php esc_html_e( 'Technical data and export', 'koz-donate-stats' ); ?></summary>
 			<div class="kozdonate-technical-inner">
@@ -513,8 +517,8 @@ final class KOZDONATE_Admin {
 			<ol>
 				<li><?php echo ! empty( $settings['enabled'] ) ? '✓' : '○'; ?> <?php esc_html_e( 'Enable local statistics collection', 'koz-donate-stats' ); ?></li>
 				<li><?php echo $tracked_targets > 0 ? '✓' : '○'; ?> <?php esc_html_e( 'Select a donation page or local path', 'koz-donate-stats' ); ?></li>
-				<li><?php echo ! empty( $settings['payment_hosts'] ) ? '✓' : '○'; ?> <?php esc_html_e( 'Add payment domains when external services are used', 'koz-donate-stats' ); ?></li>
-				<li><?php echo ! empty( KOZDONATE_Plugin::confirmation_status()['ready'] ) || ! empty( $settings['allow_client_success'] ) ? '✓' : '○'; ?> <?php esc_html_e( 'Connect successful-donation confirmation', 'koz-donate-stats' ); ?></li>
+				<li><?php echo ! empty( $settings['payment_hosts'] ) || ! empty( $settings['auto_payment_hosts'] ) ? '✓' : '○'; ?> <?php esc_html_e( 'Add payment domains when external services are used', 'koz-donate-stats' ); ?></li>
+				<li><?php echo ! empty( KOZDONATE_Plugin::confirmation_status()['ready'] ) || ! empty( $settings['allow_client_success'] ) || ( ! empty( $settings['liqpay_enabled'] ) && '' !== $settings['liqpay_private_key'] ) || ! empty( $settings['paypal_enabled'] ) ? '✓' : '○'; ?> <?php esc_html_e( 'Connect successful-donation confirmation', 'koz-donate-stats' ); ?></li>
 			</ol>
 		</section>
 		<form method="post" action="options.php" class="kozdonate-settings">
@@ -620,6 +624,56 @@ final class KOZDONATE_Admin {
 					<input type="checkbox" name="<?php echo esc_attr( KOZDONATE_Plugin::OPTION ); ?>[allow_client_success]" value="1" <?php checked( 1, $settings['allow_client_success'] ); ?>>
 					<span><?php esc_html_e( 'Allow a success-page marker when the less reliable mode is selected', 'koz-donate-stats' ); ?></span>
 				</label>
+
+				<h3><?php esc_html_e( 'LiqPay', 'koz-donate-stats' ); ?></h3>
+				<p><?php esc_html_e( 'LiqPay sends a signed server callback after each payment. The plugin checks the signature with your private key and counts only successful payments.', 'koz-donate-stats' ); ?></p>
+				<label class="kozdonate-check">
+					<input type="checkbox" name="<?php echo esc_attr( KOZDONATE_Plugin::OPTION ); ?>[liqpay_enabled]" value="1" <?php checked( 1, $settings['liqpay_enabled'] ); ?>>
+					<span><?php esc_html_e( 'Accept LiqPay callbacks', 'koz-donate-stats' ); ?></span>
+				</label>
+				<div class="kozdonate-copy-row">
+					<label class="kozdonate-field">
+						<span><?php esc_html_e( 'LiqPay callback URL (server_url)', 'koz-donate-stats' ); ?></span>
+						<input id="kozdonate-liqpay-url" type="text" readonly class="large-text code" value="<?php echo esc_attr( KOZDONATE_Providers::liqpay_url() ); ?>">
+					</label>
+					<button type="button" class="button" data-kozdonate-copy-value="#kozdonate-liqpay-url"><?php esc_html_e( 'Copy URL', 'koz-donate-stats' ); ?></button>
+				</div>
+				<label class="kozdonate-field">
+					<span><?php esc_html_e( 'LiqPay private key', 'koz-donate-stats' ); ?></span>
+					<input type="password" name="<?php echo esc_attr( KOZDONATE_Plugin::OPTION ); ?>[liqpay_private_key]" value="" class="regular-text code" autocomplete="new-password" placeholder="<?php echo esc_attr( '' !== $settings['liqpay_private_key'] ? __( 'Saved. Leave empty to keep it.', 'koz-donate-stats' ) : __( 'Not set', 'koz-donate-stats' ) ); ?>">
+				</label>
+				<?php if ( '' !== $settings['liqpay_private_key'] ) : ?>
+					<label class="kozdonate-check">
+						<input type="checkbox" name="<?php echo esc_attr( KOZDONATE_Plugin::OPTION ); ?>[liqpay_private_key_clear]" value="1">
+						<span><?php esc_html_e( 'Delete the saved private key', 'koz-donate-stats' ); ?></span>
+					</label>
+				<?php endif; ?>
+				<p class="description"><?php esc_html_e( 'Use the URL as server_url in your LiqPay buttons or API calls, or in the store settings of the LiqPay merchant account if it offers a callback address for checkout links. The key is stored in WordPress options and is never shown again.', 'koz-donate-stats' ); ?></p>
+
+				<h3><?php esc_html_e( 'PayPal', 'koz-donate-stats' ); ?></h3>
+				<p><?php esc_html_e( 'PayPal Instant Payment Notification (IPN) is checked by sending it back to PayPal. Only completed payments are counted.', 'koz-donate-stats' ); ?></p>
+				<label class="kozdonate-check">
+					<input type="checkbox" name="<?php echo esc_attr( KOZDONATE_Plugin::OPTION ); ?>[paypal_enabled]" value="1" <?php checked( 1, $settings['paypal_enabled'] ); ?>>
+					<span><?php esc_html_e( 'Accept PayPal IPN', 'koz-donate-stats' ); ?></span>
+				</label>
+				<div class="kozdonate-copy-row">
+					<label class="kozdonate-field">
+						<span><?php esc_html_e( 'PayPal IPN URL', 'koz-donate-stats' ); ?></span>
+						<input id="kozdonate-paypal-url" type="text" readonly class="large-text code" value="<?php echo esc_attr( KOZDONATE_Providers::paypal_url() ); ?>">
+					</label>
+					<button type="button" class="button" data-kozdonate-copy-value="#kozdonate-paypal-url"><?php esc_html_e( 'Copy URL', 'koz-donate-stats' ); ?></button>
+				</div>
+				<label class="kozdonate-field">
+					<span><?php esc_html_e( 'PayPal receiver email (optional)', 'koz-donate-stats' ); ?></span>
+					<input type="email" name="<?php echo esc_attr( KOZDONATE_Plugin::OPTION ); ?>[paypal_receiver]" value="<?php echo esc_attr( (string) $settings['paypal_receiver'] ); ?>" class="regular-text">
+				</label>
+				<p class="description"><?php esc_html_e( 'Set the URL in PayPal: Account settings → Notifications → Instant payment notifications. When the email is set, payments to other accounts are ignored.', 'koz-donate-stats' ); ?></p>
+
+				<label class="kozdonate-check">
+					<input type="checkbox" name="<?php echo esc_attr( KOZDONATE_Plugin::OPTION ); ?>[store_amounts]" value="1" <?php checked( 1, $settings['store_amounts'] ); ?>>
+					<span><?php esc_html_e( 'Store donation amounts and currencies from confirmations', 'koz-donate-stats' ); ?></span>
+				</label>
+				<p class="description"><?php esc_html_e( 'Off by default. Only the amount and currency are kept, never the donor. Turning it off deletes stored amounts.', 'koz-donate-stats' ); ?></p>
 			</section>
 
 			<details class="kozdonate-card kozdonate-technical-settings">
@@ -630,6 +684,11 @@ final class KOZDONATE_Admin {
 				<?php self::selector_field( 'copy_selector', __( 'Copy action selector', 'koz-donate-stats' ), $settings ); ?>
 				<?php self::selector_field( 'success_selector', __( 'Reported success marker selector', 'koz-donate-stats' ), $settings ); ?>
 
+				<label class="kozdonate-check">
+					<input type="checkbox" name="<?php echo esc_attr( KOZDONATE_Plugin::OPTION ); ?>[auto_payment_hosts]" value="1" <?php checked( 1, $settings['auto_payment_hosts'] ); ?>>
+					<span><?php esc_html_e( 'Recognise known payment services automatically', 'koz-donate-stats' ); ?></span>
+				</label>
+				<p class="description"><?php echo esc_html( implode( ', ', array_unique( array_values( KOZDONATE_Plugin::known_payment_hosts() ) ) ) ); ?></p>
 				<label class="kozdonate-field">
 					<span><?php esc_html_e( 'Allowed payment hostnames', 'koz-donate-stats' ); ?></span>
 					<textarea name="<?php echo esc_attr( KOZDONATE_Plugin::OPTION ); ?>[payment_hosts]" rows="5" class="large-text code"><?php echo esc_textarea( implode( "\n", $settings['payment_hosts'] ) ); ?></textarea>
@@ -654,6 +713,10 @@ final class KOZDONATE_Admin {
 				<label class="kozdonate-check">
 					<input type="checkbox" name="<?php echo esc_attr( KOZDONATE_Plugin::OPTION ); ?>[data_layer_enabled]" value="1" <?php checked( 1, $settings['data_layer_enabled'] ); ?>>
 					<span><?php esc_html_e( 'Send safe events to dataLayer', 'koz-donate-stats' ); ?></span>
+				</label>
+				<label class="kozdonate-check">
+					<input type="checkbox" name="<?php echo esc_attr( KOZDONATE_Plugin::OPTION ); ?>[ga4_events]" value="1" <?php checked( 1, $settings['ga4_events'] ); ?>>
+					<span><?php esc_html_e( 'Also send GA4 recommended events (begin_checkout when payment opens, purchase on the success marker)', 'koz-donate-stats' ); ?></span>
 				</label>
 
 				<label class="kozdonate-field">
@@ -687,7 +750,11 @@ final class KOZDONATE_Admin {
 					<span><?php esc_html_e( 'When to consider a visit finished, minutes', 'koz-donate-stats' ); ?></span>
 					<input type="number" min="5" max="120" name="<?php echo esc_attr( KOZDONATE_Plugin::OPTION ); ?>[session_minutes]" value="<?php echo esc_attr( (string) $settings['session_minutes'] ); ?>">
 				</label>
-				<p class="description"><?php esc_html_e( 'The browser identifier is kept in sessionStorage and the database receives only a daily HMAC hash.', 'koz-donate-stats' ); ?></p>
+				<label class="kozdonate-check">
+					<input type="checkbox" name="<?php echo esc_attr( KOZDONATE_Plugin::OPTION ); ?>[storage_consent]" value="1" <?php checked( 1, $settings['storage_consent'] ); ?>>
+					<span><?php esc_html_e( 'Use browser storage only after analytics consent', 'koz-donate-stats' ); ?></span>
+				</label>
+				<p class="description"><?php esc_html_e( 'Before consent the visit identifier lives only in the open page, so a reload counts as a new visit. After consent it is kept in sessionStorage. The database receives only a daily HMAC hash.', 'koz-donate-stats' ); ?></p>
 			</section>
 
 			<?php submit_button( __( 'Save settings', 'koz-donate-stats' ) ); ?>

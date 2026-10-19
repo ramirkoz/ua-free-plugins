@@ -5,7 +5,7 @@
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Author URI: https://www.linkedin.com/in/tonykoz/
  * Plugin URI: https://github.com/ramirkoz/ua-free-plugins
- * Version: 1.3.11
+ * Version: 1.4.0
  * Author: Tony Kozyriev
  * Text Domain: koz-donate-stats
  * Domain Path: /languages
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'KOZDONATE_VERSION', '1.3.11' );
+define( 'KOZDONATE_VERSION', '1.4.0' );
 define( 'KOZDONATE_FILE', __FILE__ );
 define( 'KOZDONATE_DIR', plugin_dir_path( __FILE__ ) );
 define( 'KOZDONATE_URL', plugin_dir_url( __FILE__ ) );
@@ -28,6 +28,8 @@ require_once KOZDONATE_DIR . 'includes/class-kozdonate-runtime-i18n.php';
 
 require_once KOZDONATE_DIR . 'includes/class-storage.php';
 require_once KOZDONATE_DIR . 'includes/class-tracker.php';
+require_once KOZDONATE_DIR . 'includes/class-providers.php';
+require_once KOZDONATE_DIR . 'includes/class-insights.php';
 require_once KOZDONATE_DIR . 'includes/class-suite.php';
 require_once KOZDONATE_DIR . 'includes/class-admin.php';
 require_once KOZDONATE_DIR . 'includes/class-plugin.php';

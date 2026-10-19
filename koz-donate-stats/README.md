@@ -1,4 +1,4 @@
-# KOZ Donate Stats & Conversions 1.3.11
+# KOZ Donate Stats & Conversions 1.4.0
 Local donation-journey analytics and consent-aware conversion events for WordPress.
 
 ## Ownership and project history
@@ -15,4 +15,4 @@ The public plugin slug is `koz-donate-stats`. Legacy internal option names and d
 - LinkedIn: https://www.linkedin.com/in/tonykoz/
 - GitHub: https://github.com/ramirkoz/
 - Support Ukraine through UA FREE: https://uafree.org/donate/
-- Developer PayPal and crypto addresses are displayed in the plugin administration support panel.
+- Developer crypto addresses are displayed in the plugin administration support panel.
