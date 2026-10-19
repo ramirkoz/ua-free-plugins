@@ -1,0 +1,38 @@
+name: Publish KOZ Suite Control Center 0.4.7 GitHub prerelease
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/publish-koz-suite-control-center-0.4.7-release.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Publish ready submission candidate
+        env:
+          GH_TOKEN: \${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          TAG='koz-suite-control-center-v0.4.7'
+          if ! gh release view "$TAG" >/dev/null 2>&1; then
+            gh release create "$TAG" \
+              releases/koz-suite-control-center-0.4.7-wordpress-review.zip \
+              releases/koz-suite-control-center-0.4.7-wordpress-review.zip.sha256 \
+              releases/koz-suite-control-center-0.4.7-assets.zip \
+              releases/KOZ_SUITE_CONTROL_CENTER_0.4.7_REVIEW_NOTES.md \
+              releases/KOZ_SUITE_CONTROL_CENTER_0.4.7_RELEASE.json \
+              --target "$(git rev-parse HEAD)" \
+              --title 'KOZ Suite Control Center 0.4.7 WordPress.org submission candidate' \
+              --notes-file releases/KOZ_SUITE_CONTROL_CENTER_0.4.7_REVIEW_NOTES.md \
+              --prerelease --latest=false
+          fi
+          gh release view "$TAG" --json tagName,isDraft,isPrerelease,assets
