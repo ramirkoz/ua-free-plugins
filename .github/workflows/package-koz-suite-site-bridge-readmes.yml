@@ -1,0 +1,56 @@
+name: Package KOZ Suite readme updates (Site Bridge)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/package-koz-suite-site-bridge-readmes.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  package-readmes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Package readme-only SVN updates
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile, ZIP_DEFLATED
+
+          versions = {
+              'koz-donate-stats': '1.4.0',
+              'koz-consent-manager': '0.3.0',
+              'koz-404-guard': '2.2.0',
+              'koz-translate-diagnostics': '0.4.0',
+              'koz-static-translate': '0.10.0',
+              'koz-seo-core': '2.2.0',
+              'koz-url-only-comment-spam': '1.2.0',
+              'koz-copy-actions': '1.2.0',
+          }
+          target = Path('releases/KOZ_SUITE_ADD_SITE_BRIDGE_READMES_2026-10-19.zip')
+          target.parent.mkdir(exist_ok=True)
+          with ZipFile(target, 'w', compression=ZIP_DEFLATED, compresslevel=9) as archive:
+              for slug, version in sorted(versions.items()):
+                  data = Path(slug, 'readme.txt').read_bytes()
+                  text = data.decode('utf-8')
+                  assert 'Stable tag: ' + version in text, (slug, 'unexpected version')
+                  assert text.count('[KOZ Site Bridge](https://wordpress.org/plugins/koz-site-bridge/)') == 1, (slug, 'expected one linked entry')
+                  for dest in (f'{slug}/trunk/readme.txt', f'{slug}/tags/{version}/readme.txt'):
+                      archive.writestr(dest, data)
+          print('Packaged', len(versions), 'plugins,', len(versions)*2, 'readme files,', target)
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add releases/KOZ_SUITE_ADD_SITE_BRIDGE_READMES_2026-10-19.zip
+          if ! git diff --cached --quiet; then
+            git commit -m 'Package documentation-only SVN readme updates for KOZ Site Bridge'
+            git push origin HEAD:main
+          fi
