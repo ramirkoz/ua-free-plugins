@@ -1,0 +1,13 @@
+{
+  "plugin": "koz-google-ads-campaign-builder",
+  "version": "1.5.0",
+  "source_files": 28,
+  "changed_files_from_claude_package": [
+    "koz-google-ads-campaign-builder/readme.txt"
+  ],
+  "original_sha256": "3f3165b61ca3fd209be4765a0ac01986415004e80c5a60824dd6467b7d9416b1",
+  "submission_sha256": "5e02df1bb1d87dac727761926b58b766df27991a4421ab9a27f67eefc03e5eff",
+  "original_bytes": 161713,
+  "submission_bytes": 162369,
+  "note": "Only readme.txt changed, adding KOZ Suite crosslinks. No application code changed. Not yet submitted to WordPress.org."
+}
