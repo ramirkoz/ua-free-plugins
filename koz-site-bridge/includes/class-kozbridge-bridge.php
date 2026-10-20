@@ -20,10 +20,6 @@ final class KOZBRIDGE_Bridge {
 	private const LEGACY_KEY_HASH_OPTIONS = array( 'uafree_bridge_api_key_hash', 'koz_site_bridge_api_key_hash' );
 	private const LEGACY_KEY_DATE_OPTIONS = array( 'uafree_bridge_api_key_created_at', 'koz_site_bridge_api_key_created_at' );
 	private const LEGACY_LOG_OPTIONS = array( 'uafree_bridge_api_log', 'koz_site_bridge_api_log' );
-	// Security/abuse throttle for authenticated diagnostic traffic. It does not alter feature availability.
-	private const SECURITY_REQUESTS_PER_HOUR = 120;
-	private const RATE_TTL        = 3700;
-	private const RATE_LOCK_TTL   = 5;
 	private const CONTENT_LIMIT   = 50;
 	private const HTTP_TIMEOUT    = 8;
 	private const MAX_REDIRECTS   = 5;
@@ -31,7 +27,7 @@ final class KOZBRIDGE_Bridge {
 	private const PAGE_BODY_MAX   = 2097152;
 	private const AUDIT_LIMIT     = 5;
 	private const SITEMAP_LIMIT   = 100;
-	private const SITEMAP_URL_MAX = 1000;
+	private const SITEMAP_URL_MAX = 3000;
 	private const SITEMAP_CHILD_MAX = 50;
 	private const LOG_TAIL_BYTES   = 262144;
 	private const LOG_LINE_LIMIT   = 200;
@@ -57,9 +53,10 @@ final class KOZBRIDGE_Bridge {
 
 	public static function init(): void {
 		self::migrate_legacy_data();
-		add_action( 'admin_menu', array( __CLASS__, 'admin_menu' ), 20 );
-		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'enqueue_admin_assets' ) );
 		add_action( 'rest_api_init', array( __CLASS__, 'register_routes' ) );
+		KOZBRIDGE_Admin::init();
+		KOZBRIDGE_Abilities::init();
+		KOZBRIDGE_Site_Health::init();
 		add_filter( 'rest_pre_serve_request', array( __CLASS__, 'rest_headers' ), 10, 4 );
 	}
 
@@ -72,7 +69,7 @@ final class KOZBRIDGE_Bridge {
 		return in_array( $language, array( 'uk', 'zh', 'es', 'ar', 'id', 'pt', 'fr', 'ja', 'de', 'hi' ), true ) ? $language : 'en';
 	}
 
-	private static function tr( string $text ): string {
+	public static function tr( string $text ): string {
 		$language = self::language();
 		if ( 'en' === $language ) {
 			return $text;
@@ -90,176 +87,62 @@ final class KOZBRIDGE_Bridge {
 			: $text;
 	}
 
-	public static function enqueue_admin_assets( string $hook_suffix ): void {
-		if ( ! current_user_can( 'manage_options' ) || ! str_contains( $hook_suffix, 'koz-site-bridge' ) ) {
-			return;
-		}
-
-		wp_enqueue_style(
-			'kozbridge-admin',
-			plugins_url( '../assets/kozbridge-admin.css', __FILE__ ),
-			array(),
-			KOZBRIDGE_VERSION
-		);
-		wp_enqueue_script(
-			'kozbridge-admin',
-			plugins_url( '../assets/kozbridge-admin.js', __FILE__ ),
-			array(),
-			KOZBRIDGE_VERSION,
-			true
-		);
-		wp_localize_script(
-			'kozbridge-admin',
-			'KOZBRIDGEAdmin',
-			array(
-				'revokeConfirm' => self::tr( 'Revoke the key?' ),
-				'copied'        => self::tr( 'API key copied.' ),
-			)
+	/** Route path => callback method. */
+	public static function routes(): array {
+		return array(
+			'/ping'             => 'ping',
+			'/overview'         => 'overview',
+			'/plugins'          => 'plugins',
+			'/suite'            => 'suite',
+			'/content'          => 'content',
+			'/navigation'       => 'navigation',
+			'/links'            => 'links',
+			'/404-log'          => 'error_404_log',
+			'/diagnostics'      => 'diagnostics',
+			'/security-headers' => 'security_headers',
+			'/consent-check'    => 'consent_check',
+			'/performance'      => 'performance',
+			'/admin-error-log'  => 'admin_error_log',
+			'/sitemap'          => 'sitemap_inventory',
+			'/page-audit'       => 'page_audit',
+			'/rendered-audit'   => 'rendered_audit',
+			'/http-probe'       => 'http_probe',
 		);
 	}
 
-	public static function admin_menu(): void {
-		$parent = KOZBRIDGE_Suite_Registry::suite_page();
-
-		add_submenu_page(
-			$parent,
-			self::tr( 'KOZ Site Bridge' ),
-			self::tr( 'Site Bridge' ),
-			'manage_options',
-			'koz-site-bridge',
-			array( __CLASS__, 'admin_page' )
-		);
-	}
-
-	public static function admin_page(): void {
-		if ( ! current_user_can( 'manage_options' ) ) {
-			return;
+	/**
+	 * Runs one endpoint without HTTP and without an API key, for the admin "Try it"
+	 * console and WordPress abilities. Callers check manage_options first.
+	 *
+	 * @return array{status:int,data:mixed}
+	 */
+	public static function run( string $method, array $params ): array {
+		if ( ! in_array( $method, self::routes(), true ) ) {
+			return array( 'status' => 404, 'data' => array( 'error' => 'Unknown endpoint.' ) );
 		}
-
-		$plain_key = '';
-
-		if ( isset( $_POST['kozbridge_generate'] ) ) {
-			check_admin_referer( 'kozbridge_generate_action' );
-
-			try {
-				$plain_key = 'kozb_' . bin2hex( random_bytes( 32 ) );
-			} catch ( \Throwable $error ) {
-				$plain_key = 'kozb_' . wp_generate_password( 64, false, false );
+		$request = new WP_REST_Request( 'GET', '/' . self::API_NAMESPACE . '/' . array_search( $method, self::routes(), true ) );
+		foreach ( self::route_args( $method ) as $name => $arg ) {
+			$value = array_key_exists( $name, $params ) && '' !== $params[ $name ] ? $params[ $name ] : ( $arg['default'] ?? null );
+			if ( null === $value ) {
+				if ( ! empty( $arg['required'] ) ) {
+					return array( 'status' => 400, 'data' => array( 'error' => 'Missing parameter: ' . $name ) );
+				}
+				continue;
 			}
-
-			update_option(
-				self::KEY_HASH_OPTION,
-				'v2:' . self::key_digest( $plain_key ),
-				false
-			);
-			update_option( self::KEY_DATE_OPTION, current_time( 'mysql' ), false );
-			delete_option( self::LEGACY_LOG_OPTION );
-			self::delete_rate_limit_options();
-
-			echo '<div class="notice notice-success"><p>' . esc_html( self::tr( 'New API key created. Copy it now: it will not be displayed again.' ) ) . '</p></div>';
+			if ( isset( $arg['sanitize_callback'] ) && is_callable( $arg['sanitize_callback'] ) ) {
+				$value = call_user_func( $arg['sanitize_callback'], $value );
+			}
+			if ( isset( $arg['validate_callback'] ) && is_callable( $arg['validate_callback'] ) && ! call_user_func( $arg['validate_callback'], $value ) ) {
+				return array( 'status' => 400, 'data' => array( 'error' => 'Invalid parameter: ' . $name ) );
+			}
+			$request->set_param( $name, $value );
 		}
-
-		if ( isset( $_POST['kozbridge_revoke'] ) ) {
-			check_admin_referer( 'kozbridge_revoke_action' );
-			delete_option( self::KEY_HASH_OPTION );
-			delete_option( self::KEY_DATE_OPTION );
-			delete_option( self::LEGACY_LOG_OPTION );
-			self::delete_rate_limit_options();
-
-			echo '<div class="notice notice-success"><p>' . esc_html( self::tr( 'API key revoked. External access is closed.' ) ) . '</p></div>';
-		}
-
-		$stored_hash = (string) get_option( self::KEY_HASH_OPTION, '' );
-		$has_key     = '' !== $stored_hash;
-		$legacy_key  = $has_key && ! str_starts_with( $stored_hash, 'v2:' );
-		$key_created = (string) get_option( self::KEY_DATE_OPTION, '' );
-		$schema_url  = rest_url( self::API_NAMESPACE . '/openapi' );
-		$ping_url    = rest_url( self::API_NAMESPACE . '/ping' );
-		$https_ok    = 'https' === wp_parse_url( home_url(), PHP_URL_SCHEME );
-		?>
-		<div class="wrap kozbridge-wrap">
-			<h1>KOZ Site Bridge <small><?php echo esc_html( KOZBRIDGE_VERSION ); ?></small></h1>
-
-			<div class="notice notice-info inline">
-				<p><strong><?php echo esc_html( self::tr( 'Read-only.' ) ); ?></strong>
-				<?php echo esc_html( self::tr( 'The plugin does not modify pages, plugins, themes, users or site settings. Persistent records are limited to the API-key hash, creation date and automatically expiring rate-limit counters.' ) ); ?></p>
-			</div>
-
-			<?php if ( ! $https_ok ) : ?>
-				<div class="notice notice-error inline"><p><?php echo esc_html( self::tr( 'API disabled: Home URL does not use HTTPS.' ) ); ?></p></div>
-			<?php endif; ?>
-
-			<?php if ( $legacy_key ) : ?>
-				<div class="notice notice-warning inline"><p><?php echo esc_html( self::tr( 'The active key was created by an older version. It still works, but should be rotated to the faster HMAC format.' ) ); ?></p></div>
-			<?php endif; ?>
-
-			<table class="widefat striped kozbridge-table">
-				<tbody>
-					<tr><th><?php echo esc_html( self::tr( 'Mode' ) ); ?></th><td><?php echo esc_html( self::tr( 'Read-only, privacy-safe' ) ); ?></td></tr>
-					<tr><th><?php echo esc_html( self::tr( 'API key' ) ); ?></th><td><?php echo $has_key ? '<strong class="kozbridge-status kozbridge-status--active">' . esc_html( self::tr( 'active' ) ) . '</strong>' : '<strong class="kozbridge-status kozbridge-status--missing">' . esc_html( self::tr( 'not created' ) ) . '</strong>'; ?></td></tr>
-					<tr><th><?php echo esc_html( self::tr( 'Key created' ) ); ?></th><td><?php echo esc_html( $key_created ?: '—' ); ?></td></tr>
-					<tr><th>OpenAPI</th><td><code class="kozbridge-url"><?php echo esc_html( $schema_url ); ?></code></td></tr>
-					<tr><th>Ping</th><td><code class="kozbridge-url"><?php echo esc_html( $ping_url ); ?></code></td></tr>
-					<tr><th><?php echo esc_html( self::tr( 'Limit' ) ); ?></th><td><?php echo esc_html( (string) self::SECURITY_REQUESTS_PER_HOUR ); ?> <?php echo esc_html( self::tr( 'successfully authenticated requests per hour.' ) ); ?></td></tr>
-					<tr><th><?php echo esc_html( self::tr( 'API log' ) ); ?></th><td><?php echo esc_html( self::tr( 'Disabled. IP addresses, User-Agent strings and request history are not stored.' ) ); ?></td></tr>
-				</tbody>
-			</table>
-
-			<?php if ( '' !== $plain_key ) : ?>
-				<section class="kozbridge-key-card">
-					<h2><?php echo esc_html( self::tr( 'API key is displayed once' ) ); ?></h2>
-					<input type="text" readonly value="<?php echo esc_attr( $plain_key ); ?>" class="kozbridge-key-input" data-kozbridge-select-key>
-					<div class="kozbridge-key-actions"><button type="button" class="button button-primary" data-kozbridge-copy-key><?php echo esc_html( self::tr( 'Copy API key' ) ); ?></button><strong><?php echo esc_html( self::tr( 'Do not send the key in chat.' ) ); ?></strong><span class="screen-reader-text" aria-live="polite" data-kozbridge-key-status></span></div>
-				</section>
-			<?php endif; ?>
-
-			<div class="kozbridge-actions">
-				<form method="post">
-					<?php wp_nonce_field( 'kozbridge_generate_action' ); ?>
-					<button class="button button-primary" name="kozbridge_generate" value="1"><?php echo esc_html( $has_key ? self::tr( 'Rotate API key' ) : self::tr( 'Create API key' ) ); ?></button>
-				</form>
-
-				<?php if ( $has_key ) : ?>
-					<form method="post" data-kozbridge-revoke-form>
-						<?php wp_nonce_field( 'kozbridge_revoke_action' ); ?>
-						<button class="button" name="kozbridge_revoke" value="1"><?php echo esc_html( self::tr( 'Revoke API key' ) ); ?></button>
-					</form>
-				<?php endif; ?>
-			</div>
-
-			<h2><?php echo esc_html( self::tr( 'Private GPT connection' ) ); ?></h2>
-			<ol class="kozbridge-steps">
-				<li><?php echo esc_html( self::tr( 'Create a private GPT with “Only me” access.' ) ); ?></li>
-				<li><?php echo esc_html( self::tr( 'Import the OpenAPI schema from the URL above.' ) ); ?></li>
-				<li>Authentication: <strong>API key → Custom header</strong>.</li>
-				<li>Header: <code>X-KOZ-Key</code>.</li>
-				<li><?php echo esc_html( self::tr( 'Legacy endpoint and X-UAFree-Key remain accepted during migration.' ) ); ?></li>
-				<li><?php echo esc_html( self::tr( 'Paste the key and test pingSiteBridge.' ) ); ?></li>
-			</ol>
-
-			<h2><?php echo esc_html( self::tr( 'Safe HTTP profiles' ) ); ?></h2>
-			<p><?php echo esc_html( self::tr( 'HTTP probe accepts safe public frontend paths on the current site without a query string. WordPress administration, REST, login, executable and private system paths remain blocked. Profiles: default, googlebot, adsbot-google, adsbot-google-mobile.' ) ); ?></p>
-		</div>
-		<?php
+		$response = call_user_func( array( __CLASS__, $method ), $request );
+		return array( 'status' => (int) $response->get_status(), 'data' => $response->get_data() );
 	}
 
 	public static function register_routes(): void {
-		$routes = array(
-			'/ping'        => 'ping',
-			'/overview'    => 'overview',
-			'/plugins'     => 'plugins',
-			'/suite'       => 'suite',
-			'/content'     => 'content',
-			'/navigation'  => 'navigation',
-			'/links'       => 'links',
-			'/404-log'     => 'error_404_log',
-			'/diagnostics'    => 'diagnostics',
-			'/admin-error-log' => 'admin_error_log',
-			'/sitemap'        => 'sitemap_inventory',
-			'/page-audit'     => 'page_audit',
-			'/rendered-audit' => 'rendered_audit',
-			'/http-probe'     => 'http_probe',
-		);
+		$routes = self::routes();
 
 		foreach ( array_merge( array( self::API_NAMESPACE ), self::LEGACY_API_NAMESPACES ) as $namespace ) {
 			register_rest_route(
@@ -279,7 +162,7 @@ final class KOZBRIDGE_Bridge {
 					array(
 						'methods'             => WP_REST_Server::READABLE,
 						'callback'            => array( __CLASS__, $method ),
-						'permission_callback' => array( __CLASS__, 'permission' ),
+						'permission_callback' => static fn( WP_REST_Request $request ) => KOZBRIDGE_Auth::permission( $request, KOZBRIDGE_Auth::scope_for( $method ) ),
 						'args'                => self::route_args( $method ),
 					)
 				);
@@ -409,6 +292,16 @@ final class KOZBRIDGE_Bridge {
 			);
 		}
 
+		if ( 'performance' === $method || 'security_headers' === $method || 'consent_check' === $method ) {
+			return array(
+				'path' => array(
+					'default'           => '/',
+					'sanitize_callback' => 'sanitize_text_field',
+					'validate_callback' => array( __CLASS__, 'validate_probe_path' ),
+				),
+			);
+		}
+
 		if ( 'http_probe' === $method ) {
 			return array(
 				'path' => array(
@@ -449,127 +342,9 @@ final class KOZBRIDGE_Bridge {
 		return true;
 	}
 
+	/** Kept for code written against 0.5.x: full basic-scope check. */
 	public static function permission( WP_REST_Request $request ) {
-		if ( 'https' !== wp_parse_url( home_url(), PHP_URL_SCHEME ) ) {
-			return new WP_Error( 'kozbridge_https_required', 'Site Bridge requires HTTPS.', array( 'status' => 503 ) );
-		}
-
-		$stored_hash = (string) get_option( self::KEY_HASH_OPTION, '' );
-		if ( '' === $stored_hash ) {
-			return new WP_Error( 'kozbridge_not_configured', 'API key is not configured.', array( 'status' => 503 ) );
-		}
-
-		$key = trim( (string) $request->get_header( 'X-KOZ-Key' ) );
-		if ( '' === $key ) {
-			$key = trim( (string) $request->get_header( 'X-UAFree-Key' ) );
-		}
-		if ( strlen( $key ) < 32 || strlen( $key ) > 128 || ! self::verify_key( $key, $stored_hash ) ) {
-			return new WP_Error( 'kozbridge_unauthorized', 'Invalid or missing API key.', array( 'status' => 401 ) );
-		}
-
-		$key_id = substr( self::key_digest( $key ), 0, 16 );
-		$rate   = self::increment_rate_limit( $key_id );
-
-		if ( is_wp_error( $rate ) ) {
-			return $rate;
-		}
-
-		if ( $rate > self::SECURITY_REQUESTS_PER_HOUR ) {
-			return new WP_Error( 'kozbridge_rate_limit', 'Hourly API rate limit exceeded.', array( 'status' => 429 ) );
-		}
-
-		return true;
-	}
-
-	private static function key_digest( string $key ): string {
-		return hash_hmac( 'sha256', $key, wp_salt( 'auth' ) );
-	}
-
-	private static function verify_key( string $key, string $stored_hash ): bool {
-		if ( str_starts_with( $stored_hash, 'v2:' ) ) {
-			$expected = substr( $stored_hash, 3 );
-			return preg_match( '/^[a-f0-9]{64}$/', $expected ) && hash_equals( $expected, self::key_digest( $key ) );
-		}
-
-		return wp_check_password( $key, $stored_hash );
-	}
-
-	private static function increment_rate_limit( string $key_id ) {
-		global $wpdb;
-
-		$rate_key   = 'kozbridge_rl_' . $key_id;
-		$bucket     = gmdate( 'YmdH' );
-		$lock_name  = 'kozbridge_rate_' . substr( hash( 'sha256', $rate_key ), 0, 40 );
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- MySQL advisory lock coordinates concurrent rate-limit updates.
-		$lock_value = $wpdb->get_var(
-			$wpdb->prepare( 'SELECT GET_LOCK(%s, %d)', $lock_name, self::RATE_LOCK_TTL )
-		);
-
-		if ( '1' !== (string) $lock_value ) {
-			return new WP_Error(
-				'kozbridge_rate_busy',
-				'Rate limiter is busy. Retry shortly.',
-				array( 'status' => 503 )
-			);
-		}
-
-		try {
-			$state = get_transient( $rate_key );
-
-			if (
-				! is_array( $state )
-				|| (string) ( $state['bucket'] ?? '' ) !== $bucket
-				|| (int) ( $state['expires'] ?? 0 ) <= time()
-			) {
-				$state = array(
-					'bucket'  => $bucket,
-					'count'   => 0,
-					'expires' => time() + self::RATE_TTL,
-				);
-			}
-
-			$current = max( 0, (int) ( $state['count'] ?? 0 ) );
-
-			// Saturating counter: after the limit, do not perform another persistent write.
-			if ( $current >= self::SECURITY_REQUESTS_PER_HOUR ) {
-				return self::SECURITY_REQUESTS_PER_HOUR + 1;
-			}
-
-			$state['count'] = $current + 1;
-
-			if ( ! set_transient( $rate_key, $state, self::RATE_TTL ) ) {
-				return new WP_Error(
-					'kozbridge_rate_storage',
-					'Rate limiter storage failed.',
-					array( 'status' => 503 )
-				);
-			}
-
-			return (int) $state['count'];
-		} finally {
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Releases the advisory lock acquired above.
-			$wpdb->get_var( $wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', $lock_name ) );
-		}
-	}
-
-	private static function delete_rate_limit_options(): void {
-		global $wpdb;
-		foreach ( array( 'kozbridge_rl_', 'koz_site_bridge_rl_', 'uafree_bridge_rl_' ) as $prefix ) {
-			$value_prefix   = $wpdb->esc_like( '_transient_' . $prefix ) . '%';
-			$timeout_prefix = $wpdb->esc_like( '_transient_timeout_' . $prefix ) . '%';
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Cleanup scans only Site Bridge transient names.
-			$rows = $wpdb->get_col(
-				$wpdb->prepare(
-					'SELECT option_name FROM %i WHERE option_name LIKE %s OR option_name LIKE %s',
-					$wpdb->options,
-					$value_prefix,
-					$timeout_prefix
-				)
-			);
-			foreach ( (array) $rows as $option_name ) {
-				delete_option( (string) $option_name );
-			}
-		}
+		return KOZBRIDGE_Auth::permission( $request, 'basic' );
 	}
 
 	private static function response( array $data, int $status = 200 ): WP_REST_Response {
@@ -757,6 +532,167 @@ final class KOZBRIDGE_Bridge {
 			array(
 				'count'      => count( $rows ),
 				'components' => $rows,
+				'status'     => self::suite_details(),
+			)
+		);
+	}
+
+	/** Read-only status contracts published by other KOZ plugins. */
+	private static function suite_details(): array {
+		$details = array();
+		foreach ( array( 'koz-404-guard' => 'koz404_public_status', 'koz-donate-stats' => 'kozdonate_public_status' ) as $slug => $filter ) {
+			if ( has_filter( $filter ) ) {
+				$value = apply_filters( $filter, array() ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- Reads public status filters of other KOZ plugins.
+				if ( is_array( $value ) ) {
+					$details[ $slug ] = $value;
+				}
+			}
+		}
+		if ( function_exists( 'kozstx_get_status' ) ) {
+			$stx = kozstx_get_status();
+			unset( $stx['last_error'] );
+			$quota = '\\ramirkz\\kozstx\\KOZSTX_Quota';
+			if ( class_exists( $quota ) && method_exists( $quota, 'current_usage' ) ) {
+				$usage = call_user_func( array( $quota, 'current_usage' ) );
+				$stx['azure_month'] = array(
+					'characters' => (int) ( $usage['characters'] ?? 0 ),
+					'limit'      => (int) ( $usage['limit'] ?? 0 ),
+					'percent'    => round( (float) ( $usage['percent'] ?? 0 ), 1 ),
+				);
+			}
+			$details['koz-static-translate'] = $stx;
+		}
+		$consent = '\\ramirkz\\kozconsent\\KOZCONSENT_Settings';
+		if ( class_exists( $consent ) && method_exists( $consent, 'stored' ) ) {
+			$c = call_user_func( array( $consent, 'stored' ) );
+			$details['koz-consent-manager'] = array(
+				'enabled'             => ! empty( $c['enabled'] ),
+				'policy_version'      => (string) ( $c['policy_version'] ?? '' ),
+				'google_consent_mode' => ! empty( $c['google_consent_mode'] ),
+				'block_media'         => ! empty( $c['block_media'] ),
+				'wp_consent_api'      => function_exists( 'wp_has_consent' ),
+			);
+		}
+		return $details;
+	}
+
+	/** Security response headers of one public page. */
+	public static function security_headers( WP_REST_Request $request ): WP_REST_Response {
+		$path = self::normalise_probe_path( (string) $request->get_param( 'path' ) ) ?? '/';
+		$res  = self::simple_request( home_url( $path ), 'GET', self::user_agent_profiles()['default'], false );
+		$h    = (array) ( $res['headers'] ?? array() );
+		$checks = array(
+			'strict-transport-security' => array( 'high', 'HSTS is missing: browsers may load the site over plain HTTP first.' ),
+			'x-content-type-options'    => array( 'medium', 'X-Content-Type-Options: nosniff is missing.' ),
+			'x-frame-options'           => array( 'medium', 'X-Frame-Options is missing; without frame-ancestors in CSP the site can be framed (clickjacking).' ),
+			'referrer-policy'           => array( 'low', 'Referrer-Policy is missing.' ),
+			'permissions-policy'        => array( 'low', 'Permissions-Policy is missing.' ),
+			'content-security-policy'   => array( 'low', 'Content-Security-Policy is missing.' ),
+		);
+		$issues = array();
+		$found  = array();
+		foreach ( $checks as $name => $issue ) {
+			$found[ $name ] = $h[ $name ] ?? '';
+			if ( '' === $found[ $name ] ) {
+				if ( 'x-frame-options' === $name && str_contains( strtolower( (string) ( $h['content-security-policy'] ?? '' ) ), 'frame-ancestors' ) ) {
+					continue;
+				}
+				$issues[] = array( 'severity' => $issue[0], 'code' => 'missing_' . str_replace( '-', '_', $name ), 'message' => $issue[1] );
+			}
+		}
+		return self::response(
+			array(
+				'path'    => $path,
+				'status'  => (int) ( $res['status'] ?? 0 ),
+				'headers' => $found,
+				'issues'  => $issues,
+			)
+		);
+	}
+
+	/** Response time and cache state of one public page, measured twice. */
+	public static function performance( WP_REST_Request $request ): WP_REST_Response {
+		$path   = self::normalise_probe_path( (string) $request->get_param( 'path' ) ) ?? '/';
+		$runs   = array();
+		foreach ( array( 1, 2 ) as $attempt ) {
+			$fetch  = self::fetch_public_page( home_url( $path ), self::user_agent_profiles()['default'] );
+			$body   = (string) ( $fetch['body'] ?? '' );
+			$runs[] = array(
+				'attempt'         => $attempt,
+				'status'          => (int) ( $fetch['status'] ?? 0 ),
+				'duration_ms'     => (int) ( $fetch['duration_ms'] ?? 0 ),
+				'bytes'           => strlen( $body ),
+				'cf_cache_status' => (string) ( $fetch['headers']['cf-cache-status'] ?? '' ),
+				'page_cache'      => str_contains( $body, 'WP-Super-Cache' ) || str_contains( $body, 'Cached page generated' ) ? 'wp-super-cache' : ( str_contains( $body, 'Performance optimized by' ) ? 'other' : '' ),
+			);
+		}
+		$issues = array();
+		if ( $runs[1]['duration_ms'] > 1500 ) {
+			$issues[] = array( 'severity' => 'medium', 'code' => 'slow_response', 'message' => 'The second (warm) request took longer than 1500 ms.' );
+		}
+		if ( '' === $runs[1]['page_cache'] && '' === $runs[1]['cf_cache_status'] ) {
+			$issues[] = array( 'severity' => 'low', 'code' => 'no_cache_signal', 'message' => 'No page cache signature or CDN cache header was found.' );
+		}
+		return self::response( array( 'path' => $path, 'runs' => $runs, 'issues' => $issues ) );
+	}
+
+	/** Third-party services and embeds on a public page and whether consent controls them. */
+	public static function consent_check( WP_REST_Request $request ): WP_REST_Response {
+		$path  = self::normalise_probe_path( (string) $request->get_param( 'path' ) ) ?? '/';
+		$fetch = self::fetch_public_page( home_url( $path ), self::user_agent_profiles()['default'] );
+		$html  = (string) ( $fetch['body'] ?? '' );
+		$services = array(
+			'google_tag'        => array( 'googletagmanager.com/gtag/js', 'consent_mode' ),
+			'google_tag_manager' => array( 'googletagmanager.com/gtm.js', 'consent_mode' ),
+			'google_ads'        => array( 'AW-', 'consent_mode' ),
+			'meta_pixel'        => array( 'connect.facebook.net', 'none' ),
+			'microsoft_clarity' => array( 'clarity.ms/tag', 'microsoft' ),
+			'microsoft_uet'     => array( 'bat.bing.com', 'microsoft' ),
+			'hotjar'            => array( 'static.hotjar.com', 'none' ),
+			'tiktok'            => array( 'analytics.tiktok.com', 'none' ),
+		);
+		$found = array();
+		foreach ( $services as $name => $service ) {
+			if ( str_contains( $html, $service[0] ) ) {
+				$found[] = array( 'service' => $name, 'control' => $service[1] );
+			}
+		}
+		$blocked = substr_count( $html, 'data-kozconsent-src=' );
+		$open    = 0;
+		if ( preg_match_all( '/<iframe\b[^>]*\ssrc=["\']([^"\']+)/i', $html, $matches ) ) {
+			foreach ( $matches[1] as $src ) {
+				if ( preg_match( '#youtube\.com|youtu\.be|vimeo\.com|google\.com/maps#i', (string) $src ) ) {
+					$open++;
+				}
+			}
+		}
+		$consent_default = str_contains( $html, 'kozconsent-google-consent-mode' ) || str_contains( $html, "gtag('consent', 'default'" ) || str_contains( $html, 'gtag("consent","default"' );
+		$issues = array();
+		if ( ! str_contains( $html, 'id="kozconsent"' ) ) {
+			$issues[] = array( 'severity' => 'high', 'code' => 'no_consent_banner', 'message' => 'No KOZ Consent Manager banner was found on the page.' );
+		}
+		if ( $open > 0 ) {
+			$issues[] = array( 'severity' => 'high', 'code' => 'embeds_before_consent', 'message' => 'Video or map embeds load before consent.' );
+		}
+		foreach ( $found as $service ) {
+			if ( 'consent_mode' === $service['control'] && ! $consent_default ) {
+				$issues[] = array( 'severity' => 'high', 'code' => 'no_consent_default', 'message' => 'Google tags load without a Consent Mode default.' );
+				break;
+			}
+			if ( 'none' === $service['control'] ) {
+				$issues[] = array( 'severity' => 'medium', 'code' => 'uncontrolled_' . $service['service'], 'message' => 'A tracker that ignores Consent Mode loads on the page; trigger it in GTM on kozconsent_update.' );
+			}
+		}
+		return self::response(
+			array(
+				'path'               => $path,
+				'status'             => (int) ( $fetch['status'] ?? 0 ),
+				'consent_banner'     => str_contains( $html, 'id="kozconsent"' ),
+				'consent_mode_default' => $consent_default,
+				'services'           => $found,
+				'embeds_blocked'     => $blocked,
+				'embeds_open'        => $open,
+				'issues'             => $issues,
 			)
 		);
 	}
@@ -1086,56 +1022,66 @@ final class KOZBRIDGE_Bridge {
 
 	public static function error_404_log( WP_REST_Request $request ): WP_REST_Response {
 		$limit = min( 200, max( 1, (int) $request->get_param( 'limit' ) ) );
-		$raw   = get_option( 'uafree_404_guard_log', array() );
-		$rows  = array();
+		$log   = '\\ramirkz\\koz404\\KOZ404_Log';
 
-		if ( is_array( $raw ) ) {
-			foreach ( $raw as $row ) {
-				if ( ! is_array( $row ) ) {
-					continue;
-				}
-
-				$path_fingerprint = strtolower( (string) ( $row['path_fingerprint'] ?? '' ) );
-				if ( ! preg_match( '/^[a-f0-9]{16}$/', $path_fingerprint ) ) {
-					continue;
-				}
-
-				$query_fingerprints = array();
-				foreach ( (array) ( $row['query_key_fingerprints'] ?? array() ) as $fingerprint ) {
-					$fingerprint = strtolower( (string) $fingerprint );
-					if ( preg_match( '/^[a-f0-9]{16}$/', $fingerprint ) ) {
-						$query_fingerprints[] = $fingerprint;
-					}
-				}
-
+		if ( class_exists( $log ) && method_exists( $log, 'query' ) ) {
+			$result = call_user_func( array( $log, 'query' ), array( 'view' => 'all', 'per_page' => $limit, 'orderby' => 'hits', 'show_ignored' => false ) );
+			$rows   = array();
+			foreach ( array_slice( (array) ( $result['rows'] ?? array() ), 0, $limit ) as $row ) {
 				$rows[] = array(
-					'status'                 => in_array( (string) ( $row['status'] ?? '404' ), array( '404', '410' ), true ) ? (string) $row['status'] : '404',
-					'kind'                   => in_array( (string) ( $row['kind'] ?? 'unknown' ), array( 'human', 'bot', 'unknown' ), true ) ? (string) $row['kind'] : 'unknown',
-					'path_fingerprint'       => $path_fingerprint,
-					'query_key_fingerprints' => array_values( array_unique( $query_fingerprints ) ),
-					'count'                  => max( 0, absint( $row['count'] ?? 0 ) ),
-					'sample_denominator'     => max( 1, absint( $row['sample_denominator'] ?? 1 ) ),
-					'first_seen'             => sanitize_text_field( (string) ( $row['first_seen'] ?? '' ) ),
-					'last_seen'              => sanitize_text_field( (string) ( $row['last_seen'] ?? '' ) ),
-					'referrer_scope'         => in_array( (string) ( $row['referrer_scope'] ?? 'none' ), array( 'none', 'same-site', 'external' ), true ) ? (string) $row['referrer_scope'] : 'none',
-					'source'                 => sanitize_key( (string) ( $row['source'] ?? 'unknown' ) ),
+					'status'           => (int) ( $row['status'] ?? 404 ),
+					'kind'             => sanitize_key( (string) ( $row['kind'] ?? '' ) ),
+					'source'           => sanitize_key( (string) ( $row['source'] ?? '' ) ),
+					'path'             => (string) ( $row['path'] ?? '' ),
+					'path_fingerprint' => (string) ( $row['path_fingerprint'] ?? '' ),
+					'query_keys'       => '' !== (string) ( $row['query_keys'] ?? '' ) ? explode( ',', (string) $row['query_keys'] ) : array(),
+					'hits'             => (int) ( $row['hits'] ?? 0 ),
+					'first_seen'       => (string) ( $row['first_seen'] ?? '' ),
+					'last_seen'        => (string) ( $row['last_seen'] ?? '' ),
+					'referrer_scope'   => sanitize_key( (string) ( $row['referrer_scope'] ?? 'none' ) ),
+					'referrer_path'    => (string) ( $row['referrer_path'] ?? '' ),
 				);
 			}
+			return self::response(
+				array(
+					'available' => true,
+					'source'    => 'koz-404-guard',
+					'total'     => (int) ( $result['total'] ?? count( $rows ) ),
+					'count'     => count( $rows ),
+					'privacy'   => 'Paths are included only when KOZ 404 Guard stores them. No IP address, User-Agent, query value or external referrer exists in the log.',
+					'rows'      => $rows,
+				)
+			);
 		}
 
-		usort(
-			$rows,
-			static fn( array $a, array $b ): int => strcmp( $b['last_seen'], $a['last_seen'] )
-		);
-
+		// KOZ 404 Guard before 2.2.0 kept a fingerprint-only log in an option.
+		$raw  = get_option( 'koz404_log', get_option( 'uafree_404_guard_log', array() ) );
+		$rows = array();
+		foreach ( is_array( $raw ) ? $raw : array() as $row ) {
+			if ( ! is_array( $row ) || ! preg_match( '/^[a-f0-9]{16}$/', strtolower( (string) ( $row['path_fingerprint'] ?? '' ) ) ) ) {
+				continue;
+			}
+			$rows[] = array(
+				'status'           => (int) ( $row['status'] ?? 404 ),
+				'kind'             => sanitize_key( (string) ( $row['kind'] ?? 'unknown' ) ),
+				'source'           => sanitize_key( (string) ( $row['source'] ?? 'unknown' ) ),
+				'path'             => '',
+				'path_fingerprint' => strtolower( (string) $row['path_fingerprint'] ),
+				'hits'             => max( 0, absint( $row['count'] ?? 0 ) ),
+				'first_seen'       => sanitize_text_field( (string) ( $row['first_seen'] ?? '' ) ),
+				'last_seen'        => sanitize_text_field( (string) ( $row['last_seen'] ?? '' ) ),
+				'referrer_scope'   => sanitize_key( (string) ( $row['referrer_scope'] ?? 'none' ) ),
+			);
+		}
+		usort( $rows, static fn( array $a, array $b ): int => strcmp( $b['last_seen'], $a['last_seen'] ) );
 		$rows = array_slice( $rows, 0, $limit );
-
 		return self::response(
 			array(
-				'available'  => false !== get_option( 'uafree_404_guard_log', false ),
-				'count'      => count( $rows ),
-				'privacy'    => 'No raw path, query name, query value, IP, User-Agent or referrer is returned.',
-				'rows'       => $rows,
+				'available' => ! empty( $rows ),
+				'source'    => empty( $rows ) ? 'none' : 'legacy-option',
+				'count'     => count( $rows ),
+				'privacy'   => 'Fingerprints only.',
+				'rows'      => $rows,
 			)
 		);
 	}
@@ -1149,6 +1095,13 @@ final class KOZBRIDGE_Bridge {
 			'ai_manifest' => '/.well-known/koz-ai-manifest.json',
 			'not_found'   => '/__kozbridge_404_probe__/',
 		);
+		$extra = 0;
+		foreach ( self::sitemap_roots() as $root ) {
+			$path = (string) wp_parse_url( $root, PHP_URL_PATH );
+			if ( '/wp-sitemap.xml' !== $path && $extra < 5 ) {
+				$checks[ 'robots_sitemap_' . ( ++$extra ) ] = $path;
+			}
+		}
 
 		$result = array();
 		foreach ( $checks as $name => $path ) {
@@ -1169,6 +1122,11 @@ final class KOZBRIDGE_Bridge {
 		}
 		if ( isset( $result['not_found']['status'] ) && 404 !== (int) $result['not_found']['status'] ) {
 			$issues[] = array( 'severity' => 'high', 'code' => 'invalid_404_status', 'message' => 'A random missing path does not return HTTP 404.' );
+		}
+		foreach ( $result as $name => $check ) {
+			if ( str_starts_with( (string) $name, 'robots_sitemap_' ) && 200 !== (int) ( $check['status'] ?? 0 ) ) {
+				$issues[] = array( 'severity' => 'medium', 'code' => 'robots_sitemap_status', 'message' => 'A sitemap listed in robots.txt does not return HTTP 200: ' . $check['path'] );
+			}
 		}
 		if ( isset( $result['home']['duration_ms'] ) && (int) $result['home']['duration_ms'] > 2500 ) {
 			$issues[] = array( 'severity' => 'medium', 'code' => 'slow_home', 'message' => 'Homepage response exceeded 2500 ms during the internal probe.' );
@@ -1371,10 +1329,22 @@ final class KOZBRIDGE_Bridge {
 		$total_pages = max( 1, (int) ceil( $total / $limit ) );
 		$offset      = ( $page - 1 ) * $limit;
 		$items       = array_slice( $data, $offset, $limit );
+		$sources     = array();
+		$languages   = array();
+		foreach ( $data as $url ) {
+			$source = self::$sitemap_sources[ $url ] ?? '';
+			$sources[ $source ] = ( $sources[ $source ] ?? 0 ) + 1;
+			$language = self::url_language( $url );
+			$language = '' === $language ? 'source' : $language;
+			$languages[ $language ] = ( $languages[ $language ] ?? 0 ) + 1;
+		}
+		ksort( $languages );
 
 		return self::response(
 			array(
-				'source'      => '/wp-sitemap.xml',
+				'source'      => implode( ', ', array_keys( $sources ) ),
+				'sources'     => $sources,
+				'languages'   => $languages,
 				'page'        => $page,
 				'limit'       => $limit,
 				'total'       => $total,
@@ -1436,26 +1406,54 @@ final class KOZBRIDGE_Bridge {
 		);
 	}
 
-	private static function collect_sitemap_urls() {
-		$root_url = home_url( '/wp-sitemap.xml' );
-		$root     = self::fetch_sitemap_body( $root_url );
-		if ( is_wp_error( $root ) ) {
-			return $root;
-		}
-
-		$root_locations = self::extract_sitemap_locations( $root );
-		$urls           = array();
-		$children       = array();
-
-		foreach ( $root_locations as $location ) {
-			if ( self::is_safe_sitemap_url( $location ) && self::looks_like_sitemap_url( $location ) ) {
-				$children[ $location ] = true;
-			} elseif ( self::is_safe_public_url( $location ) ) {
-				$urls[ $location ] = true;
+	/** Sitemap roots: /wp-sitemap.xml and every same-site Sitemap: line in robots.txt. */
+	private static function sitemap_roots(): array {
+		$roots    = array( home_url( '/wp-sitemap.xml' ) => true );
+		$response = wp_safe_remote_get( home_url( '/robots.txt' ), array( 'timeout' => self::HTTP_TIMEOUT, 'redirection' => 0, 'limit_response_size' => 65536, 'user-agent' => self::user_agent_profiles()['default'] ) );
+		if ( ! is_wp_error( $response ) && 200 === (int) wp_remote_retrieve_response_code( $response ) ) {
+			if ( preg_match_all( '/^\s*Sitemap:\s*(\S+)/im', (string) wp_remote_retrieve_body( $response ), $matches ) ) {
+				foreach ( $matches[1] as $url ) {
+					$url = esc_url_raw( trim( (string) $url ) );
+					if ( self::is_safe_sitemap_url( $url ) ) {
+						$roots[ $url ] = true;
+					}
+				}
 			}
 		}
+		return array_keys( $roots );
+	}
 
-		foreach ( array_slice( array_keys( $children ), 0, self::SITEMAP_CHILD_MAX ) as $child_url ) {
+	/** @var array<string,string> Page URL => sitemap it came from, filled by collect_sitemap_urls(). */
+	private static array $sitemap_sources = array();
+
+	private static function collect_sitemap_urls() {
+		$urls     = array();
+		$children = array();
+		$errors   = 0;
+		$roots    = self::sitemap_roots();
+		self::$sitemap_sources = array();
+
+		foreach ( $roots as $root_url ) {
+			$root = self::fetch_sitemap_body( $root_url );
+			if ( is_wp_error( $root ) ) {
+				$errors++;
+				continue;
+			}
+			$root_path = (string) wp_parse_url( $root_url, PHP_URL_PATH );
+			foreach ( self::extract_sitemap_locations( $root ) as $location ) {
+				if ( self::is_safe_sitemap_url( $location ) && self::looks_like_sitemap_url( $location ) ) {
+					$children[ $location ] = $root_path;
+				} elseif ( self::is_safe_public_url( $location ) ) {
+					$urls[ $location ] = true;
+					self::$sitemap_sources[ $location ] = $root_path;
+				}
+			}
+		}
+		if ( $errors === count( $roots ) ) {
+			return new WP_Error( 'kozbridge_sitemap_status', 'No sitemap could be read.' );
+		}
+
+		foreach ( array_slice( $children, 0, self::SITEMAP_CHILD_MAX, true ) as $child_url => $root_path ) {
 			$body = self::fetch_sitemap_body( $child_url );
 			if ( is_wp_error( $body ) ) {
 				continue;
@@ -1463,6 +1461,7 @@ final class KOZBRIDGE_Bridge {
 			foreach ( self::extract_sitemap_locations( $body ) as $location ) {
 				if ( self::is_safe_public_url( $location ) && ! self::looks_like_sitemap_url( $location ) ) {
 					$urls[ $location ] = true;
+					self::$sitemap_sources[ $location ] = $root_path;
 					if ( count( $urls ) >= self::SITEMAP_URL_MAX ) {
 						break 2;
 					}
@@ -1473,6 +1472,20 @@ final class KOZBRIDGE_Bridge {
 		$result = array_keys( $urls );
 		sort( $result, SORT_STRING );
 		return $result;
+	}
+
+	/** Language of a URL from KOZ Static Translate routes ('' = source language). */
+	private static function url_language( string $url ): string {
+		static $languages = null;
+		if ( null === $languages ) {
+			$languages = array();
+			if ( function_exists( 'kozstx_get_status' ) ) {
+				$status    = kozstx_get_status();
+				$languages = array_map( 'strval', (array) ( $status['target_languages'] ?? array() ) );
+			}
+		}
+		$first = strtolower( (string) strtok( trim( (string) wp_parse_url( $url, PHP_URL_PATH ), '/' ), '/' ) );
+		return in_array( $first, $languages, true ) ? $first : '';
 	}
 
 	private static function fetch_sitemap_body( string $url ) {
@@ -1529,7 +1542,8 @@ final class KOZBRIDGE_Bridge {
 			return false;
 		}
 		$path = strtolower( rawurldecode( (string) ( $parts['path'] ?? '' ) ) );
-		return '/wp-sitemap.xml' === $path || ( str_starts_with( $path, '/wp-sitemap-' ) && str_ends_with( $path, '.xml' ) );
+		// Any same-site XML file named like a sitemap, outside WordPress system folders.
+		return str_ends_with( $path, '.xml' ) && str_contains( $path, 'sitemap' ) && self::is_safe_frontend_path( $path );
 	}
 
 	private static function is_safe_public_url( string $url ): bool {
@@ -2316,6 +2330,15 @@ final class KOZBRIDGE_Bridge {
 				'cf-mitigated',
 				'x-robots-tag',
 				'retry-after',
+				'strict-transport-security',
+				'content-security-policy',
+				'x-frame-options',
+				'x-content-type-options',
+				'referrer-policy',
+				'permissions-policy',
+				'cache-control',
+				'age',
+				'x-cache',
 			) as $name
 		) {
 			$value = wp_remote_retrieve_header( $response, $name );
@@ -2375,6 +2398,9 @@ final class KOZBRIDGE_Bridge {
 				self::query_parameter( 'limit', 'integer', false, 'Rendered pages per batch, maximum 5.' ),
 				self::query_parameter( 'profile', 'string', false, 'default, googlebot, adsbot-google or adsbot-google-mobile.' ),
 			),
+			'security-headers' => array( self::query_parameter( 'path', 'string', false, 'Public path, default /.' ) ),
+			'performance'      => array( self::query_parameter( 'path', 'string', false, 'Public path, default /.' ) ),
+			'consent-check'    => array( self::query_parameter( 'path', 'string', false, 'Public path, default /.' ) ),
 			'http-probe' => array(
 				self::query_parameter( 'path', 'string', true, 'Safe same-site public frontend path beginning with /.' ),
 				self::query_parameter( 'method', 'string', false, 'HEAD or GET.' ),
@@ -2399,6 +2425,22 @@ final class KOZBRIDGE_Bridge {
 			'/page-audit'     => array( 'auditRenderedPage', 'Fetch and inspect one safe public frontend page including rendered SEO, H1, alt, links, hreflang and schema signals.' ),
 			'/rendered-audit' => array( 'auditSitemapBatch', 'Audit a small batch of sitemap URLs and return concrete per-URL issues.' ),
 			'/http-probe'     => array( 'probeSameSitePath', 'Probe one safe public frontend path with an allowlisted browser or crawler User-Agent.' ),
+			'/security-headers' => array( 'checkSecurityHeaders', 'Check HSTS, CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy and Permissions-Policy of one public page. Response: headers, issues[].' ),
+			'/performance'    => array( 'measurePerformance', 'Measure response time, size and page/CDN cache state of one public page twice. Response: runs[], issues[].' ),
+			'/consent-check'  => array( 'checkConsentSetup', 'Find trackers and embeds on a public page and whether consent controls them. Response: consent_banner, consent_mode_default, services[], embeds_blocked, embeds_open, issues[].' ),
+		);
+		$operations['/404-log'][1]  = 'Read the KOZ 404 Guard log: rows[] with status, kind, source, path (when stored), query_keys, hits, last_seen, referrer_scope and referrer_path.';
+		$operations['/sitemap'][1]  = 'List same-site public URLs from /wp-sitemap.xml and every same-site sitemap in robots.txt. Response: total, sources, languages, items[].';
+		$operations['/suite'][1]    = 'Get KOZ Suite components and the status reported by KOZ plugins (404 Guard, Donate Stats, Static Translate with Azure usage, Consent Manager). Response: components[], status{}.';
+
+		$response_schemas = array(
+			'/404-log'          => 'Log404Response',
+			'/sitemap'          => 'SitemapResponse',
+			'/security-headers' => 'IssuesResponse',
+			'/performance'      => 'IssuesResponse',
+			'/consent-check'    => 'IssuesResponse',
+			'/diagnostics'      => 'IssuesResponse',
+			'/page-audit'       => 'IssuesResponse',
 		);
 
 		foreach ( $operations as $path => $operation ) {
@@ -2407,7 +2449,8 @@ final class KOZBRIDGE_Bridge {
 				'get' => self::openapi_operation(
 					$operation[0],
 					$operation[1],
-					$parameters[ $key ] ?? array()
+					$parameters[ $key ] ?? array(),
+					$response_schemas[ $path ] ?? 'BridgeResponse'
 				),
 			);
 		}
@@ -2485,6 +2528,64 @@ final class KOZBRIDGE_Bridge {
 							),
 							'additionalProperties' => true,
 						),
+						'Issue' => array(
+							'type'       => 'object',
+							'properties' => array(
+								'severity' => array( 'type' => 'string', 'enum' => array( 'high', 'medium', 'low', 'info' ) ),
+								'code'     => array( 'type' => 'string' ),
+								'message'  => array( 'type' => 'string' ),
+							),
+							'additionalProperties' => true,
+						),
+						'IssuesResponse' => array(
+							'type'       => 'object',
+							'properties' => array(
+								'path'   => array( 'type' => 'string' ),
+								'status' => array( 'type' => 'integer', 'description' => 'HTTP status of the checked page.' ),
+								'issues' => array( 'type' => 'array', 'items' => array( '$ref' => '#/components/schemas/Issue' ) ),
+							),
+							'additionalProperties' => true,
+						),
+						'Log404Response' => array(
+							'type'       => 'object',
+							'properties' => array(
+								'available' => array( 'type' => 'boolean' ),
+								'source'    => array( 'type' => 'string', 'description' => 'koz-404-guard, legacy-option or none.' ),
+								'total'     => array( 'type' => 'integer' ),
+								'count'     => array( 'type' => 'integer' ),
+								'rows'      => array(
+									'type'  => 'array',
+									'items' => array(
+										'type'       => 'object',
+										'properties' => array(
+											'status'         => array( 'type' => 'integer' ),
+											'kind'           => array( 'type' => 'string', 'description' => 'human or bot.' ),
+											'source'         => array( 'type' => 'string' ),
+											'path'           => array( 'type' => 'string', 'description' => 'Empty when the log keeps fingerprints only.' ),
+											'query_keys'     => array( 'type' => 'array', 'items' => array( 'type' => 'string' ) ),
+											'hits'           => array( 'type' => 'integer' ),
+											'last_seen'      => array( 'type' => 'string' ),
+											'referrer_scope' => array( 'type' => 'string', 'description' => 'none, same_site or external.' ),
+											'referrer_path'  => array( 'type' => 'string', 'description' => 'Same-site referring path, if known.' ),
+										),
+										'additionalProperties' => true,
+									),
+								),
+							),
+							'additionalProperties' => true,
+						),
+						'SitemapResponse' => array(
+							'type'       => 'object',
+							'properties' => array(
+								'total'       => array( 'type' => 'integer' ),
+								'page'        => array( 'type' => 'integer' ),
+								'total_pages' => array( 'type' => 'integer' ),
+								'sources'     => array( 'type' => 'object', 'description' => 'Sitemap path => URL count.', 'additionalProperties' => array( 'type' => 'integer' ) ),
+								'languages'   => array( 'type' => 'object', 'description' => 'Language code (or source) => URL count.', 'additionalProperties' => array( 'type' => 'integer' ) ),
+								'items'       => array( 'type' => 'array', 'items' => array( 'type' => 'string' ) ),
+							),
+							'additionalProperties' => true,
+						),
 						'ErrorResponse' => array(
 							'type' => 'object',
 							'properties' => array(
@@ -2516,7 +2617,7 @@ final class KOZBRIDGE_Bridge {
 		);
 	}
 
-	private static function openapi_operation( string $operation_id, string $description, array $parameters ): array {
+	private static function openapi_operation( string $operation_id, string $description, array $parameters, string $schema = 'BridgeResponse' ): array {
 		return array(
 			'operationId' => $operation_id,
 			'description' => $description,
@@ -2526,12 +2627,13 @@ final class KOZBRIDGE_Bridge {
 					'description' => 'Successful read-only response.',
 					'content' => array(
 						'application/json' => array(
-							'schema' => array( '$ref' => '#/components/schemas/BridgeResponse' ),
+							'schema' => array( '$ref' => '#/components/schemas/' . $schema ),
 						),
 					),
 				),
 				'400' => self::error_response( 'Invalid request.' ),
 				'401' => self::error_response( 'Invalid or missing API key.' ),
+				'403' => self::error_response( 'The API key has no access to this endpoint (scope) or has expired.' ),
 				'429' => self::error_response( 'Rate limit exceeded.' ),
 				'503' => self::error_response( 'Bridge unavailable.' ),
 			),

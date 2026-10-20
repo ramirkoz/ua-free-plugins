@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.6.0
+- Multiple API keys (`kozbridge_keys`) with label, scopes (basic, content, audit, logs, error_log), last-used day and optional expiry. The pre-0.6.0 key is listed as "Legacy key" with every scope.
+- Per-route scope check in `KOZBRIDGE_Auth::permission()`; missing scope returns 403 `kozbridge_scope`.
+- Admin "Try it" console via admin-ajax (`manage_options` + nonce) using `KOZBRIDGE_Bridge::run()`.
+- Abilities API (WordPress 6.9+): `kozbridge/site-overview`, `kozbridge/diagnostics`, `kozbridge/page-audit`, `kozbridge/sitemap-audit`, `kozbridge/404-log`, `kozbridge/plugins`; `manage_options` only, read-only annotations, optional.
+- `/404-log` uses `ramirkz\koz404\KOZ404_Log::query()`; falls back to the legacy option.
+- Sitemap roots: `/wp-sitemap.xml` plus same-site `Sitemap:` lines in robots.txt; up to 3000 URLs; `sources` and `languages` counts.
+- New endpoints `/security-headers`, `/performance`, `/consent-check`; more response headers in probes.
+- `/suite` adds `status` from KOZ plugin public status contracts.
+- OpenAPI response schemas `IssuesResponse`, `Log404Response`, `SitemapResponse`, and a 403 response.
+- Site Health test `kozbridge_keys` and debug information.
+- New classes `KOZBRIDGE_Auth`, `KOZBRIDGE_Admin`, `KOZBRIDGE_Abilities`, `KOZBRIDGE_Site_Health`.
+- Support panel without PayPal; updated BTC and USDT addresses.
+
 ## 0.5.7
 - Removed automatic deactivation of the legacy UA FREE Site Bridge plugin; administrators retain activation control.
 - Replaced the generic public OpenAPI permission callback with an explicit schema-only permission callback.

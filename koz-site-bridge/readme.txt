@@ -1,19 +1,19 @@
 === KOZ Site Bridge ===
 Contributors: ramirkz
 Donate link: https://github.com/ramirkoz/ua-free-plugins
-Tags: diagnostics, rest api, automation, googlebot, adsbot
+Tags: diagnostics, rest api, mcp, seo audit, gpt actions
 Requires at least: 6.2
 Tested up to: 7.1
-Stable tag: 0.5.7
+Stable tag: 0.6.0
 Requires PHP: 8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Secure read-only diagnostics API with controlled same-site HTTP probes.
+Read-only site diagnostics for a private GPT or AI client: scoped API keys, SEO and sitemap audits, 404 log, security and consent checks.
 
 == Description ==
 
-KOZ Site Bridge is an independently installable WordPress plugin developed and maintained by Tony Kozyriev. It provides authenticated read-only diagnostics and controlled same-site HTTP probes for private site analysis and automation. The plugin grew from production tooling used on the UA FREE charitable foundation website.
+KOZ Site Bridge is an independently installable WordPress plugin developed and maintained by Tony Kozyriev. It grew from production tooling used on the UA FREE charitable foundation website.
 
 = Part of the KOZ Suite =
 
@@ -36,6 +36,14 @@ Current public KOZ plugins:
 = Main features =
 
 * authenticated read-only REST diagnostics;
+* several API keys, each with a label, access scopes (basic, content, audits, 404 log, PHP error log), last-used date and optional expiry;
+* "Try it" console in the admin: run any endpoint as an administrator without a key and see the JSON;
+* WordPress 6.9+ Abilities API: read-only abilities for administrators that AI clients can use through the MCP Adapter;
+* sitemaps from robots.txt (for example multilingual sitemaps) are included in the inventory and audits, with counts per language;
+* KOZ 404 Guard 2.2+ log with paths (when the log stores them), query keys and same-site referrers;
+* security headers, page/CDN cache and response-time, and consent (trackers, embeds, Consent Mode) checks;
+* status of KOZ plugins: 404 Guard, Donate Stats, Static Translate (with monthly Azure usage) and Consent Manager;
+* Site Health test for HTTPS, old non-expiring keys and error-log access;
 * canonical KOZ REST namespace and X-KOZ-Key authentication;
 * backward-compatible legacy endpoint and header during migration;
 * HMAC API keys with one-time display;
@@ -56,6 +64,8 @@ Existing Site Bridge API keys are preserved. The old REST namespace and X-UAFree
 
 * The X-KOZ-Key is generated locally by the site administrator and is used only to authenticate the read-only REST API. It does not control feature availability.
 * Every built-in plugin feature is available to every installation.
+* Each key can be limited to the scopes it needs; reading the PHP error log is off for new keys. The key created before 0.6.0 is kept as "Legacy key" with full access until you revoke it.
+* Abilities and the "Try it" console require the manage_options capability and never use or show API keys.
 * The authenticated API has a security/abuse throttle of 120 successful requests per hour per key. This protects the WordPress site and applies equally to all authenticated clients.
 * The OpenAPI schema endpoint is intentionally public so an administrator can import the schema into a REST client. It exposes only the API contract and does not return private site data, credentials, settings, content, or logs. All diagnostic data endpoints require X-KOZ-Key authentication.
 * KOZ Site Bridge does not connect to an external processing service. Its HTTP probes are restricted to the current WordPress site. External REST clients or automation tools are optional and chosen by the site administrator.
@@ -65,9 +75,37 @@ Existing Site Bridge API keys are preserved. The old REST namespace and X-UAFree
 1. If the legacy UA FREE Site Bridge plugin is active, deactivate it manually and keep it installed until verification is complete. KOZ Site Bridge does not deactivate other plugins automatically.
 2. Upload and activate the KOZ plugin ZIP.
 3. Open KOZ Suite > Site Bridge.
-4. Verify the existing key or rotate it, then test Ping and OpenAPI.
+4. Create an API key with the scopes you need, then test Ping and OpenAPI, or use the "Try it" console.
+
+== Frequently Asked Questions ==
+
+= Do I need to change my existing GPT after updating? =
+
+No. The key created before 0.6.0 keeps working as "Legacy key" with full access. You can later create a key with fewer scopes, put it into the GPT and revoke the legacy key.
+
+= How do AI clients use the abilities? =
+
+On WordPress 6.9 or newer the plugin registers read-only abilities (site overview, diagnostics, page audit, sitemap audit, 404 log, plugins) in the "KOZ Site Bridge" category. Only administrators can run them. Install the WordPress MCP Adapter to expose them to an MCP client. You can turn them off in the settings.
+
+= What does the plugin store? =
+
+Key digests (HMAC-SHA256), labels, scopes, creation, last-used and expiry dates, one settings option and hourly rate-limit counters that expire automatically. No IP addresses, User-Agent strings or request history.
 
 == Changelog ==
+
+= 0.6.0 =
+* Several API keys with label, scopes, last-used date and optional expiry; the existing key stays as "Legacy key" with full access.
+* Scoped REST permissions: a key without the scope gets HTTP 403.
+* "Try it" console in the admin (administrators only, no key).
+* Read-only Abilities API abilities for administrators (WordPress 6.9+, MCP Adapter).
+* /404-log reads the KOZ 404 Guard 2.2 table (paths, query keys, same-site referrers) with the old option as a fallback.
+* Sitemaps declared in robots.txt are included in /sitemap, /rendered-audit and /diagnostics; /sitemap reports counts per sitemap and language.
+* New endpoints: /security-headers, /performance, /consent-check.
+* /suite reports the status of KOZ 404 Guard, Donate Stats, Static Translate (including Azure usage) and Consent Manager.
+* OpenAPI: new operations, response schemas and the 403 response.
+* Site Health test and debug information.
+* Code split into Auth, Admin, Abilities and Site Health classes.
+* Support panel: PayPal removed, crypto addresses updated.
 
 = 0.5.7 =
 * Removed automatic deactivation of the legacy UA FREE Site Bridge plugin; activation state remains under administrator control.
@@ -114,6 +152,9 @@ Existing Site Bridge API keys are preserved. The old REST namespace and X-UAFree
 * Added a dedicated enqueued admin interface and shared KOZ support panel.
 
 == Upgrade Notice ==
+
+= 0.6.0 =
+Scoped API keys, "Try it" console, WordPress abilities for administrators, 404 Guard 2.2 log, robots.txt sitemaps and new security, consent and performance checks. Your existing key keeps working.
 
 = 0.5.7 =
 Keeps legacy-plugin activation under administrator control and clarifies the security/authentication model for WordPress.org review.

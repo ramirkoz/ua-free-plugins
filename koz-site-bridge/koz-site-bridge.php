@@ -3,7 +3,7 @@
  * Plugin Name: KOZ Site Bridge
  * Plugin URI: https://github.com/ramirkoz/ua-free-plugins
  * Description: Secure read-only WordPress diagnostics API with controlled same-site HTTP probes for private automation and GPT Actions.
- * Version: 0.5.7
+ * Version: 0.6.0
  * Author: Tony Kozyriev
  * Author URI: https://www.linkedin.com/in/tonykoz/
  * Text Domain: koz-site-bridge
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'KOZBRIDGE_VERSION', '0.5.7' );
+define( 'KOZBRIDGE_VERSION', '0.6.0' );
 define( 'KOZBRIDGE_FILE', __FILE__ );
 define( 'KOZBRIDGE_DIR', plugin_dir_path( __FILE__ ) );
 define( 'KOZBRIDGE_URL', plugin_dir_url( __FILE__ ) );
@@ -25,6 +25,10 @@ define( 'KOZBRIDGE_URL', plugin_dir_url( __FILE__ ) );
 require_once KOZBRIDGE_DIR . 'includes/class-kozbridge-runtime-i18n.php';
 require_once KOZBRIDGE_DIR . 'includes/class-kozbridge-suite-registry.php';
 require_once KOZBRIDGE_DIR . 'includes/class-kozbridge-bridge.php';
+require_once KOZBRIDGE_DIR . 'includes/class-kozbridge-auth.php';
+require_once KOZBRIDGE_DIR . 'includes/class-kozbridge-admin.php';
+require_once KOZBRIDGE_DIR . 'includes/class-kozbridge-abilities.php';
+require_once KOZBRIDGE_DIR . 'includes/class-kozbridge-site-health.php';
 
 \ramirkz\kozbridge\KOZBRIDGE_Runtime_I18n::register( 'koz-site-bridge', KOZBRIDGE_DIR );
 \ramirkz\kozbridge\KOZBRIDGE_Suite_Registry::register(

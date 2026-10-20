@@ -1,0 +1,15 @@
+{
+  "slug": "koz-site-bridge",
+  "candidate_version": "0.6.0",
+  "wordpress_org_live": "0.5.7",
+  "zip": "releases/koz-site-bridge-0.6.0.zip",
+  "original_zip": "releases/koz-site-bridge-0.6.0-claude-original.zip",
+  "sha256": "ca9082af7a308f2d4981fda5079f99191dacb9c6b1362a1fd81e8c18429366b2",
+  "original_sha256": "391698d3a7dad75982b1fd2f99d66efbd7a5b17e42c5db9de650ba04c14181d6",
+  "changes_to_original_zip": [
+    "koz-site-bridge/readme.txt"
+  ],
+  "drive_folder": "https://drive.google.com/drive/folders/1PHg3FmqRMauDteiIM-zV07wnmZreHwLB",
+  "status": "GitHub and Drive synchronized; WordPress.org SVN publication by owner pending",
+  "suite_bundle": "1.0.30 unchanged"
+}

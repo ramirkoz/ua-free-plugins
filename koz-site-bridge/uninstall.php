@@ -8,6 +8,9 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 		array(
 			'kozbridge_api_key_hash',
 			'kozbridge_api_key_created_at',
+			'kozbridge_api_key_last_used',
+			'kozbridge_keys',
+			'kozbridge_settings',
 			'kozbridge_api_log',
 			'uafree_bridge_api_key_hash',
 			'uafree_bridge_api_key_created_at',
