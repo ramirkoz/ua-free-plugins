@@ -1,4 +1,16 @@
 # Changelog
+## 1.5.0
+- Copy from rendered pages (`KOZGADS_Copy`): title, meta description, H1/H2; 15 headlines, 4 descriptions; CTA templates for en, uk, de, fr, es, pl, pt, it.
+- Translated pages from KOZ Static Translate; Azure fallback checks `KOZSTX_Quota::available()` and records usage.
+- `KOZGADS_Report`: import of Google Ads keyword reports (UTF-16 TSV or CSV) and Keyword Planner exports; low-search-volume keywords removed, planner ideas added.
+- Conversions from KOZ Donate Stats; `bid_strategy = auto`; Ad Grants without conversion uses Maximize clicks; CONVERSION-SETUP.txt.
+- `generate_source_language` setting; manual landing pages; Donate Stats and menu pages first.
+- `KOZGADS_Export`: Editor headers (Budget, Budget type, Languages, Ad type, Negative Phrase), validation, POST-IMPORT-CHECKLIST.txt.
+- `KOZGADS_Checks`: AdsBot desktop + mobile, Accept-Language, noindex, script detection.
+- `KOZGADS_Health`: Site Health test, `kozgads_public_status`.
+- Package folder `koz-google-ads-packages`, random file names; legacy folder still readable.
+- Removed automatic deactivation of the former UA FREE plugin.
+- Support panel without PayPal; corrected wallet addresses.
 ## 1.4.13
 - Updated WordPress compatibility metadata for WordPress 7.1.
 - No functional changes.

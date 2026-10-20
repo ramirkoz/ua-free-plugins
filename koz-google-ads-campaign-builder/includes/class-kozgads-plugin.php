@@ -20,8 +20,8 @@ final class KOZGADS_Plugin {
 	private const ACTION_GENERATE = 'kozgads_generate';
 	private const ACTION_DOWNLOAD = 'kozgads_download';
 	private const ACTION_DELETE   = 'kozgads_delete';
-	private const ACTION_LIVE_CHECK = 'kozgads_live_check';
-	private const LIVE_CHECK_OPTION = 'kozgads_live_destination_check';
+	private const PACKAGE_DIR     = 'koz-google-ads-packages';
+	private const LEGACY_PACKAGE_DIR = 'ua-free-google-ads-packages';
 
 	/** @var array<string,array{name:string,ads_code:string,azure_code:string}> */
 	private static array $languages = array(
@@ -49,7 +49,9 @@ final class KOZGADS_Plugin {
 		add_action( 'admin_post_' . self::ACTION_GENERATE, array( __CLASS__, 'generate_package' ) );
 		add_action( 'admin_post_' . self::ACTION_DOWNLOAD, array( __CLASS__, 'download_package' ) );
 		add_action( 'admin_post_' . self::ACTION_DELETE, array( __CLASS__, 'delete_package' ) );
-		add_action( 'admin_post_' . self::ACTION_LIVE_CHECK, array( __CLASS__, 'run_live_destination_check' ) );
+		KOZGADS_Checks::init();
+		KOZGADS_Report::init();
+		KOZGADS_Health::init();
 		add_filter( 'plugin_action_links_' . plugin_basename( KOZGADS_FILE ), array( __CLASS__, 'action_links' ) );
 	}
 
@@ -131,8 +133,9 @@ final class KOZGADS_Plugin {
 		$package  = get_option( self::PACKAGE_OPTION, array() );
 		$landings = self::selected_landing_pages( $settings );
 		$preflight = self::landing_preflight( $settings, $landings );
-		$live_check = get_option( self::LIVE_CHECK_OPTION, array() );
-		$azure = self::azure_credentials();
+		$live_check = get_option( KOZGADS_Checks::OPTION, array() );
+		$azure = KOZGADS_Integrations::azure_credentials();
+		$report = KOZGADS_Report::summary();
 		$summary = self::manager_summary_from(
 			$settings,
 			$landings,
@@ -155,6 +158,11 @@ final class KOZGADS_Plugin {
 			'live_destination_ready'=> is_array( $live_check ) && ! empty( $live_check['ready'] ),
 			'live_destination_issues'=> is_array( $live_check ) ? (int) ( $live_check['issue_count'] ?? 0 ) : 0,
 			'live_destination_warnings'=> is_array( $live_check ) ? (int) ( $live_check['warning_count'] ?? 0 ) : 0,
+			'live_destination_checked_at'=> is_array( $live_check ) ? (string) ( $live_check['checked_at'] ?? '' ) : '',
+			'bid_strategy'           => self::effective_bid_strategy( $settings ),
+			'conversion_source'      => self::conversion_source(),
+			'report_keywords'        => (int) $report['total'],
+			'report_low_volume'      => (int) $report['low'],
 			'selected_language_count'=> (int) $summary['language_count'],
 			'selected_languages'     => self::campaign_languages( $settings ),
 			'target_location_count'  => (int) $summary['location_count'],
@@ -172,10 +180,6 @@ final class KOZGADS_Plugin {
 
 	private static function legacy_package_option(): string {
 		return implode( '_', array( 'uafree', 'agb', 'last', 'package' ) );
-	}
-
-	private static function static_translate_option(): string {
-		return implode( '_', array( 'uafree', 'st', 'auto', 'settings' ) );
 	}
 
 	private static function migrate_legacy_data(): void {
@@ -218,9 +222,7 @@ final class KOZGADS_Plugin {
 	}
 
 	private static function detected_site_language(): array {
-		$translator = get_option( self::static_translate_option(), array() );
-		$translator = is_array( $translator ) ? $translator : array();
-		$slug       = sanitize_key( (string) ( $translator['source_language'] ?? '' ) );
+		$slug = KOZGADS_Integrations::source_language();
 		if ( isset( self::$languages[ $slug ] ) ) {
 			return array( 'slug' => $slug, 'source' => 'KOZ Static Translate' );
 		}
@@ -255,7 +257,10 @@ final class KOZGADS_Plugin {
 			'primary_conversion_name'       => 'primary_conversion',
 			'allow_azure_copy_translation'  => 0,
 			'max_campaigns'                 => 4,
-			'bid_strategy'                  => 'Maximize conversions',
+			'bid_strategy'                  => 'auto',
+			'landing_page_ids'              => array(),
+			'generate_source_language'      => 1,
+			'min_searches'                  => 10,
 			'negative_keywords'             => array(),
 			'callouts'                      => array(),
 			'delete_data_on_uninstall'      => 0,
@@ -263,7 +268,7 @@ final class KOZGADS_Plugin {
 	}
 
 	/** @return array<string,mixed> */
-	private static function settings(): array {
+	public static function settings(): array {
 		$saved    = get_option( self::SETTINGS_OPTION, array() );
 		$settings = wp_parse_args( is_array( $saved ) ? $saved : array(), self::defaults() );
 		$settings['account_mode']       = self::account_mode( $settings );
@@ -283,11 +288,12 @@ final class KOZGADS_Plugin {
 		if ( '' === $settings['primary_conversion_name'] ) {
 			$settings['primary_conversion_name'] = 'primary_conversion';
 		}
-		$allowed_bids = array( 'Maximize conversions', 'Maximize clicks', 'Manual CPC' );
-		if ( ! in_array( (string) $settings['bid_strategy'], $allowed_bids, true ) ) {
-			$settings['bid_strategy'] = 'ad_grants' === $settings['account_mode'] ? 'Maximize conversions' : 'Maximize clicks';
+		if ( ! in_array( (string) $settings['bid_strategy'], self::bid_strategies(), true ) ) {
+			$settings['bid_strategy'] = 'auto';
 		}
-		foreach ( array( 'include_search_partners', 'conversion_tracking_confirmed', 'allow_azure_copy_translation', 'delete_data_on_uninstall' ) as $flag ) {
+		$settings['landing_page_ids'] = array_slice( array_values( array_unique( array_map( 'absint', (array) ( $settings['landing_page_ids'] ?? array() ) ) ) ), 0, 10 );
+		$settings['min_searches']     = min( 1000, max( 0, absint( $settings['min_searches'] ?? 10 ) ) );
+		foreach ( array( 'include_search_partners', 'conversion_tracking_confirmed', 'allow_azure_copy_translation', 'delete_data_on_uninstall', 'generate_source_language' ) as $flag ) {
 			$settings[ $flag ] = ! empty( $settings[ $flag ] ) ? 1 : 0;
 		}
 		return $settings;
@@ -295,17 +301,56 @@ final class KOZGADS_Plugin {
 
 
 	/** @return string[] */
-	private static function campaign_languages( ?array $settings = null ): array {
+	private static function bid_strategies(): array {
+		return array( 'auto', 'Maximize conversions', 'Maximize clicks', 'Manual CPC' );
+	}
+
+	public static function min_searches(): int {
+		return (int) self::settings()['min_searches'];
+	}
+
+	/** Where the real conversion comes from, for display and status. */
+	private static function conversion_source(): string {
+		$donate = KOZGADS_Integrations::donate_stats();
+		if ( $donate['available'] && $donate['data_layer'] && '' !== $donate['event'] ) {
+			return 'KOZ Donate Stats: ' . $donate['event'];
+		}
+		return '';
+	}
+
+	/**
+	 * Bid strategy written to the package. "auto" and Ad Grants without a recorded
+	 * conversion use Maximize clicks (capped at 2.00 USD per click by Ad Grants),
+	 * because Maximize conversions has no signal without conversions.
+	 */
+	public static function effective_bid_strategy( array $settings ): string {
+		$chosen    = (string) $settings['bid_strategy'];
+		$confirmed = ! empty( $settings['conversion_tracking_confirmed'] );
+		if ( 'auto' === $chosen ) {
+			return $confirmed ? 'Maximize conversions' : 'Maximize clicks';
+		}
+		if ( 'Maximize conversions' === $chosen && ! $confirmed && 'ad_grants' === self::account_mode( $settings ) ) {
+			return 'Maximize clicks';
+		}
+		return $chosen;
+	}
+
+	/** @return string[] */
+	public static function campaign_languages( ?array $settings = null ): array {
 		$source = (string) self::detected_site_language()['slug'];
 		$mode   = is_array( $settings )
 			? sanitize_key( (string) ( $settings['language_mode'] ?? 'automatic' ) )
 			: 'automatic';
 
 		if ( 'manual' !== $mode ) {
+			$languages = array( $source, 'en' );
+			if ( is_array( $settings ) && empty( $settings['generate_source_language'] ) && 'en' !== $source ) {
+				$languages = array( 'en' );
+			}
 			return array_values(
 				array_unique(
 					array_filter(
-						array( $source, 'en' ),
+						$languages,
 						static fn( string $slug ): bool => isset( self::$languages[ $slug ] )
 					)
 				)
@@ -640,11 +685,11 @@ final class KOZGADS_Plugin {
 		if ( empty( $languages ) ) {
 			$languages = array( (string) self::detected_site_language()['slug'] );
 		}
-		$allowed_bids = array( 'Maximize conversions', 'Maximize clicks', 'Manual CPC' );
-		$bid = sanitize_text_field( (string) wp_unslash( $_POST['bid_strategy'] ?? '' ) );
-		if ( ! in_array( $bid, $allowed_bids, true ) ) {
-			$bid = 'ad_grants' === $mode ? 'Maximize conversions' : 'Maximize clicks';
+		$bid = sanitize_text_field( (string) wp_unslash( $_POST['bid_strategy'] ?? 'auto' ) );
+		if ( ! in_array( $bid, self::bid_strategies(), true ) ) {
+			$bid = 'auto';
 		}
+		$landing_ids = isset( $_POST['landing_page_ids'] ) ? array_map( 'absint', (array) wp_unslash( $_POST['landing_page_ids'] ) ) : array();
 
 		$language_mode = 'manual' === sanitize_key( (string) wp_unslash( $_POST['language_mode'] ?? 'automatic' ) ) ? 'manual' : 'automatic';
 		$location_mode = 'manual' === sanitize_key( (string) wp_unslash( $_POST['location_mode'] ?? 'automatic' ) ) ? 'manual' : 'automatic';
@@ -677,6 +722,9 @@ final class KOZGADS_Plugin {
 			'negative_keywords'             => self::sanitize_lines( $negative_keywords, 100, 80 ),
 			'callouts'                      => self::sanitize_lines( $callouts, 20, 25 ),
 			'delete_data_on_uninstall'      => ! empty( $_POST['delete_data_on_uninstall'] ) ? 1 : 0,
+			'generate_source_language'      => ! empty( $_POST['generate_source_language'] ) ? 1 : 0,
+			'landing_page_ids'              => array_slice( array_values( array_unique( $landing_ids ) ), 0, 10 ),
+			'min_searches'                  => min( 1000, absint( $_POST['min_searches'] ?? 10 ) ),
 		);
 		if ( '' === $settings['primary_conversion_name'] ) {
 			$settings['primary_conversion_name'] = 'primary_conversion';
@@ -691,62 +739,13 @@ final class KOZGADS_Plugin {
 		}
 	}
 
-	private static function redirect_notice( string $notice, string $message = '' ): void {
+	public static function redirect_notice( string $notice, string $message = '' ): void {
 		$args = array( 'page' => self::PAGE_SLUG, 'kozgads_notice' => sanitize_key( $notice ) );
 		if ( '' !== $message ) {
 			$args['message'] = rawurlencode( $message );
 		}
 		wp_safe_redirect( add_query_arg( $args, admin_url( 'admin.php' ) ) );
 		exit;
-	}
-
-	/** @return array<int,array<string,mixed>> */
-	private static function landing_pages( int $limit = 50 ): array {
-		$pages = array();
-		$front_id = absint( get_option( 'page_on_front' ) );
-		if ( $front_id > 0 ) {
-			$post = get_post( $front_id );
-			if ( $post instanceof \WP_Post && 'publish' === $post->post_status ) {
-				$pages[] = self::normalise_post( $post, true );
-			}
-		} else {
-			$pages[] = array(
-				'id'         => 0,
-				'type'       => 'home',
-				'title'      => (string) get_bloginfo( 'name' ),
-				'url'        => home_url( '/' ),
-				'path'       => '/',
-				'word_count' => self::word_count( (string) get_bloginfo( 'description' ) ),
-				'text'       => self::normalise_text( (string) get_bloginfo( 'description' ) ),
-				'updated_at' => '',
-			);
-		}
-
-		$posts = get_posts(
-			array(
-				'post_type'      => array_values( get_post_types( array( 'public' => true ), 'names' ) ),
-				'post_status'    => 'publish',
-				'posts_per_page' => min( 100, max( 10, $limit ) ),
-				'orderby'        => 'modified',
-				'order'          => 'DESC',
-				'no_found_rows'  => true,
-			)
-		);
-		foreach ( (array) $posts as $post ) {
-			if ( ! $post instanceof \WP_Post || ( $front_id > 0 && (int) $post->ID === $front_id ) ) {
-				continue;
-			}
-			$pages[] = self::normalise_post( $post, false );
-		}
-
-		$unique = array();
-		foreach ( $pages as $page ) {
-			$url = esc_url_raw( (string) ( $page['url'] ?? '' ) );
-			if ( '' !== $url ) {
-				$unique[ $url ] = $page;
-			}
-		}
-		return array_slice( array_values( $unique ), 0, $limit );
 	}
 
 	/** @return array<string,mixed> */
@@ -777,30 +776,95 @@ final class KOZGADS_Plugin {
 		return is_array( $words ) ? count( $words ) : 0;
 	}
 
-	/** @return array<string,array<string,mixed>> */
-	private static function selected_landing_pages( array $settings ): array {
-		$pages = self::landing_pages( 60 );
-		usort(
-			$pages,
-			static fn( array $a, array $b ): int => ( (int) $b['word_count'] <=> (int) $a['word_count'] ) ?: strcmp( (string) $b['updated_at'], (string) $a['updated_at'] )
-		);
-		$home_index = null;
-		foreach ( $pages as $index => $page ) {
-			if ( '/' === (string) $page['path'] ) {
-				$home_index = $index;
-				break;
+	/** Page IDs used in the site's navigation menus. */
+	private static function menu_page_ids(): array {
+		$ids = array();
+		foreach ( wp_get_nav_menus() as $menu ) {
+			foreach ( (array) wp_get_nav_menu_items( $menu->term_id ) as $item ) {
+				if ( isset( $item->object, $item->object_id ) && 'page' === $item->object ) {
+					$ids[] = (int) $item->object_id;
+				}
+			}
+		}
+		return array_values( array_unique( $ids ) );
+	}
+
+	/** Pages the administrator can pick in the settings: menu pages first, then other pages. */
+	private static function landing_choices(): array {
+		$ids   = self::menu_page_ids();
+		$pages = get_posts( array( 'post_type' => 'page', 'post_status' => 'publish', 'posts_per_page' => 60, 'orderby' => 'menu_order title', 'order' => 'ASC', 'fields' => 'ids', 'no_found_rows' => true ) );
+		$ids   = array_values( array_unique( array_merge( $ids, array_map( 'intval', (array) $pages ) ) ) );
+		$out   = array();
+		foreach ( array_slice( $ids, 0, 60 ) as $id ) {
+			$post = get_post( $id );
+			if ( $post instanceof \WP_Post && 'publish' === $post->post_status ) {
+				$out[ $id ] = self::normalise_text( wp_strip_all_tags( get_the_title( $post ) ) );
+			}
+		}
+		return $out;
+	}
+
+	/**
+	 * Landing pages for the campaign: the pages chosen in the settings, or
+	 * automatically the home page, the donation page known to KOZ Donate Stats,
+	 * pages from the navigation menus and then the longest other pages. Blog posts
+	 * are used only when chosen explicitly.
+	 *
+	 * @return array<string,array<string,mixed>>
+	 */
+	public static function selected_landing_pages( array $settings ): array {
+		$limit    = (int) $settings['max_campaigns'];
+		$front_id = absint( get_option( 'page_on_front' ) );
+		$ordered  = array();
+		$manual   = (array) $settings['landing_page_ids'];
+		if ( ! empty( $manual ) ) {
+			foreach ( $manual as $id ) {
+				$ordered[] = (int) $id;
+			}
+		} else {
+			$ordered[] = $front_id;
+			foreach ( KOZGADS_Integrations::donate_stats()['page_ids'] as $id ) {
+				$ordered[] = (int) $id;
+			}
+			foreach ( self::menu_page_ids() as $id ) {
+				$ordered[] = (int) $id;
+			}
+			$pages = get_posts( array( 'post_type' => 'page', 'post_status' => 'publish', 'posts_per_page' => 40, 'no_found_rows' => true ) );
+			$pages = array_map( static fn( \WP_Post $post ): array => self::normalise_post( $post, false ), array_filter( (array) $pages, static fn( $post ): bool => $post instanceof \WP_Post ) );
+			usort( $pages, static fn( array $a, array $b ): int => (int) $b['word_count'] <=> (int) $a['word_count'] );
+			foreach ( $pages as $page ) {
+				$ordered[] = (int) $page['id'];
 			}
 		}
 		$selected = array();
-		if ( null !== $home_index ) {
-			$selected[] = $pages[ $home_index ];
-			unset( $pages[ $home_index ] );
-		}
-		foreach ( $pages as $page ) {
-			if ( count( $selected ) >= (int) $settings['max_campaigns'] ) {
+		$seen     = array();
+		foreach ( $ordered as $id ) {
+			if ( count( $selected ) >= $limit ) {
 				break;
 			}
-			if ( (int) $page['word_count'] < 20 && count( $selected ) > 0 ) {
+			if ( 0 === $id || $id === $front_id ) {
+				if ( isset( $seen['home'] ) ) {
+					continue;
+				}
+				$seen['home'] = true;
+				$front = $front_id > 0 ? get_post( $front_id ) : null;
+				if ( $front instanceof \WP_Post && 'publish' === $front->post_status ) {
+					$selected[] = self::normalise_post( $front, true );
+				} else {
+					$selected[] = array( 'id' => 0, 'type' => 'home', 'title' => (string) get_bloginfo( 'name' ), 'url' => home_url( '/' ), 'path' => '/', 'word_count' => self::word_count( (string) get_bloginfo( 'description' ) ), 'text' => self::normalise_text( (string) get_bloginfo( 'description' ) ), 'updated_at' => '' );
+				}
+				continue;
+			}
+			if ( isset( $seen[ $id ] ) ) {
+				continue;
+			}
+			$seen[ $id ] = true;
+			$post        = get_post( $id );
+			if ( ! $post instanceof \WP_Post || 'publish' !== $post->post_status || ( empty( $manual ) && 'page' !== $post->post_type ) ) {
+				continue;
+			}
+			$page = self::normalise_post( $post, false );
+			if ( empty( $manual ) && (int) $page['word_count'] < 20 ) {
 				continue;
 			}
 			$selected[] = $page;
@@ -812,7 +876,15 @@ final class KOZGADS_Plugin {
 		return $result;
 	}
 
-	private static function localised_url( string $url, string $language, array $settings ): string {
+	/** True for the donation page (Donate Stats) or a path that looks like one. */
+	private static function is_donation_page( array $page ): bool {
+		if ( in_array( (int) ( $page['id'] ?? 0 ), KOZGADS_Integrations::donate_stats()['page_ids'], true ) ) {
+			return true;
+		}
+		return (bool) preg_match( '#/(donat|donate|spend|pozhert|donation)#i', (string) ( $page['path'] ?? '' ) );
+	}
+
+	public static function localised_url( string $url, string $language, array $settings ): string {
 		$source = (string) self::detected_site_language()['slug'];
 		if ( $language === $source ) {
 			return $url;
@@ -931,360 +1003,87 @@ final class KOZGADS_Plugin {
 
 
 
-	/**
-	 * Build the exact destination list that the campaign generator will use.
-	 *
-	 * Landing pages are discovered automatically by the plugin. The live AdsBot
-	 * check then validates those same selected source pages and their generated
-	 * language URLs. No site name, page title, slug or manually entered Final URL
-	 * is required for discovery.
-	 *
-	 * @param array<string,mixed> $settings
-	 * @param array<string,array<string,mixed>> $landings
-	 * @return array<int,array{key:string,title:string,language:string,url:string}>
-	 */
-	private static function live_destination_targets( array $settings, array $landings ): array {
-		$targets = array();
-		$seen = array();
-
-		foreach ( $landings as $key => $page ) {
-			$source_url = esc_url_raw( (string) ( $page['url'] ?? '' ) );
-			$title = trim( (string) ( $page['title'] ?? $key ) );
-			foreach ( self::campaign_languages( $settings ) as $language ) {
-				$url = esc_url_raw( self::localised_url( $source_url, $language, $settings ) );
-				if ( '' === $url || isset( $seen[ $url ] ) ) {
-					continue;
-				}
-				$seen[ $url ] = true;
-				$targets[] = array(
-					'key' => (string) $key,
-					'title' => $title,
-					'language' => sanitize_key( (string) $language ),
-					'url' => $url,
-				);
-			}
-		}
-
-		return array_slice( $targets, 0, 24 );
-	}
-
-	/**
-	 * A privacy-safe GET that emulates Google AdsBot for a same-site URL.
-	 *
-	 * @return array<string,mixed>
-	 */
-	private static function adsbot_probe( string $url, string $expected_language ): array {
-		$home_host = strtolower( (string) wp_parse_url( home_url( '/' ), PHP_URL_HOST ) );
-		$host = strtolower( (string) wp_parse_url( $url, PHP_URL_HOST ) );
-		if ( '' === $url || '' === $host || $host !== $home_host ) {
-			return array(
-				'ok' => false,
-				'http_code' => 0,
-				'error' => 'Destination is not a same-site URL.',
-				'elapsed_ms' => 0,
-				'html_lang' => '',
-				'language_match' => false,
-				'text_language_warning' => false,
+	/** Page signals for the source language, from the rendered page or local content. */
+	private static function source_signals( array $page ): array {
+		$signals = KOZGADS_Copy::signals( (string) $page['url'] );
+		if ( empty( $signals['ok'] ) ) {
+			$signals = array_merge(
+				$signals,
+				array( 'ok' => true, 'title' => (string) $page['title'], 'h1' => (string) $page['title'], 'description' => self::first_words( (string) $page['text'], 25 ), 'text' => (string) $page['text'] )
 			);
 		}
-
-		$started = microtime( true );
-		$response = wp_safe_remote_get(
-			$url,
-			array(
-				'timeout' => 15,
-				'redirection' => 5,
-				'limit_response_size' => 2 * MB_IN_BYTES,
-				'headers' => array(
-					'Accept' => 'text/html,application/xhtml+xml',
-					'Accept-Language' => 'en-US,en;q=0.9',
-				),
-				'user-agent' => 'Mozilla/5.0 (compatible; AdsBot-Google/1.0; +http://www.google.com/adsbot.html)',
-			)
-		);
-		$elapsed = (int) round( ( microtime( true ) - $started ) * 1000 );
-		if ( is_wp_error( $response ) ) {
-			return array(
-				'ok' => false,
-				'http_code' => 0,
-				'error' => sanitize_text_field( $response->get_error_message() ),
-				'elapsed_ms' => $elapsed,
-				'html_lang' => '',
-				'language_match' => false,
-				'text_language_warning' => false,
-			);
-		}
-
-		$code = (int) wp_remote_retrieve_response_code( $response );
-		$body = (string) wp_remote_retrieve_body( $response );
-		$html_lang = '';
-		if ( preg_match( '/<html\\b[^>]*\\blang=["\\\']([^"\\\']+)["\\\']/i', $body, $match ) ) {
-			$html_lang = strtolower( sanitize_text_field( (string) $match[1] ) );
-		}
-		$expected = strtolower( sanitize_key( $expected_language ) );
-		$language_match = '' === $expected || '' === $html_lang || 0 === strpos( $html_lang, $expected );
-
-		$text = wp_strip_all_tags( (string) preg_replace( '/<(script|style|noscript)\\b[^>]*>.*?<\\/\\1>/is', ' ', $body ) );
-		$latin = (int) preg_match_all( '/[A-Za-z]/u', $text, $unused_latin );
-		$cyrillic = (int) preg_match_all( '/[А-Яа-яІіЇїЄєҐґ]/u', $text, $unused_cyrillic );
-		$text_language_warning = false;
-		if ( 'en' === $expected && $cyrillic > 150 && $cyrillic > ( $latin * 0.55 ) ) {
-			$text_language_warning = true;
-		}
-		if ( 'uk' === $expected && $latin > 250 && $latin > ( $cyrillic * 1.5 ) ) {
-			$text_language_warning = true;
-		}
-
-		return array(
-			'ok' => $code >= 200 && $code < 400,
-			'http_code' => $code,
-			'error' => '',
-			'elapsed_ms' => $elapsed,
-			'html_lang' => $html_lang,
-			'language_match' => $language_match,
-			'text_language_warning' => $text_language_warning,
-			'body_bytes_sampled' => strlen( $body ),
-		);
+		return $signals;
 	}
-
-	/** @return array<string,mixed> */
-	private static function adsbot_robots_check(): array {
-		$response = wp_safe_remote_get(
-			home_url( '/robots.txt' ),
-			array(
-				'timeout' => 6,
-				'redirection' => 3,
-				'limit_response_size' => 256 * KB_IN_BYTES,
-				'user-agent' => 'Mozilla/5.0 (compatible; AdsBot-Google/1.0; +http://www.google.com/adsbot.html)',
-			)
-		);
-		if ( is_wp_error( $response ) ) {
-			return array( 'ok' => false, 'http_code' => 0, 'blocked' => null, 'error' => sanitize_text_field( $response->get_error_message() ) );
-		}
-		$code = (int) wp_remote_retrieve_response_code( $response );
-		$body = strtolower( (string) wp_remote_retrieve_body( $response ) );
-		$blocked = false;
-		if ( preg_match_all( '/user-agent\\s*:\\s*adsbot-google\\s*(.*?)(?=user-agent\\s*:|\\z)/is', $body, $groups ) ) {
-			foreach ( (array) $groups[1] as $group ) {
-				if ( preg_match( '/disallow\\s*:\\s*\\/\\s*(?:$|\\r?\\n)/mi', (string) $group ) ) {
-					$blocked = true;
-					break;
-				}
-			}
-		}
-		return array( 'ok' => $code >= 200 && $code < 400, 'http_code' => $code, 'blocked' => $blocked, 'error' => '' );
-	}
-
-	public static function run_live_destination_check(): void {
-		self::require_admin();
-		check_admin_referer( self::ACTION_LIVE_CHECK );
-		$settings = self::settings();
-		$landings = self::selected_landing_pages( $settings );
-		$targets = self::live_destination_targets( $settings, $landings );
-		$rows = array();
-		$issues = array();
-		$warnings = array();
-
-		foreach ( $targets as $target ) {
-			$probe = self::adsbot_probe( (string) $target['url'], (string) $target['language'] );
-			$rows[] = array_merge( $target, $probe );
-			if ( empty( $probe['ok'] ) ) {
-				$issues[] = (string) $target['title'] . ' [' . strtoupper( (string) $target['language'] ) . ']: HTTP/timeout failure.';
-			} else {
-				if ( (int) ( $probe['elapsed_ms'] ?? 0 ) > 5000 ) {
-					$warnings[] = (string) $target['title'] . ' [' . strtoupper( (string) $target['language'] ) . ']: slow destination response (' . (int) $probe['elapsed_ms'] . ' ms).';
-				}
-				if ( empty( $probe['language_match'] ) || ! empty( $probe['text_language_warning'] ) ) {
-					$warnings[] = (string) $target['title'] . ' [' . strtoupper( (string) $target['language'] ) . ']: rendered language may not match the campaign language.';
-				}
-			}
-		}
-
-		$robots = self::adsbot_robots_check();
-		if ( true === ( $robots['blocked'] ?? null ) ) {
-			$issues[] = 'robots.txt blocks AdsBot-Google.';
-		} elseif ( empty( $robots['ok'] ) ) {
-			$warnings[] = 'robots.txt could not be verified with the AdsBot user agent.';
-		}
-		$result = array(
-			'checked_at' => gmdate( 'c' ),
-			'ready' => ! empty( $rows ) && empty( $issues ),
-			'target_count' => count( $rows ),
-			'issue_count' => count( array_unique( $issues ) ),
-			'warning_count' => count( array_unique( $warnings ) ),
-			'issues' => array_values( array_unique( $issues ) ),
-			'warnings' => array_values( array_unique( $warnings ) ),
-			'robots' => $robots,
-			'rows' => $rows,
-			'user_agent_mode' => 'AdsBot-Google desktop emulation',
-			'external_requests' => true,
-			'privacy' => array( 'same_site_only' => true, 'visitor_data_sent' => false ),
-		);
-		update_option( self::LIVE_CHECK_OPTION, $result, false );
-		self::redirect_notice( 'live_check_complete' );
-	}
-
 
 	/**
-	 * Build universal automatic assets from the campaign copy itself.
+	 * Copy for every landing page in one language.
 	 *
-	 * Callouts are derived from the selected landing-page sitelink text, so the
-	 * plugin remains site-agnostic. Negative keywords are never guessed globally:
-	 * an irrelevant generic exclusion can damage a legitimate campaign on another
-	 * site, so only administrator-provided negatives are used.
+	 * Other languages use the translated page published on the site. Azure is used
+	 * only when that page is missing and the administrator allowed translation.
 	 *
-	 * @param array<string,mixed> $copy
-	 * @return array{callouts:string[],negative_keywords:string[]}
+	 * @return array{groups:array<string,array>,warnings:string[]}
 	 */
-	private static function automatic_assets_from_copy( array $copy ): array {
-		$callouts = array();
-		foreach ( (array) ( $copy['sitelinks'] ?? array() ) as $link ) {
-			$text = self::clip( self::normalise_text( (string) ( $link['text'] ?? '' ) ), 25 );
-			if ( '' !== $text ) {
-				$callouts[] = $text;
-			}
-		}
-
-		return array(
-			'callouts' => array_slice( array_values( array_unique( $callouts ) ), 0, 10 ),
-			'negative_keywords' => array(),
-		);
-	}
-
-
-	/**
-	 * Automatic assets are always present.
-	 * Manager-entered values are optional additions, not required setup.
-	 *
-	 * @return array{callouts:string[],negative_keywords:string[]}
-	 */
-	private static function merge_campaign_assets(
-		array $automatic,
-		array $manual
-	): array {
-		return array(
-			'callouts' => array_slice(
-				self::sanitize_lines(
-					array_merge(
-						(array) ( $automatic['callouts'] ?? array() ),
-						(array) ( $manual['callouts'] ?? array() )
-					),
-					10,
-					25
-				),
-				0,
-				10
-			),
-			'negative_keywords' => self::sanitize_lines(
-				array_merge(
-					(array) ( $automatic['negative_keywords'] ?? array() ),
-					(array) ( $manual['negative_keywords'] ?? array() )
-				),
-				100,
-				80
-			),
-		);
-	}
-
-	/** @return array<string,mixed> */
-	private static function source_copy_pack( array $landings, array $settings ): array {
-		$organisation = self::normalise_text( (string) $settings['organisation_name'] );
-		$site_tagline = self::normalise_text( (string) get_bloginfo( 'description' ) );
+	private static function language_copy( array $landings, string $language, string $source, array $settings ): array {
 		$groups       = array();
-		$sitelinks    = array();
+		$warnings     = array();
+		$organisation = (string) $settings['organisation_name'];
 		foreach ( $landings as $key => $page ) {
-			$title = self::normalise_text( (string) $page['title'] );
-			$text  = self::normalise_text( (string) $page['text'] );
-			$description_a = self::clip( '' !== $text ? $text : trim( $title . ' ' . $organisation ), 90 );
-			$description_b = self::clip( trim( $site_tagline . ' ' . $organisation . ' ' . $title ), 90 );
-			$headlines = array_values(
-				array_unique(
-					array_filter(
-						array(
-							self::clip( $title, 30 ),
-							self::clip( $organisation, 30 ),
-							self::clip( trim( $title . ' ' . $organisation ), 30 ),
-							self::clip( $site_tagline, 30 ),
-							self::clip( self::first_words( $text, 6 ), 30 ),
-						)
-					)
-				)
-			);
-			$keywords = array_values(
-				array_unique(
-					array_filter(
-						array(
-							self::clip( self::lower( $title ), 80 ),
-							self::clip( self::lower( trim( $organisation . ' ' . $title ) ), 80 ),
-							self::clip( self::lower( trim( $title . ' ' . $site_tagline ) ), 80 ),
-						)
-					)
-				)
-			);
-			$groups[ $key ] = array(
-				'name'         => $title,
-				'landing'      => $key,
-				'keywords'     => $keywords,
-				'headlines'    => $headlines,
-				'descriptions' => array_values( array_unique( array_filter( array( $description_a, $description_b ) ) ) ),
-			);
-			$sitelinks[] = array( 'text' => self::clip( $title, 25 ), 'landing' => $key );
+			$url     = self::localised_url( (string) $page['url'], $language, $settings );
+			$kind    = self::is_donation_page( $page ) ? 'donate' : 'general';
+			$is_home = '/' === (string) $page['path'];
+			if ( $language === $source ) {
+				$signals = self::source_signals( $page );
+			} else {
+				$signals = KOZGADS_Copy::signals( $url );
+				$native  = ! empty( $signals['ok'] )
+					&& ( '' === $signals['lang'] || 0 === strpos( (string) $signals['lang'], $language ) )
+					&& ! KOZGADS_Copy::script_mismatch( (string) $signals['text'], $language )
+					// A partly translated page keeps the source-language title.
+					&& ! KOZGADS_Copy::script_mismatch( str_replace( KOZGADS_Copy::brand( (string) $settings['organisation_name'] ), '', (string) $signals['title'] ), $language, 3, 0.5 );
+				if ( ! $native ) {
+					$translated = self::azure_signals( self::source_signals( $page ), $source, $language, $settings );
+					if ( is_wp_error( $translated ) ) {
+						$warnings[] = $language . ' / ' . (string) $page['title'] . ': ' . $translated->get_error_message();
+						continue;
+					}
+					$signals = $translated;
+				}
+			}
+			$group = KOZGADS_Copy::group( $signals, $language, $organisation, $kind, $is_home );
+			$words = KOZGADS_Copy::words( $group['name'] . ' ' . (string) $signals['h1'] . ' ' . implode( ' ', (array) $signals['h2'] ) );
+			$demand = KOZGADS_Report::apply( $group['keywords'], $words, KOZGADS_Copy::MAX_KEYWORDS );
+			$group['keywords']           = array_values( array_filter( $demand['keywords'], static fn( string $keyword ): bool => self::valid_keyword( $keyword, self::account_mode( $settings ) ) ) );
+			$group['low_volume_removed'] = $demand['removed'];
+			$group['planner_added']      = $demand['added'];
+			$group['final_url']          = $url;
+			$group['h2']                 = (array) $signals['h2'];
+			foreach ( $group['warnings'] as $warning ) {
+				$warnings[] = $language . ' / ' . $group['name'] . ': ' . $warning;
+			}
+			$groups[ $key ] = $group;
 		}
-		return array(
-			'ad_groups'         => $groups,
-			'sitelinks'         => array_slice( $sitelinks, 0, 6 ),
-			'callouts'          => (array) $settings['callouts'],
-			'negative_keywords' => (array) $settings['negative_keywords'],
+		return array( 'groups' => $groups, 'warnings' => $warnings );
+	}
+
+	/** Source signals translated with Azure, within the Static Translate quota. @return array|\WP_Error */
+	private static function azure_signals( array $signals, string $source, string $target, array $settings ) {
+		if ( empty( $settings['allow_azure_copy_translation'] ) ) {
+			return new \WP_Error( 'no_translated_page', __( 'No translated page was found and Azure translation is disabled.', 'koz-google-ads-campaign-builder' ) );
+		}
+		$strings = array_merge( array( (string) $signals['title'], (string) $signals['h1'], (string) $signals['description'] ), array_slice( (array) $signals['h2'], 0, 6 ) );
+		$out     = self::translate_strings( $strings, $source, $target, KOZGADS_Integrations::azure_credentials(), KOZGADS_Copy::brand( (string) $settings['organisation_name'] ) );
+		if ( is_wp_error( $out ) ) {
+			return $out;
+		}
+		return array_merge(
+			$signals,
+			array( 'ok' => true, 'lang' => $target, 'title' => $out[0], 'h1' => $out[1], 'description' => $out[2], 'h2' => array_slice( $out, 3 ), 'text' => $out[2] )
 		);
 	}
 
 	private static function first_words( string $text, int $count ): string {
 		$words = preg_split( '/\s+/u', trim( $text ), -1, PREG_SPLIT_NO_EMPTY );
 		return is_array( $words ) ? implode( ' ', array_slice( $words, 0, $count ) ) : '';
-	}
-
-	/** @return array<string,mixed> */
-	private static function azure_credentials(): array {
-		$settings = get_option( self::static_translate_option(), array() );
-		$settings = is_array( $settings ) ? $settings : array();
-		$key      = self::decrypt_secret( (string) ( $settings['azure_key_enc'] ?? '' ) );
-		if ( '' === $key && defined( 'UAFREE_AZURE_TRANSLATOR_KEY' ) ) {
-			$key = trim( (string) UAFREE_AZURE_TRANSLATOR_KEY );
-		}
-		$region = trim( (string) ( $settings['azure_region'] ?? '' ) );
-		if ( '' === $region && defined( 'UAFREE_AZURE_TRANSLATOR_REGION' ) ) {
-			$region = trim( (string) UAFREE_AZURE_TRANSLATOR_REGION );
-		}
-		$endpoint = untrailingslashit( trim( (string) ( $settings['azure_endpoint'] ?? 'https://api.cognitive.microsofttranslator.com' ) ) );
-		if ( ! self::valid_azure_endpoint( $endpoint ) ) {
-			$endpoint = 'https://api.cognitive.microsofttranslator.com';
-		}
-		return array( 'key' => $key, 'region' => $region, 'endpoint' => $endpoint, 'configured' => '' !== $key );
-	}
-
-	private static function decrypt_secret( string $encoded ): string {
-		if ( '' === $encoded || ! function_exists( 'openssl_decrypt' ) ) {
-			return '';
-		}
-		$raw = base64_decode( $encoded, true );
-		if ( false === $raw || strlen( $raw ) < 29 ) {
-			return '';
-		}
-		$iv     = substr( $raw, 0, 12 );
-		$tag    = substr( $raw, 12, 16 );
-		$cipher = substr( $raw, 28 );
-		$key    = hash( 'sha256', wp_salt( 'auth' ) . wp_salt( 'secure_auth' ), true );
-		$plain  = openssl_decrypt( $cipher, 'aes-256-gcm', $key, OPENSSL_RAW_DATA, $iv, $tag );
-		return is_string( $plain ) ? $plain : '';
-	}
-
-	private static function valid_azure_endpoint( string $endpoint ): bool {
-		$parts = wp_parse_url( $endpoint );
-		if ( ! is_array( $parts ) || 'https' !== strtolower( (string) ( $parts['scheme'] ?? '' ) ) ) {
-			return false;
-		}
-		$host = strtolower( (string) ( $parts['host'] ?? '' ) );
-		return 'api.cognitive.microsofttranslator.com' === $host || str_ends_with( $host, '.cognitiveservices.azure.com' );
 	}
 
 	/**
@@ -1299,6 +1098,11 @@ final class KOZGADS_Plugin {
 		}
 		if ( empty( $credentials['configured'] ) ) {
 			return new \WP_Error( 'azure_not_configured', __( 'Azure Translator is not configured.', 'koz-google-ads-campaign-builder' ) );
+		}
+		$characters = array_sum( array_map( static fn( $value ): int => KOZGADS_Copy::length( (string) $value ), $strings ) );
+		$available  = KOZGADS_Integrations::quota_available();
+		if ( null !== $available && $available < $characters ) {
+			return new \WP_Error( 'azure_quota', __( 'The KOZ Static Translate monthly Azure quota is used up.', 'koz-google-ads-campaign-builder' ) );
 		}
 		$from = self::$languages[ $source ]['azure_code'] ?? $source;
 		$to   = self::$languages[ $target ]['azure_code'] ?? $target;
@@ -1339,6 +1143,7 @@ final class KOZGADS_Plugin {
 			/* translators: %d: HTTP status code returned by Azure Translator. */
 			return new \WP_Error( 'azure_error', sprintf( __( 'Azure Translator returned an invalid response (HTTP %d).', 'koz-google-ads-campaign-builder' ), $status ) );
 		}
+		KOZGADS_Integrations::record_usage( $target, $characters );
 		$out = array();
 		foreach ( $strings as $index => $original ) {
 			$value = (string) ( $data[ $index ]['translations'][0]['text'] ?? '' );
@@ -1347,60 +1152,6 @@ final class KOZGADS_Plugin {
 		}
 		return $out;
 	}
-
-	/** @return array<string,mixed>|\WP_Error */
-	private static function translated_copy_pack( array $pack, string $source, string $target, array $settings, array $credentials ) {
-		if ( $source === $target ) {
-			return $pack;
-		}
-		if ( empty( $settings['allow_azure_copy_translation'] ) ) {
-			return new \WP_Error( 'translation_disabled', __( 'Automatic ad-copy translation is disabled.', 'koz-google-ads-campaign-builder' ) );
-		}
-		$flat = array();
-		$map  = array();
-		foreach ( $pack['ad_groups'] as $group_key => $group ) {
-			foreach ( array( 'name' ) as $field ) {
-				$map[]  = array( 'group', $group_key, $field, null );
-				$flat[] = (string) $group[ $field ];
-			}
-			foreach ( array( 'keywords', 'headlines', 'descriptions' ) as $field ) {
-				foreach ( (array) $group[ $field ] as $index => $value ) {
-					$map[]  = array( 'group', $group_key, $field, $index );
-					$flat[] = (string) $value;
-				}
-			}
-		}
-		foreach ( (array) $pack['sitelinks'] as $index => $link ) {
-			$map[]  = array( 'sitelink', $index, 'text', null );
-			$flat[] = (string) $link['text'];
-		}
-		foreach ( array( 'callouts', 'negative_keywords' ) as $field ) {
-			foreach ( (array) $pack[ $field ] as $index => $value ) {
-				$map[]  = array( 'root', $field, $index, null );
-				$flat[] = (string) $value;
-			}
-		}
-		$translated = self::translate_strings( $flat, $source, $target, $credentials, (string) $settings['organisation_name'] );
-		if ( is_wp_error( $translated ) ) {
-			return $translated;
-		}
-		foreach ( $map as $index => $path ) {
-			$value = (string) $translated[ $index ];
-			if ( 'group' === $path[0] ) {
-				if ( null === $path[3] ) {
-					$pack['ad_groups'][ $path[1] ][ $path[2] ] = $value;
-				} else {
-					$pack['ad_groups'][ $path[1] ][ $path[2] ][ $path[3] ] = $value;
-				}
-			} elseif ( 'sitelink' === $path[0] ) {
-				$pack['sitelinks'][ $path[1] ]['text'] = $value;
-			} else {
-				$pack[ $path[1] ][ $path[2] ] = $value;
-			}
-		}
-		return $pack;
-	}
-
 
 	private static function generation_id(): string {
 		$uuid = strtolower(
@@ -1436,8 +1187,6 @@ final class KOZGADS_Plugin {
 			return new \WP_Error( 'no_landings', __( 'No suitable published landing pages were found.', 'koz-google-ads-campaign-builder' ) );
 		}
 		$source      = (string) self::detected_site_language()['slug'];
-		$credentials = self::azure_credentials();
-		$base        = self::source_copy_pack( $landings, $settings );
 		$campaigns   = array();
 		$warnings    = array();
 		foreach ( self::campaign_languages( $settings ) as $language ) {
@@ -1447,14 +1196,11 @@ final class KOZGADS_Plugin {
 				$warnings[] = sprintf( __( '%s: no target locations are configured.', 'koz-google-ads-campaign-builder' ), $language );
 				continue;
 			}
-			$copy = self::translated_copy_pack( $base, $source, $language, $settings, $credentials );
-			if ( is_wp_error( $copy ) ) {
-				$warnings[] = $language . ': ' . $copy->get_error_message();
-				continue;
-			}
+			$copy     = self::language_copy( $landings, $language, $source, $settings );
+			$warnings = array_merge( $warnings, $copy['warnings'] );
 			$language_info = self::$languages[ $language ];
 			$campaign = array(
-				'name'                  => self::campaign_name( (string) $settings['organisation_name'], (string) $language_info['name'], $generation_id ),
+				'name'                  => self::campaign_name( KOZGADS_Copy::brand( (string) $settings['organisation_name'] ), (string) $language_info['name'], $generation_id ),
 				'language'              => $language,
 				'language_name'         => $language_info['name'],
 				'ads_language_code'     => $language_info['ads_code'],
@@ -1466,58 +1212,41 @@ final class KOZGADS_Plugin {
 				'callouts'              => array(),
 				'negative_keywords'     => array(),
 			);
-			foreach ( $copy['ad_groups'] as $group_key => $group ) {
-				$landing = $landings[ (string) $group['landing'] ] ?? null;
-				if ( ! is_array( $landing ) ) {
-					continue;
-				}
-				$keywords = array_values(
-					array_unique(
-						array_filter(
-							array_map(
-								static fn( string $value ): string => self::clip( self::lower( self::normalise_text( $value ) ), 80 ),
-								(array) $group['keywords']
-							),
-							static fn( string $value ): bool => self::valid_keyword( $value, self::account_mode( $settings ) )
-						)
-					)
-				);
-				$headlines = array_slice( array_values( array_unique( array_filter( array_map( static fn( string $value ): string => self::clip( self::normalise_text( $value ), 30 ), (array) $group['headlines'] ) ) ) ), 0, 15 );
-				$descriptions = array_slice( array_values( array_unique( array_filter( array_map( static fn( string $value ): string => self::clip( self::normalise_text( $value ), 90 ), (array) $group['descriptions'] ) ) ) ), 0, 4 );
-				if ( empty( $keywords ) || count( $headlines ) < 3 || empty( $descriptions ) ) {
+			$callouts = array();
+			foreach ( $copy['groups'] as $group_key => $group ) {
+				if ( empty( $group['keywords'] ) || count( $group['headlines'] ) < 3 || count( $group['descriptions'] ) < 2 ) {
 					/* translators: 1: campaign language name, 2: ad group name. */
 					$warnings[] = sprintf( __( '%1$s / %2$s was skipped because it did not contain enough valid ad copy.', 'koz-google-ads-campaign-builder' ), $language, (string) $group['name'] );
 					continue;
 				}
 				$campaign['ad_groups'][] = array(
-					'name'         => self::clip( (string) $group['name'], 255 ),
-					'final_url'    => self::localised_url( (string) $landing['url'], $language, $settings ),
-					'keywords'     => $keywords,
-					'headlines'    => $headlines,
-					'descriptions' => $descriptions,
-					'path_1'       => self::clip( sanitize_title( (string) $group_key ), 15 ),
-					'path_2'       => self::clip( $language, 15 ),
+					'name'               => self::clip( (string) $group['name'], 255 ),
+					'final_url'          => (string) $group['final_url'],
+					'keywords'           => $group['keywords'],
+					'headlines'          => $group['headlines'],
+					'descriptions'       => $group['descriptions'],
+					'path_1'             => self::display_path( (string) $group['name'] ),
+					'path_2'             => '',
+					'low_volume_removed' => $group['low_volume_removed'],
+					'planner_added'      => $group['planner_added'],
 				);
-			}
-			foreach ( (array) $copy['sitelinks'] as $link ) {
-				$landing = $landings[ (string) ( $link['landing'] ?? '' ) ] ?? null;
-				if ( is_array( $landing ) ) {
-					$campaign['sitelinks'][] = array(
-						'text'      => self::clip( self::normalise_text( (string) $link['text'] ), 25 ),
-						'final_url' => self::localised_url( (string) $landing['url'], $language, $settings ),
-					);
+				if ( '' !== $group['sitelink'] && count( $campaign['sitelinks'] ) < 6 ) {
+					$campaign['sitelinks'][] = array( 'text' => $group['sitelink'], 'final_url' => (string) $group['final_url'] );
+				}
+				foreach ( $group['h2'] as $h2 ) {
+					$callout = KOZGADS_Copy::fit( (string) $h2, 25 );
+					// Whole headings only, in the campaign language.
+					if ( '' !== $callout && KOZGADS_Copy::length( $callout ) === KOZGADS_Copy::length( KOZGADS_Copy::fit( (string) $h2, 200 ) ) && ! KOZGADS_Copy::script_mismatch( $callout, $language, 3, 0.5 ) ) {
+						$callouts[ KOZGADS_Copy::lower( $callout ) ] = $callout;
+					}
 				}
 			}
-			$automatic_assets = self::automatic_assets_from_copy( $copy );
-			$campaign_assets = self::merge_campaign_assets(
-				$automatic_assets,
-				array(
-					'callouts' => (array) $copy['callouts'],
-					'negative_keywords' => (array) $copy['negative_keywords'],
-				)
-			);
-			$campaign['callouts'] = $campaign_assets['callouts'];
-			$campaign['negative_keywords'] = $campaign_assets['negative_keywords'];
+			foreach ( (array) $settings['callouts'] as $callout ) {
+				$callouts[ KOZGADS_Copy::lower( (string) $callout ) ] = (string) $callout;
+			}
+			$sitelink_texts = array_map( static fn( array $link ): string => KOZGADS_Copy::lower( (string) $link['text'] ), $campaign['sitelinks'] );
+			$campaign['callouts']          = array_slice( array_values( array_diff_key( $callouts, array_flip( $sitelink_texts ) ) ), 0, 8 );
+			$campaign['negative_keywords'] = (array) $settings['negative_keywords'];
 			if ( empty( $campaign['ad_groups'] ) ) {
 				/* translators: %s: campaign language name. */
 				$warnings[] = sprintf( __( '%s: no complete ad groups were generated.', 'koz-google-ads-campaign-builder' ), $language );
@@ -1535,6 +1264,8 @@ final class KOZGADS_Plugin {
 		unset( $campaign );
 		return array(
 			'account_mode'            => self::account_mode( $settings ),
+			'bid_strategy'            => self::effective_bid_strategy( $settings ),
+			'conversion_confirmed'    => ! empty( $settings['conversion_tracking_confirmed'] ),
 			'source_language'         => $source,
 			'campaigns'               => $campaigns,
 			'warnings'                => $warnings,
@@ -1542,6 +1273,17 @@ final class KOZGADS_Plugin {
 			'estimated_daily_budget'  => array_sum( array_column( $campaigns, 'daily_budget' ) ),
 			'landing_pages'           => $landings,
 		);
+	}
+
+	/** Display path from the first words of the ad group name (letters and digits, up to 15 characters). */
+	private static function display_path( string $name ): string {
+		foreach ( array( 2, 1 ) as $count ) {
+			$path = trim( (string) preg_replace( '/[^\p{L}\p{N}]+/u', '-', KOZGADS_Copy::lower( self::first_words( $name, $count ) ) ), '-' );
+			if ( '' !== $path && KOZGADS_Copy::length( $path ) <= 15 ) {
+				return $path;
+			}
+		}
+		return '';
 	}
 
 	private static function valid_keyword( string $keyword, string $mode ): bool {
@@ -1556,145 +1298,6 @@ final class KOZGADS_Plugin {
 		return is_array( $words ) && count( $words ) >= 2;
 	}
 
-	/** @return array<string,array{headers:array<int,string>,rows:array<int,array<string,mixed>>}> */
-	private static function editor_files( array $plan, array $settings ): array {
-		$campaign_rows = array();
-		$location_rows = array();
-		$group_rows    = array();
-		$keyword_rows  = array();
-		$ad_rows       = array();
-		$sitelink_rows          = array();
-		$campaign_callout_rows  = array();
-		$networks = ! empty( $settings['include_search_partners'] ) ? 'Google Search; Search Partners' : 'Google Search';
-		foreach ( $plan['campaigns'] as $campaign ) {
-			$campaign_rows[] = array(
-				'Campaign'              => $campaign['name'],
-				'Campaign type'         => 'Search',
-				'Campaign daily budget' => $campaign['daily_budget'],
-				'Language targeting'    => $campaign['ads_language_code'],
-				'Networks'              => $networks,
-				'Bid strategy type'     => (string) $settings['bid_strategy'],
-				'Campaign status'       => 'Paused',
-				'Tracking template'     => '{lpurl}',
-				'Final URL suffix'      => (string) $settings['final_url_suffix'],
-			);
-			foreach ( $campaign['locations'] as $location ) {
-				$location_rows[] = array( 'Campaign' => $campaign['name'], 'Location' => $location['name'], 'Location ID' => $location['id'] );
-			}
-			foreach ( $campaign['ad_groups'] as $group ) {
-				$group_rows[] = array( 'Campaign' => $campaign['name'], 'Ad Group' => $group['name'], 'Ad group status' => 'Enabled' );
-				foreach ( $group['keywords'] as $keyword ) {
-					$keyword_rows[] = array(
-						'Campaign'       => $campaign['name'],
-						'Ad Group'       => $group['name'],
-						'Keyword'        => $keyword,
-						'Criterion Type' => 'Phrase',
-						'Status'         => 'Enabled',
-						'Final URL'      => $group['final_url'],
-					);
-				}
-				$ad = array( 'Campaign' => $campaign['name'], 'Ad Group' => $group['name'], 'Final URL' => $group['final_url'], 'Path 1' => $group['path_1'], 'Path 2' => $group['path_2'], 'Status' => 'Enabled' );
-				foreach ( array_slice( $group['headlines'], 0, 15 ) as $index => $value ) {
-					$ad[ 'Headline ' . ( $index + 1 ) ] = $value;
-				}
-				foreach ( array_slice( $group['descriptions'], 0, 4 ) as $index => $value ) {
-					$ad[ 'Description ' . ( $index + 1 ) ] = $value;
-				}
-				$ad_rows[] = $ad;
-			}
-			foreach ( $campaign['negative_keywords'] as $keyword ) {
-				$keyword_rows[] = array(
-					'Campaign'       => $campaign['name'],
-					'Ad Group'       => '',
-					'Keyword'        => $keyword,
-					'Criterion Type' => 'Campaign negative',
-					'Status'         => 'Enabled',
-					'Final URL'      => '',
-				);
-			}
-			foreach ( $campaign['sitelinks'] as $link ) {
-				$sitelink_rows[] = array( 'Campaign' => $campaign['name'], 'Sitelink text' => $link['text'], 'Final URL' => $link['final_url'], 'Status' => 'Enabled' );
-			}
-			foreach ( $campaign['callouts'] as $callout ) {
-				$campaign_callout_rows[] = array(
-					'Campaign'     => $campaign['name'],
-					'Ad Group'     => '',
-					'Callout text' => $callout,
-					'Status'       => 'Enabled',
-				);
-			}
-		}
-		$ad_headers = array( 'Campaign', 'Ad Group', 'Final URL', 'Path 1', 'Path 2', 'Status' );
-		for ( $index = 1; $index <= 15; $index++ ) {
-			$ad_headers[] = 'Headline ' . $index;
-		}
-		for ( $index = 1; $index <= 4; $index++ ) {
-			$ad_headers[] = 'Description ' . $index;
-		}
-		$all_headers = array(
-			'Campaign',
-			'Campaign type',
-			'Campaign daily budget',
-			'Language targeting',
-			'Networks',
-			'Bid strategy type',
-			'Campaign status',
-			'Tracking template',
-			'Final URL suffix',
-			'Location',
-			'Location ID',
-			'Ad Group',
-			'Ad group status',
-			'Keyword',
-			'Criterion Type',
-			'Status',
-			'Final URL',
-			'Path 1',
-			'Path 2',
-		);
-		for ( $index = 1; $index <= 15; $index++ ) {
-			$all_headers[] = 'Headline ' . $index;
-		}
-		for ( $index = 1; $index <= 4; $index++ ) {
-			$all_headers[] = 'Description ' . $index;
-		}
-		$all_headers[] = 'Sitelink text';
-		$all_headers[] = 'Callout text';
-
-		$all_rows = array_merge(
-			$campaign_rows,
-			$location_rows,
-			$group_rows,
-			$keyword_rows,
-			$ad_rows,
-			$sitelink_rows,
-			$campaign_callout_rows
-		);
-
-		return array(
-			'00-IMPORT-ALL.csv' => array(
-				'headers' => $all_headers,
-				'rows'    => $all_rows,
-			),
-			'01-campaigns.csv' => array( 'headers' => array( 'Campaign', 'Campaign type', 'Campaign daily budget', 'Language targeting', 'Networks', 'Bid strategy type', 'Campaign status', 'Tracking template', 'Final URL suffix' ), 'rows' => $campaign_rows ),
-			'02-locations.csv' => array( 'headers' => array( 'Campaign', 'Location', 'Location ID' ), 'rows' => $location_rows ),
-			'03-ad-groups.csv' => array( 'headers' => array( 'Campaign', 'Ad Group', 'Ad group status' ), 'rows' => $group_rows ),
-			'04-keywords-and-negatives.csv' => array(
-				'headers' => array( 'Campaign', 'Ad Group', 'Keyword', 'Criterion Type', 'Status', 'Final URL' ),
-				'rows'    => $keyword_rows,
-			),
-			'05-responsive-search-ads.csv' => array( 'headers' => $ad_headers, 'rows' => $ad_rows ),
-			'06-sitelinks.csv' => array(
-				'headers' => array( 'Campaign', 'Sitelink text', 'Final URL', 'Status' ),
-				'rows'    => $sitelink_rows,
-			),
-			'07-campaign-callouts.csv' => array(
-				'headers' => array( 'Campaign', 'Ad Group', 'Callout text', 'Status' ),
-				'rows'    => $campaign_callout_rows,
-			),
-		);
-	}
-
 	/** @return array<string,mixed> */
 	private static function readiness_report( array $plan, array $settings ): array {
 		$issues   = array();
@@ -1707,22 +1310,21 @@ final class KOZGADS_Plugin {
 			$warnings[] = (string) $landing_warning;
 		}
 		if ( 'ad_grants' === self::account_mode( $settings ) && empty( $settings['conversion_tracking_confirmed'] ) ) {
-			$issues[] = __( 'Meaningful conversion tracking has not been confirmed for the Ad Grants mode.', 'koz-google-ads-campaign-builder' );
+			$issues[] = __( 'No real conversion is recorded in Google Ads yet. Set it up with CONVERSION-SETUP.txt before launching.', 'koz-google-ads-campaign-builder' );
 		} elseif ( empty( $settings['conversion_tracking_confirmed'] ) ) {
 			$warnings[] = __( 'Conversion tracking has not been confirmed.', 'koz-google-ads-campaign-builder' );
 		}
+		if ( self::effective_bid_strategy( $settings ) !== (string) $settings['bid_strategy'] && 'auto' !== (string) $settings['bid_strategy'] ) {
+			$warnings[] = __( 'Maximize conversions was replaced by Maximize clicks because no real conversion is recorded yet.', 'koz-google-ads-campaign-builder' );
+		}
+		$validation = KOZGADS_Export::validate( $plan );
+		$issues     = array_merge( $issues, $validation['issues'] );
+		$warnings   = array_merge( $warnings, $validation['warnings'] );
 		foreach ( $plan['campaigns'] as $campaign ) {
-			if ( empty( $campaign['negative_keywords'] ) ) {
-				$warnings[] = sprintf(
-					/* translators: %s: campaign name. */
-					__( '%s: automatic campaign negative keyword generation returned no rows.', 'koz-google-ads-campaign-builder' ),
-					(string) $campaign['name']
-				);
-			}
 			if ( empty( $campaign['callouts'] ) ) {
 				$warnings[] = sprintf(
 					/* translators: %s: campaign name. */
-					__( '%s: automatic callout generation returned no rows.', 'koz-google-ads-campaign-builder' ),
+					__( '%s: no callouts. Add callouts in the settings.', 'koz-google-ads-campaign-builder' ),
 					(string) $campaign['name']
 				);
 			}
@@ -1759,21 +1361,21 @@ final class KOZGADS_Plugin {
 			self::redirect_notice( 'error', $plan->get_error_message() );
 		}
 		$readiness = self::readiness_report( $plan, $settings );
-		$files     = self::editor_files( $plan, $settings );
+		$files     = KOZGADS_Export::editor_files( $plan, $settings );
 		$dir       = self::package_dir();
 		if ( is_wp_error( $dir ) ) {
 			self::redirect_notice( 'error', $dir->get_error_message() );
 		}
 		self::remove_old_packages( $dir );
-		$prefix   = 'ad_grants' === self::account_mode( $settings ) ? 'uafree-ad-grants-' : 'uafree-google-ads-';
-		$filename = $prefix . $generation_id . '.zip';
+		$prefix   = 'ad_grants' === self::account_mode( $settings ) ? 'koz-ad-grants-' : 'koz-google-ads-';
+		$filename = $prefix . $generation_id . '-' . strtolower( wp_generate_password( 10, false, false ) ) . '.zip';
 		$path     = trailingslashit( $dir ) . $filename;
 		$zip      = new \ZipArchive();
 		if ( true !== $zip->open( $path, \ZipArchive::CREATE | \ZipArchive::OVERWRITE ) ) {
 			self::redirect_notice( 'error', __( 'The ZIP package could not be created.', 'koz-google-ads-campaign-builder' ) );
 		}
 		foreach ( $files as $name => $file ) {
-			$zip->addFromString( $name, self::csv_content( $file['headers'], $file['rows'] ) );
+			$zip->addFromString( $name, KOZGADS_Export::csv_content( $file['headers'], $file['rows'] ) );
 		}
 		$manifest = array(
 			'generator' => array( 'name' => 'KOZ Google Ads Campaign Builder', 'version' => KOZGADS_VERSION, 'generated_at_utc' => gmdate( 'c' ), 'package_id' => $generation_id ),
@@ -1800,9 +1402,11 @@ final class KOZGADS_Plugin {
 			),
 			'campaign_negative_keywords' => array_sum( array_map( static fn( array $campaign ): int => count( $campaign['negative_keywords'] ), $plan['campaigns'] ) ),
 			'callouts' => array_sum( array_map( static fn( array $campaign ): int => count( $campaign['callouts'] ), $plan['campaigns'] ) ),
+			'sitelinks' => array_sum( array_map( static fn( array $campaign ): int => count( $campaign['sitelinks'] ), $plan['campaigns'] ) ),
+			'bid_strategy' => (string) $plan['bid_strategy'],
 			'status' => 'Paused',
 			'launch_ready' => (bool) $readiness['launch_ready'],
-			'files' => array_merge( array_keys( $files ), array( 'campaign-plan.json', 'landing-page-inventory.json', 'readiness-report.json', 'conversion-plan.json', 'package-manifest.json', 'IMPORT-INSTRUCTIONS.txt' ) ),
+			'files' => array_merge( array_keys( $files ), array( 'campaign-plan.json', 'landing-page-inventory.json', 'readiness-report.json', 'conversion-plan.json', 'package-manifest.json', 'IMPORT-INSTRUCTIONS.txt', 'CONVERSION-SETUP.txt', 'POST-IMPORT-CHECKLIST.txt' ) ),
 		);
 		$conversion_plan = array(
 			'primary_conversion_name' => (string) $settings['primary_conversion_name'],
@@ -1824,7 +1428,7 @@ final class KOZGADS_Plugin {
 				__( 'Manager workflow:', 'koz-google-ads-campaign-builder' ),
 				'1. Import only 00-IMPORT-ALL.csv.',
 				'2. Review the proposed campaigns and keep the imported changes.',
-				'3. Do not publish the campaigns during acceptance testing.',
+				'3. Follow CONVERSION-SETUP.txt and POST-IMPORT-CHECKLIST.txt before enabling any campaign.',
 				'',
 				__( 'The numbered CSV files contain the same data split by entity and are only for diagnostics.', 'koz-google-ads-campaign-builder' ),
 				__( 'Campaign negatives, locations and direct campaign-level callout assets are included in the single master import.', 'koz-google-ads-campaign-builder' ),
@@ -1840,6 +1444,8 @@ final class KOZGADS_Plugin {
 		$zip->addFromString( 'conversion-plan.json', wp_json_encode( $conversion_plan, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ) );
 		$zip->addFromString( 'package-manifest.json', wp_json_encode( $manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ) );
 		$zip->addFromString( 'IMPORT-INSTRUCTIONS.txt', $instructions );
+		$zip->addFromString( 'CONVERSION-SETUP.txt', KOZGADS_Export::conversion_guide( KOZGADS_Integrations::donate_stats(), $settings ) );
+		$zip->addFromString( 'POST-IMPORT-CHECKLIST.txt', KOZGADS_Export::checklist( $plan ) );
 		$zip->close();
 
 		$package = array(
@@ -1856,6 +1462,10 @@ final class KOZGADS_Plugin {
 			'launch_ready'       => (bool) $readiness['launch_ready'],
 			'warnings'           => count( $readiness['warnings'] ),
 			'issues'             => count( $readiness['issues'] ),
+			'issue_list'         => array_slice( (array) $readiness['issues'], 0, 20 ),
+			'warning_list'       => array_slice( (array) $readiness['warnings'], 0, 30 ),
+			'bid_strategy'       => (string) $plan['bid_strategy'],
+			'preview'            => self::preview( $plan ),
 		);
 		update_option( self::PACKAGE_OPTION, $package, false );
 		self::redirect_notice( 'package_ready' );
@@ -1866,7 +1476,30 @@ final class KOZGADS_Plugin {
 	 *
 	 * @return \WP_Filesystem_Base|\WP_Error
 	 */
-	private static function filesystem() {
+	/** First ad of every ad group, for the preview in the admin. */
+	private static function preview( array $plan ): array {
+		$out = array();
+		foreach ( $plan['campaigns'] as $campaign ) {
+			foreach ( $campaign['ad_groups'] as $group ) {
+				$out[] = array(
+					'campaign'     => (string) $campaign['name'],
+					'group'        => (string) $group['name'],
+					'url'          => (string) $group['final_url'],
+					'headlines'    => array_slice( $group['headlines'], 0, 15 ),
+					'descriptions' => array_slice( $group['descriptions'], 0, 4 ),
+					'keywords'     => array_slice( $group['keywords'], 0, 15 ),
+					'removed'      => array_slice( (array) $group['low_volume_removed'], 0, 15 ),
+					'added'        => array_slice( (array) $group['planner_added'], 0, 5 ),
+				);
+				if ( count( $out ) >= 24 ) {
+					return $out;
+				}
+			}
+		}
+		return $out;
+	}
+
+	public static function filesystem() {
 		global $wp_filesystem;
 
 		if ( ! function_exists( 'WP_Filesystem' ) ) {
@@ -1887,7 +1520,7 @@ final class KOZGADS_Plugin {
 		if ( ! empty( $upload['error'] ) ) {
 			return new \WP_Error( 'upload_error', (string) $upload['error'] );
 		}
-		$dir = trailingslashit( (string) $upload['basedir'] ) . 'ua-free-google-ads-packages';
+		$dir = trailingslashit( (string) $upload['basedir'] ) . self::PACKAGE_DIR;
 		if ( ! wp_mkdir_p( $dir ) ) {
 			return new \WP_Error( 'directory_error', __( 'The private package directory could not be created.', 'koz-google-ads-campaign-builder' ) );
 		}
@@ -1907,7 +1540,7 @@ final class KOZGADS_Plugin {
 	}
 
 	private static function remove_old_packages( string $dir ): void {
-		$files = glob( trailingslashit( $dir ) . 'uafree-*.zip' );
+		$files = glob( trailingslashit( $dir ) . 'koz-*.zip' );
 		if ( ! is_array( $files ) ) {
 			return;
 		}
@@ -1924,8 +1557,7 @@ final class KOZGADS_Plugin {
 		check_admin_referer( self::ACTION_DOWNLOAD );
 		$package = get_option( self::PACKAGE_OPTION, array() );
 		$path    = is_array( $package ) ? (string) ( $package['path'] ?? '' ) : '';
-		$dir     = self::package_dir();
-		if ( is_wp_error( $dir ) || ! self::path_is_inside( $path, (string) $dir ) || ! is_file( $path ) ) {
+		if ( ! self::package_path_allowed( $path ) ) {
 			wp_die( esc_html__( 'The generated package is unavailable.', 'koz-google-ads-campaign-builder' ) );
 		}
 		$filesystem = self::filesystem();
@@ -1949,59 +1581,31 @@ final class KOZGADS_Plugin {
 		check_admin_referer( self::ACTION_DELETE );
 		$package = get_option( self::PACKAGE_OPTION, array() );
 		$path    = is_array( $package ) ? (string) ( $package['path'] ?? '' ) : '';
-		$dir     = self::package_dir();
-		if ( ! is_wp_error( $dir ) && self::path_is_inside( $path, (string) $dir ) && is_file( $path ) ) {
+		if ( self::package_path_allowed( $path ) ) {
 			wp_delete_file( $path );
 		}
 		delete_option( self::PACKAGE_OPTION );
 		self::redirect_notice( 'package_deleted' );
 	}
 
+	/** The package lives in the current or the pre-1.5.0 package folder. */
+	private static function package_path_allowed( string $path ): bool {
+		$upload = wp_upload_dir();
+		if ( '' === $path || ! empty( $upload['error'] ) || ! is_file( $path ) ) {
+			return false;
+		}
+		foreach ( array( self::PACKAGE_DIR, self::LEGACY_PACKAGE_DIR ) as $folder ) {
+			if ( self::path_is_inside( $path, trailingslashit( (string) $upload['basedir'] ) . $folder ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	private static function path_is_inside( string $path, string $directory ): bool {
 		$real_path = realpath( $path );
 		$real_dir  = realpath( $directory );
 		return is_string( $real_path ) && is_string( $real_dir ) && str_starts_with( $real_path, trailingslashit( $real_dir ) );
-	}
-
-	private static function csv_content( array $headers, array $rows ): string {
-		$lines = array( self::csv_row( $headers ) );
-		foreach ( $rows as $row ) {
-			$values = array();
-			foreach ( $headers as $header ) {
-				$values[] = $row[ $header ] ?? '';
-			}
-			$lines[] = self::csv_row( $values );
-		}
-		$content = "\xEF\xBB\xBF" . implode( "\n", $lines ) . "\n";
-		return str_replace( "\n", "\r\n", $content );
-	}
-
-	private static function csv_row( array $values ): string {
-		return implode(
-			',',
-			array_map(
-				static function ( $value ): string {
-					$value = (string) $value;
-					if ( false !== strpbrk( $value, ",\"\\\r\n\t " ) ) {
-						$escaped  = '';
-						$previous = '';
-						$length   = strlen( $value );
-						for ( $index = 0; $index < $length; $index++ ) {
-							$character = $value[ $index ];
-							if ( '"' === $character && '\\' !== $previous ) {
-								$escaped .= '""';
-							} else {
-								$escaped .= $character;
-							}
-							$previous = $character;
-						}
-						return '"' . $escaped . '"';
-					}
-					return $value;
-				},
-				$values
-			)
-		);
 	}
 
 	private static function normalise_text( string $text ): string {
@@ -2094,7 +1698,9 @@ final class KOZGADS_Plugin {
 				break;
 			}
 		}
-		$translation_ready = ! $needs_translation
+		$published = KOZGADS_Integrations::translated_languages();
+		$missing   = array_values( array_filter( $languages, static fn( string $language ): bool => $language !== $source_slug && ! in_array( $language, $published, true ) ) );
+		$translation_ready = empty( $missing )
 			|| ( ! empty( $settings['allow_azure_copy_translation'] ) && ! empty( $azure['configured'] ) );
 		$conversion_confirmed = ! empty( $settings['conversion_tracking_confirmed'] );
 		$package_available = ! empty( $package['path'] );
@@ -2156,7 +1762,7 @@ final class KOZGADS_Plugin {
 			$attention[] = array(
 				'level' => 'warning',
 				'title' => self::ui( 'Переклад рекламних текстів не готовий', 'Ad-copy translation is not ready' ),
-				'message' => self::ui( 'Вибрано інші мови, але переклад Azure не дозволений або не налаштований.', 'Other languages are selected, but Azure translation is disabled or unavailable.' ),
+				'message' => sprintf( self::ui( 'На сайті немає перекладених сторінок для: %s, а переклад Azure вимкнено.', 'The site has no translated pages for: %s, and Azure translation is off.' ), implode( ', ', $missing ) ),
 			);
 			$actions[] = array(
 				'level' => 'warning',
@@ -2165,16 +1771,33 @@ final class KOZGADS_Plugin {
 			);
 		}
 
-		if ( 'ad_grants' === $mode && ! $conversion_confirmed ) {
+		if ( ! $conversion_confirmed ) {
+			$donate = KOZGADS_Integrations::donate_stats();
 			$attention[] = array(
-				'level' => 'warning',
-				'title' => self::ui( 'Конверсію Ad Grants ще не підтверджено', 'Ad Grants conversion is not confirmed' ),
-				'message' => self::ui( 'Пакет можна підготувати, але запускати кампанію ще не слід.', 'The package may be prepared, but the campaign should not be launched yet.' ),
+				'level' => 'ad_grants' === $mode ? 'critical' : 'warning',
+				'title' => self::ui( 'Немає реальної конверсії в Google Ads', 'No real conversion in Google Ads' ),
+				'message' => self::ui( 'Без конверсії стратегія «Максимум конверсій» не має сигналу й кампанії майже не показуються. Пакет використає «Максимум кліків».', 'Without a conversion, Maximize conversions has no signal and campaigns barely serve. The package uses Maximize clicks.' ),
 			);
 			$actions[] = array(
 				'level' => 'warning',
-				'title' => self::ui( 'Підтвердити реальну конверсію', 'Confirm a meaningful conversion' ),
-				'description' => self::ui( 'Використати перевірену дію, наприклад підтверджений донат.', 'Use a verified action such as a confirmed donation.' ),
+				'title' => self::ui( 'Налаштувати конверсію донату', 'Set up the donation conversion' ),
+				'description' => $donate['data_layer'] && '' !== $donate['event']
+					? sprintf( self::ui( 'Подія Donate Stats «%s» → тригер GTM → тег конверсії Google Ads, зробити її основною. Покроково — у CONVERSION-SETUP.txt у пакеті.', 'Donate Stats event "%s" → GTM trigger → Google Ads conversion tag, make it primary. Step by step in CONVERSION-SETUP.txt in the package.' ), $donate['event'] )
+					: self::ui( 'Увімкніть подію dataLayer у KOZ Donate Stats або використайте власну подію донату. Покроково — у CONVERSION-SETUP.txt.', 'Turn on the dataLayer event in KOZ Donate Stats or use your own donation event. Step by step in CONVERSION-SETUP.txt.' ),
+			);
+		}
+		$report = KOZGADS_Report::summary();
+		if ( $report['total'] > 0 && $report['low'] > 0 ) {
+			$attention[] = array(
+				'level' => $report['low'] * 2 > $report['total'] ? 'critical' : 'warning',
+				'title' => self::ui( 'Ключові слова без попиту', 'Keywords without search demand' ),
+				'message' => sprintf( self::ui( 'У завантаженому звіті %1$d з %2$d ключових слів мають низький обсяг пошуку. Новий пакет їх не міститиме.', '%1$d of %2$d keywords in the imported report have low search volume. A new package leaves them out.' ), $report['low'], $report['total'] ),
+			);
+		} elseif ( 0 === $report['total'] ) {
+			$actions[] = array(
+				'level' => 'success',
+				'title' => self::ui( 'Завантажити звіт ключових слів', 'Import a keyword report' ),
+				'description' => self::ui( 'Експорт із Google Ads або Keyword Planner допоможе відсіяти слова з низьким обсягом пошуку.', 'An export from Google Ads or Keyword Planner filters out low-search-volume keywords.' ),
 			);
 		}
 
@@ -2234,7 +1857,7 @@ final class KOZGADS_Plugin {
 		return self::manager_summary_from(
 			$settings,
 			self::selected_landing_pages( $settings ),
-			self::azure_credentials(),
+			KOZGADS_Integrations::azure_credentials(),
 			is_array( $package ) ? $package : array(),
 			(string) self::detected_site_language()['slug']
 		);
@@ -2317,23 +1940,26 @@ final class KOZGADS_Plugin {
 		</section>
 
 
-		<?php $live_destination_check = get_option( self::LIVE_CHECK_OPTION, array() ); ?>
+		<?php self::render_conversion_section( $settings ); ?>
+		<?php self::render_report_section(); ?>
+
+		<?php $live_destination_check = get_option( KOZGADS_Checks::OPTION, array() ); ?>
 		<section class="kozgads-generate">
 			<h2><?php echo esc_html( self::ui( 'Жива перевірка Google AdsBot', 'Live Google AdsBot destination check' ) ); ?></h2>
-			<p class="description"><?php echo esc_html( self::ui( 'Робить лише same-site GET-запити з AdsBot-Google user agent. Перевіряє вибрані landing pages та точні додаткові Final URL, задані адміністратором: HTTP/таймаут, robots.txt і базову відповідність мови.', 'Makes same-site GET requests only with an AdsBot-Google user agent. Checks selected landing pages plus exact additional Final URLs entered by the administrator for HTTP/timeouts, robots.txt and basic language alignment.' ) ); ?></p>
+			<p class="description"><?php echo esc_html( self::ui( 'Робить лише запити до свого сайту з user agent AdsBot-Google (комп’ютер і мобільний) та мовою кампанії. Перевіряє HTTP і таймаут, robots.txt, noindex і мову сторінки.', 'Makes requests to this site only, with the AdsBot-Google user agent (desktop and mobile) and the campaign language. Checks HTTP and timeouts, robots.txt, noindex and the page language.' ) ); ?></p>
 			<?php if ( is_array( $live_destination_check ) && ! empty( $live_destination_check['checked_at'] ) ) : ?>
 				<p><strong><?php echo esc_html( ! empty( $live_destination_check['ready'] ) ? self::ui( 'PASS — destination доступні для AdsBot-перевірки.', 'PASS — destinations are reachable in the AdsBot check.' ) : self::ui( 'FAIL — є недоступні destination.', 'FAIL — one or more destinations are not reachable.' ) ); ?></strong></p>
 				<p><?php echo esc_html( sprintf( self::ui( 'URL: %1$d; проблем: %2$d; попереджень: %3$d.', 'URLs: %1$d; issues: %2$d; warnings: %3$d.' ), (int) ( $live_destination_check['target_count'] ?? 0 ), (int) ( $live_destination_check['issue_count'] ?? 0 ), (int) ( $live_destination_check['warning_count'] ?? 0 ) ) ); ?></p>
 				<?php if ( ! empty( $live_destination_check['issues'] ) ) : ?><ul class="ul-disc"><?php foreach ( (array) $live_destination_check['issues'] as $item ) : ?><li><?php echo esc_html( (string) $item ); ?></li><?php endforeach; ?></ul><?php endif; ?>
 				<?php if ( ! empty( $live_destination_check['warnings'] ) ) : ?><ul class="ul-disc"><?php foreach ( (array) $live_destination_check['warnings'] as $item ) : ?><li><?php echo esc_html( (string) $item ); ?></li><?php endforeach; ?></ul><?php endif; ?>
-				<table class="widefat striped"><thead><tr><th><?php echo esc_html( self::ui( 'Сторінка', 'Page' ) ); ?></th><th><?php echo esc_html( self::ui( 'Мова', 'Language' ) ); ?></th><th>HTTP</th><th><?php echo esc_html( self::ui( 'Час', 'Time' ) ); ?></th><th>HTML lang</th><th>URL</th></tr></thead><tbody>
+				<table class="widefat striped"><thead><tr><th><?php echo esc_html( self::ui( 'Сторінка', 'Page' ) ); ?></th><th><?php echo esc_html( self::ui( 'Мова', 'Language' ) ); ?></th><th><?php echo esc_html( self::ui( 'Пристрій', 'Device' ) ); ?></th><th>HTTP</th><th><?php echo esc_html( self::ui( 'Час', 'Time' ) ); ?></th><th>HTML lang</th><th>URL</th></tr></thead><tbody>
 				<?php foreach ( (array) ( $live_destination_check['rows'] ?? array() ) as $row ) : ?>
-				<tr><td><?php echo esc_html( (string) ( $row['title'] ?? '' ) ); ?></td><td><?php echo esc_html( strtoupper( (string) ( $row['language'] ?? '' ) ) ); ?></td><td><?php echo esc_html( (string) ( $row['http_code'] ?? 0 ) ); ?><?php if ( ! empty( $row['error'] ) ) : ?><br><small><?php echo esc_html( (string) $row['error'] ); ?></small><?php endif; ?></td><td><?php echo esc_html( (string) ( $row['elapsed_ms'] ?? 0 ) ); ?> ms</td><td><?php echo esc_html( (string) ( $row['html_lang'] ?? '' ) ); ?></td><td><code><?php echo esc_html( (string) ( $row['url'] ?? '' ) ); ?></code></td></tr>
+				<tr><td><?php echo esc_html( (string) ( $row['title'] ?? '' ) ); ?></td><td><?php echo esc_html( strtoupper( (string) ( $row['language'] ?? '' ) ) ); ?></td><td><?php echo esc_html( (string) ( $row['device'] ?? 'desktop' ) ); ?></td><td><?php echo esc_html( (string) ( $row['http_code'] ?? 0 ) ); ?><?php if ( ! empty( $row['error'] ) ) : ?><br><small><?php echo esc_html( (string) $row['error'] ); ?></small><?php endif; ?></td><td><?php echo esc_html( (string) ( $row['elapsed_ms'] ?? 0 ) ); ?> ms</td><td><?php echo esc_html( (string) ( $row['html_lang'] ?? '' ) ); ?></td><td><code><?php echo esc_html( (string) ( $row['url'] ?? '' ) ); ?></code></td></tr>
 				<?php endforeach; ?>
 				</tbody></table>
 			<?php endif; ?>
-			<form method="post" action="<?php echo esc_url( self::admin_action_url( self::ACTION_LIVE_CHECK ) ); ?>">
-				<?php wp_nonce_field( self::ACTION_LIVE_CHECK ); ?>
+			<form method="post" action="<?php echo esc_url( self::admin_action_url( KOZGADS_Checks::ACTION ) ); ?>">
+				<?php wp_nonce_field( KOZGADS_Checks::ACTION ); ?>
 				<p><button type="submit" class="button button-secondary"><?php echo esc_html( self::ui( 'Запустити живу перевірку AdsBot', 'Run live AdsBot destination check' ) ); ?></button></p>
 			</form>
 		</section>
@@ -2365,6 +1991,7 @@ final class KOZGADS_Plugin {
 					<a class="button button-primary" href="<?php echo esc_url( wp_nonce_url( self::admin_action_url( self::ACTION_DOWNLOAD ), self::ACTION_DOWNLOAD ) ); ?>"><?php echo esc_html( self::ui( 'Завантажити ZIP', 'Download ZIP' ) ); ?></a>
 					<a class="button" href="<?php echo esc_url( wp_nonce_url( self::admin_action_url( self::ACTION_DELETE ), self::ACTION_DELETE ) ); ?>"><?php echo esc_html( self::ui( 'Видалити ZIP із сервера', 'Delete ZIP from server' ) ); ?></a>
 				</p>
+				<?php self::render_package_details( $package ); ?>
 				<details>
 					<summary>SHA-256</summary>
 					<code><?php echo esc_html( (string) $package['sha256'] ); ?></code>
@@ -2378,7 +2005,8 @@ final class KOZGADS_Plugin {
 				<table class="widefat striped">
 					<tbody>
 						<tr><th><?php echo esc_html( self::ui( 'Вихідна мова', 'Source language' ) ); ?></th><td><?php echo esc_html( self::$languages[ $source['slug'] ]['name'] . ' (' . $source['slug'] . ')' ); ?></td></tr>
-						<tr><th><?php echo esc_html( self::ui( 'Переклад Azure', 'Azure translation' ) ); ?></th><td><?php echo esc_html( ! empty( $azure['configured'] ) ? self::ui( 'Налаштований', 'Configured' ) : self::ui( 'Не налаштований', 'Not configured' ) ); ?></td></tr>
+						<tr><th><?php echo esc_html( self::ui( 'Переклад Azure', 'Azure translation' ) ); ?></th><td><?php echo esc_html( ! empty( $azure['configured'] ) ? self::ui( 'Налаштований', 'Configured' ) . ' (' . $azure['source'] . ')' : self::ui( 'Не налаштований', 'Not configured' ) ); ?><?php $usage = KOZGADS_Integrations::quota_usage(); if ( ! empty( $usage ) ) : ?> · <?php echo esc_html( sprintf( self::ui( 'квота Static Translate: %1$s з %2$s символів (%3$s%%)', 'Static Translate quota: %1$s of %2$s characters (%3$s%%)' ), number_format_i18n( $usage['characters'] ), number_format_i18n( $usage['limit'] ), (string) $usage['percent'] ) ); ?><?php endif; ?></td></tr>
+						<tr><th><?php echo esc_html( self::ui( 'Перекладені сторінки', 'Translated pages' ) ); ?></th><td><?php echo esc_html( implode( ', ', KOZGADS_Integrations::translated_languages() ) ?: '—' ); ?></td></tr>
 					</tbody>
 				</table>
 				<table class="widefat striped">
@@ -2391,6 +2019,79 @@ final class KOZGADS_Plugin {
 				</table>
 			</div>
 		</details>
+		<?php
+	}
+
+	private static function render_conversion_section( array $settings ): void {
+		$donate = KOZGADS_Integrations::donate_stats();
+		$bid    = self::effective_bid_strategy( $settings );
+		?>
+		<section class="kozgads-generate">
+			<h2><?php echo esc_html( self::ui( 'Конверсія і ставки', 'Conversion and bidding' ) ); ?></h2>
+			<table class="widefat striped"><tbody>
+				<tr><th><?php echo esc_html( self::ui( 'Реальна конверсія в Google Ads', 'Real conversion in Google Ads' ) ); ?></th><td><?php echo esc_html( ! empty( $settings['conversion_tracking_confirmed'] ) ? self::ui( 'Так (підтверджено в налаштуваннях)', 'Yes (confirmed in the settings)' ) : self::ui( 'Ні', 'No' ) ); ?></td></tr>
+				<tr><th>KOZ Donate Stats</th><td><?php echo esc_html( $donate['available'] ? ( $donate['data_layer'] && '' !== $donate['event'] ? sprintf( self::ui( 'подія dataLayer «%1$s»; підтверджених донатів: %2$d', 'dataLayer event "%1$s"; confirmed donations: %2$d' ), $donate['event'], $donate['confirmations'] ) : self::ui( 'активний, але подію dataLayer вимкнено', 'active, but the dataLayer event is off' ) ) : self::ui( 'не встановлено', 'not installed' ) ); ?></td></tr>
+				<tr><th><?php echo esc_html( self::ui( 'Стратегія ставок у пакеті', 'Bid strategy in the package' ) ); ?></th><td><?php echo esc_html( $bid ); ?><?php if ( 'ad_grants' === self::account_mode( $settings ) && 'Maximize conversions' !== $bid ) : ?> — <?php echo esc_html( self::ui( 'Ad Grants обмежує ціну кліку до 2,00 USD', 'Ad Grants caps the cost per click at 2.00 USD' ) ); ?><?php endif; ?></td></tr>
+			</tbody></table>
+			<p class="description"><?php echo esc_html( self::ui( 'Після появи першої конверсії донату позначте її в налаштуваннях: пакет перейде на «Максимум конверсій».', 'Once the first donation conversion is recorded, tick it in the settings: the package switches to Maximize conversions.' ) ); ?></p>
+		</section>
+		<?php
+	}
+
+	private static function render_report_section(): void {
+		$summary = KOZGADS_Report::summary();
+		?>
+		<section class="kozgads-generate">
+			<h2><?php echo esc_html( self::ui( 'Попит на ключові слова', 'Keyword search demand' ) ); ?></h2>
+			<p class="description"><?php echo esc_html( self::ui( 'Завантажте звіт ключових слів із Google Ads (Ключові слова → Завантажити → CSV) або експорт Keyword Planner. Слова з низьким обсягом пошуку не потраплять у новий пакет, а ідеї з Keyword Planner, що збігаються зі сторінками, буде додано.', 'Upload a keyword report from Google Ads (Keywords → Download → CSV) or a Keyword Planner export. Low-search-volume keywords are left out of the next package, and Keyword Planner ideas that match the pages are added.' ) ); ?></p>
+			<?php if ( $summary['total'] > 0 ) : ?>
+				<p><strong><?php echo esc_html( sprintf( self::ui( 'Ключових слів: %1$d; низький обсяг пошуку: %2$d; без показів: %3$d; з даними Keyword Planner: %4$d.', 'Keywords: %1$d; low search volume: %2$d; no impressions: %3$d; with Keyword Planner data: %4$d.' ), $summary['total'], $summary['low'], $summary['zero_impressions'], $summary['with_searches'] ) ); ?></strong> <span class="description"><?php echo esc_html( $summary['filename'] . ' · ' . $summary['imported_at'] ); ?></span></p>
+			<?php endif; ?>
+			<form method="post" enctype="multipart/form-data" action="<?php echo esc_url( self::admin_action_url( KOZGADS_Report::ACTION_IMPORT ) ); ?>">
+				<?php wp_nonce_field( KOZGADS_Report::ACTION_IMPORT ); ?>
+				<input type="file" name="kozgads_report" accept=".csv,.tsv,.txt" required>
+				<button type="submit" class="button"><?php echo esc_html( self::ui( 'Імпортувати звіт', 'Import report' ) ); ?></button>
+			</form>
+			<?php if ( $summary['total'] > 0 ) : ?>
+				<form method="post" action="<?php echo esc_url( self::admin_action_url( KOZGADS_Report::ACTION_CLEAR ) ); ?>">
+					<?php wp_nonce_field( KOZGADS_Report::ACTION_CLEAR ); ?>
+					<p><button type="submit" class="button-link"><?php echo esc_html( self::ui( 'Видалити імпортовані дані', 'Delete imported data' ) ); ?></button></p>
+				</form>
+			<?php endif; ?>
+		</section>
+		<?php
+	}
+
+	private static function render_package_details( array $package ): void {
+		$issues   = (array) ( $package['issue_list'] ?? array() );
+		$warnings = (array) ( $package['warning_list'] ?? array() );
+		?>
+		<?php if ( ! empty( $issues ) ) : ?>
+			<h3><?php echo esc_html( self::ui( 'Блокує запуск', 'Blocks launch' ) ); ?></h3>
+			<ul class="ul-disc"><?php foreach ( $issues as $item ) : ?><li><?php echo esc_html( (string) $item ); ?></li><?php endforeach; ?></ul>
+		<?php endif; ?>
+		<?php if ( ! empty( $warnings ) ) : ?>
+			<details><summary><?php echo esc_html( sprintf( self::ui( 'Попередження (%d)', 'Warnings (%d)' ), count( $warnings ) ) ); ?></summary><ul class="ul-disc"><?php foreach ( $warnings as $item ) : ?><li><?php echo esc_html( (string) $item ); ?></li><?php endforeach; ?></ul></details>
+		<?php endif; ?>
+		<?php if ( ! empty( $package['preview'] ) ) : ?>
+			<details class="kozgads-preview" open><summary><?php echo esc_html( self::ui( 'Попередній перегляд оголошень', 'Ad preview' ) ); ?></summary>
+				<?php foreach ( (array) $package['preview'] as $ad ) : ?>
+					<div class="kozgads-ad">
+						<small><?php echo esc_html( (string) $ad['campaign'] . ' › ' . (string) $ad['group'] ); ?></small>
+						<div class="kozgads-ad__title"><?php echo esc_html( implode( ' | ', array_slice( (array) $ad['headlines'], 0, 3 ) ) ); ?></div>
+						<div class="kozgads-ad__url"><?php echo esc_html( (string) $ad['url'] ); ?></div>
+						<div><?php echo esc_html( implode( ' ', array_slice( (array) $ad['descriptions'], 0, 2 ) ) ); ?></div>
+						<details><summary><?php echo esc_html( sprintf( self::ui( 'Усі заголовки (%1$d), описи (%2$d), ключові слова (%3$d)', 'All headlines (%1$d), descriptions (%2$d), keywords (%3$d)' ), count( (array) $ad['headlines'] ), count( (array) $ad['descriptions'] ), count( (array) $ad['keywords'] ) ) ); ?></summary>
+							<p><?php echo esc_html( implode( ' · ', (array) $ad['headlines'] ) ); ?></p>
+							<p><?php echo esc_html( implode( ' · ', (array) $ad['descriptions'] ) ); ?></p>
+							<p><code><?php echo esc_html( implode( ', ', (array) $ad['keywords'] ) ); ?></code></p>
+							<?php if ( ! empty( $ad['removed'] ) ) : ?><p><?php echo esc_html( self::ui( 'Прибрано (низький обсяг пошуку):', 'Removed (low search volume):' ) . ' ' . implode( ', ', (array) $ad['removed'] ) ); ?></p><?php endif; ?>
+							<?php if ( ! empty( $ad['added'] ) ) : ?><p><?php echo esc_html( self::ui( 'Додано з Keyword Planner:', 'Added from Keyword Planner:' ) . ' ' . implode( ', ', (array) $ad['added'] ) ); ?></p><?php endif; ?>
+						</details>
+					</div>
+				<?php endforeach; ?>
+			</details>
+		<?php endif; ?>
 		<?php
 	}
 
@@ -2447,13 +2148,25 @@ final class KOZGADS_Plugin {
 					</tr>
 					<tr><th><label for="kozgads-pattern"><?php esc_html_e( 'Translated URL pattern', 'koz-google-ads-campaign-builder' ); ?></label></th><td><input id="kozgads-pattern" class="regular-text code" name="translated_url_pattern" value="<?php echo esc_attr( (string) $settings['translated_url_pattern'] ); ?>"><p class="description"><?php esc_html_e( 'Use {language} and {path}. Leave empty to reuse source URLs. Verify every generated landing URL before import.', 'koz-google-ads-campaign-builder' ); ?></p></td></tr>
 					<tr><th><label for="kozgads-max"><?php esc_html_e( 'Maximum landing pages per campaign', 'koz-google-ads-campaign-builder' ); ?></label></th><td><input id="kozgads-max" type="number" min="1" max="10" name="max_campaigns" value="<?php echo esc_attr( (string) $settings['max_campaigns'] ); ?>"></td></tr>
-					<tr><th><label for="kozgads-bid"><?php esc_html_e( 'Bid strategy', 'koz-google-ads-campaign-builder' ); ?></label></th><td><select id="kozgads-bid" name="bid_strategy"><?php foreach ( array( 'Maximize conversions', 'Maximize clicks', 'Manual CPC' ) as $strategy ) : ?><option value="<?php echo esc_attr( $strategy ); ?>" <?php selected( (string) $settings['bid_strategy'], $strategy ); ?>><?php echo esc_html( $strategy ); ?></option><?php endforeach; ?></select></td></tr>
+					<tr><th><?php echo esc_html( self::ui( 'Цільові сторінки', 'Landing pages' ) ); ?></th><td>
+						<p class="description"><?php echo esc_html( self::ui( 'Нічого не вибрано — автоматично: головна, сторінка донату з Donate Stats, сторінки з меню, потім інші сторінки. Записи блогу — лише якщо вибрати їх тут.', 'Nothing selected — automatic: home page, the Donate Stats donation page, menu pages, then other pages. Blog posts are used only when selected here.' ) ); ?></p>
+						<fieldset class="kozgads-country-grid">
+							<label><input type="checkbox" name="landing_page_ids[]" value="0" <?php checked( in_array( 0, (array) $settings['landing_page_ids'], true ) ); ?>> <?php echo esc_html( self::ui( 'Головна сторінка', 'Home page' ) ); ?></label>
+							<?php foreach ( self::landing_choices() as $page_id => $page_title ) : ?>
+								<?php if ( (int) $page_id === absint( get_option( 'page_on_front' ) ) ) { continue; } ?>
+								<label><input type="checkbox" name="landing_page_ids[]" value="<?php echo esc_attr( (string) $page_id ); ?>" <?php checked( in_array( (int) $page_id, (array) $settings['landing_page_ids'], true ) ); ?>> <?php echo esc_html( $page_title ); ?></label>
+							<?php endforeach; ?>
+						</fieldset>
+					</td></tr>
+					<tr><th><label for="kozgads-bid"><?php esc_html_e( 'Bid strategy', 'koz-google-ads-campaign-builder' ); ?></label></th><td><select id="kozgads-bid" name="bid_strategy"><?php foreach ( self::bid_strategies() as $strategy ) : ?><option value="<?php echo esc_attr( $strategy ); ?>" <?php selected( (string) $settings['bid_strategy'], $strategy ); ?>><?php echo esc_html( 'auto' === $strategy ? self::ui( 'Автоматично (Максимум кліків, доки немає конверсій)', 'Automatic (Maximize clicks until conversions exist)' ) : $strategy ); ?></option><?php endforeach; ?></select><p class="description"><?php echo esc_html( self::ui( 'У режимі Ad Grants «Максимум конверсій» без зафіксованої конверсії замінюється на «Максимум кліків».', 'In Ad Grants mode, Maximize conversions without a recorded conversion is replaced by Maximize clicks.' ) ); ?></p></td></tr>
+					<tr><th><label for="kozgads-min-searches"><?php echo esc_html( self::ui( 'Мінімум пошуків на місяць', 'Minimum monthly searches' ) ); ?></label></th><td><input id="kozgads-min-searches" type="number" min="0" max="1000" name="min_searches" value="<?php echo esc_attr( (string) $settings['min_searches'] ); ?>"><p class="description"><?php echo esc_html( self::ui( 'Для імпорту з Keyword Planner: слова з меншою кількістю пошуків не потраплять у пакет.', 'For Keyword Planner imports: keywords with fewer searches are left out of the package.' ) ); ?></p></td></tr>
 					<tr><th><label for="kozgads-conversion"><?php esc_html_e( 'Primary conversion key', 'koz-google-ads-campaign-builder' ); ?></label></th><td><input id="kozgads-conversion" class="regular-text code" name="primary_conversion_name" value="<?php echo esc_attr( (string) $settings['primary_conversion_name'] ); ?>"><p class="description"><?php esc_html_e( 'A neutral internal key for the review checklist. The plugin does not create a Google Ads conversion action.', 'koz-google-ads-campaign-builder' ); ?></p></td></tr>
 					<tr><th><label for="kozgads-negatives"><?php esc_html_e( 'Negative keywords', 'koz-google-ads-campaign-builder' ); ?></label></th><td><textarea id="kozgads-negatives" class="large-text" rows="5" name="negative_keywords"><?php echo esc_textarea( implode( "\n", (array) $settings['negative_keywords'] ) ); ?></textarea><p class="description"><?php esc_html_e( 'Optional additions, one phrase per line. The plugin does not guess universal negative keywords.', 'koz-google-ads-campaign-builder' ); ?></p></td></tr>
 					<tr><th><label for="kozgads-callouts"><?php esc_html_e( 'Callouts', 'koz-google-ads-campaign-builder' ); ?></label></th><td><textarea id="kozgads-callouts" class="large-text" rows="4" name="callouts"><?php echo esc_textarea( implode( "\n", (array) $settings['callouts'] ) ); ?></textarea><p class="description"><?php esc_html_e( 'Optional additions, one callout per line. Automatic callouts are derived from the selected landing pages.', 'koz-google-ads-campaign-builder' ); ?></p></td></tr>
 					<tr><th><?php esc_html_e( 'Options', 'koz-google-ads-campaign-builder' ); ?></th><td>
 						<label><input type="checkbox" name="include_search_partners" value="1" <?php checked( ! empty( $settings['include_search_partners'] ) ); ?>> <?php esc_html_e( 'Include Search Partners', 'koz-google-ads-campaign-builder' ); ?></label><br>
-						<label><input type="checkbox" name="conversion_tracking_confirmed" value="1" <?php checked( ! empty( $settings['conversion_tracking_confirmed'] ) ); ?>> <?php esc_html_e( 'Meaningful conversion tracking is configured', 'koz-google-ads-campaign-builder' ); ?></label><br>
+						<label><input type="checkbox" name="conversion_tracking_confirmed" value="1" <?php checked( ! empty( $settings['conversion_tracking_confirmed'] ) ); ?>> <?php echo esc_html( self::ui( 'Реальна конверсія (донат) налаштована як основна в Google Ads і вже зафіксована', 'A real conversion (donation) is primary in Google Ads and has been recorded' ) ); ?></label><br>
+						<label><input type="checkbox" name="generate_source_language" value="1" <?php checked( ! empty( $settings['generate_source_language'] ) ); ?>> <?php echo esc_html( self::ui( 'Створювати кампанію мовою сайту (вимкніть, якщо цією мовою майже немає пошукового попиту)', 'Create a campaign in the site language (turn off when there is almost no search demand in that language)' ) ); ?></label><br>
 						<label><input type="checkbox" name="allow_azure_copy_translation" value="1" <?php checked( ! empty( $settings['allow_azure_copy_translation'] ) ); ?>> <?php esc_html_e( 'Allow Azure to translate generated ad copy during package generation', 'koz-google-ads-campaign-builder' ); ?></label><br>
 						<label><input type="checkbox" name="delete_data_on_uninstall" value="1" <?php checked( ! empty( $settings['delete_data_on_uninstall'] ) ); ?>> <?php esc_html_e( 'Delete settings and the last package when the plugin is uninstalled', 'koz-google-ads-campaign-builder' ); ?></label>
 					</td></tr>
@@ -2470,7 +2183,7 @@ final class KOZGADS_Plugin {
 		$settings = self::settings();
 		$source   = self::detected_site_language();
 		$landings = self::selected_landing_pages( $settings );
-		$azure    = self::azure_credentials();
+		$azure    = KOZGADS_Integrations::azure_credentials();
 		$package  = get_option( self::PACKAGE_OPTION, array() );
 		$package  = is_array( $package ) ? $package : array();
 		$tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( (string) $_GET['tab'] ) ) : 'overview'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin tab selection.
@@ -2504,6 +2217,9 @@ final class KOZGADS_Plugin {
 			'settings_saved'  => array( 'success', __( 'Settings saved.', 'koz-google-ads-campaign-builder' ) ),
 			'package_ready'   => array( 'success', __( 'Google Ads package generated.', 'koz-google-ads-campaign-builder' ) ),
 			'package_deleted' => array( 'success', __( 'Package deleted from the server.', 'koz-google-ads-campaign-builder' ) ),
+			'report_imported' => array( 'success', __( 'Keyword report imported.', 'koz-google-ads-campaign-builder' ) ),
+			'report_cleared'  => array( 'success', __( 'Imported keyword data deleted.', 'koz-google-ads-campaign-builder' ) ),
+			'live_check_complete' => array( 'success', __( 'AdsBot destination check finished.', 'koz-google-ads-campaign-builder' ) ),
 			'error'           => array( 'error', '' !== $message ? $message : __( 'An error occurred.', 'koz-google-ads-campaign-builder' ) ),
 		);
 		if ( ! isset( $map[ $notice ] ) ) {

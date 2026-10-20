@@ -43,3 +43,10 @@
 	gap:7px;
 	min-height:28px
 }
+.kozgads-preview{margin:14px 0}
+.kozgads-ad{background:#fff;border:1px solid #dcdcde;border-radius:6px;padding:12px 14px;margin:10px 0;max-width:720px}
+.kozgads-ad small{color:#646970}
+.kozgads-ad__title{color:#1a0dab;font-size:16px;line-height:1.35;margin:4px 0 2px}
+.kozgads-ad__url{color:#006621;font-size:13px;word-break:break-all;margin-bottom:4px}
+.kozgads-ad details{margin-top:6px}
+.kozgads-ad details p{margin:6px 0}

@@ -1,15 +1,15 @@
 === KOZ Google Ads Campaign Builder ===
 Contributors: ramirkz
 Donate link: https://github.com/ramirkoz/ua-free-plugins#support-plugin-development
-Tags: google ads, ad grants, campaigns, keywords, export
+Tags: google ads, ad grants, nonprofit, google ads editor, keywords
 Requires at least: 6.2
 Tested up to: 7.1
-Stable tag: 1.4.13
+Stable tag: 1.5.0
 Requires PHP: 8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Builds reviewable Google Ad Grants and standard Google Ads Editor import packages.
+Google Ads Editor packages for Ad Grants and Google Ads built from your pages, with demand-checked keywords and conversion setup.
 
 == Description ==
 
@@ -19,12 +19,37 @@ The plugin was originally developed for the UA FREE charitable foundation. The f
 
 The plugin is developed, owned and maintained by Tony Kozyriev (`ramirkz`). UA FREE does not own the plugin or its source code. Support for the developer and charitable donations to the foundation are presented as separate optional destinations.
 
+= Part of the KOZ Suite =
+
+KOZ Google Ads Campaign Builder is **one focused module of the broader KOZ Suite**, a family of independent WordPress plugins that share a common KOZ administration experience and visual identity.
+
+Each KOZ plugin remains independently installable, so site owners can use only the modules they need or combine several modules into one toolkit. This plugin does not require a paid suite core.
+
+Current public KOZ plugins:
+
+* [KOZ SEO Core](https://wordpress.org/plugins/koz-seo-core/) — technical SEO, schema, sitemaps, AI discovery and OpenAI Vision image ALT.
+* [KOZ Copy Actions](https://wordpress.org/plugins/koz-copy-actions/) — accessible copy-to-clipboard actions for selected WordPress content.
+* [KOZ URL-Only Comment Spam](https://wordpress.org/plugins/koz-url-only-comment-spam/) — privacy-first local moderation for URL-only comment spam.
+* [KOZ Static Translate](https://wordpress.org/plugins/koz-static-translate/) — multilingual translation with Microsoft Azure AI Translator and static language routes.
+* [KOZ Translate Diagnostics](https://wordpress.org/plugins/koz-translate-diagnostics/) — read-only health checks and privacy-safe diagnostics for KOZ Static Translate.
+* [KOZ 404 Guard & URL Intelligence](https://wordpress.org/plugins/koz-404-guard/) — privacy-safe 404/410 diagnostics, controlled same-site redirects and URL intelligence.
+* [KOZ Consent Manager](https://wordpress.org/plugins/koz-consent-manager/) — privacy-first visitor consent, optional script control and Google Consent Mode v2.
+* [KOZ Donate Stats & Conversions](https://wordpress.org/plugins/koz-donate-stats/) — local donation analytics and consent-aware conversion events.
+* [KOZ Site Bridge](https://wordpress.org/plugins/koz-site-bridge/) — secure read-only WordPress diagnostics and authenticated REST automation.
+* KOZ Google Ads Campaign Builder — reviewable Google Ads Editor campaign packages, conversion-first bidding and keyword demand analysis.
+
 = Main features =
 
-* Campaign, ad group, keyword, negative keyword and asset package generation.
-* Separate Google Ad Grants and standard Google Ads workflows.
-* Reviewable CSV output for Google Ads Editor instead of direct account modification.
-* Language, location and landing-page configuration checks.
+* Campaign, ad group, keyword, negative keyword, sitelink and callout package for Google Ads Editor (CSV, UTF-8 with BOM).
+* Ad copy from the rendered pages: up to 15 headlines and 4 descriptions per ad group from the title, meta description and headings, plus neutral calls to action in 8 languages.
+* Other languages use the translated pages published by KOZ Static Translate, without Azure. Optional Azure translation counts against the Static Translate monthly quota.
+* Keywords from the page headings, with at most one brand keyword. Import a Google Ads keyword report or a Keyword Planner export to drop "Low search volume" keywords and add matching ideas.
+* Landing pages: home page, the KOZ Donate Stats donation page and menu pages automatically, or the pages you choose.
+* Conversion first: the package is not "ready to launch" in Ad Grants mode until a real conversion is recorded. Until then the bid strategy is Maximize clicks (Ad Grants caps it at 2.00 USD per click). CONVERSION-SETUP.txt explains how to turn the Donate Stats dataLayer event into a Google Ads conversion.
+* Validation of Editor limits and Ad Grants rules (single-word keywords, ad groups, sitelinks, headline and description length).
+* POST-IMPORT-CHECKLIST.txt: turn off auto-applied recommendations, make the donation conversion primary, check bids, locations and languages.
+* Live AdsBot check (desktop and mobile) with the campaign language: HTTP, timeouts, robots.txt, noindex and page language.
+* Ad preview in the admin, Site Health test and the `kozgads_public_status` filter.
 * No Google Ads account credentials stored by the plugin.
 
 = Example use cases =
@@ -35,11 +60,11 @@ The plugin is developed, owned and maintained by Tony Kozyriev (`ramirkz`). UA F
 
 = Privacy =
 
-The plugin builds local files and does not require direct access to a Google Ads account.
+The plugin builds local files and does not require direct access to a Google Ads account. It fetches only pages of the current site. An imported keyword report is reduced to keyword text and counts (impressions, clicks, monthly searches).
 
 = Support =
 
-* Support independent plugin development through PayPal or the cryptocurrency wallets listed in the administration support panel and project repository.
+* Support independent plugin development through the cryptocurrency wallets listed in the administration support panel and project repository.
 * Support Ukraine through the UA FREE charitable foundation: https://uafree.org/donate/
 * Development contact: ramir@ua.fm
 * Source and issue tracker: https://github.com/ramirkoz/ua-free-plugins
@@ -66,11 +91,37 @@ No. The plugin was originally developed for and tested on the foundation website
 
 No. All included features are free and available under the GPL license.
 
+= My imported campaigns get almost no impressions. Why? =
+
+The two usual causes are bidding and keywords. "Maximize conversions" without any recorded conversion has no signal, so set up a real conversion (see CONVERSION-SETUP.txt in the package) and use Maximize clicks until it records. Keywords marked "Low search volume" never serve: download the keyword report in Google Ads, import it in the plugin and generate a new package.
+
+= Does it use Azure Translator? =
+
+Only when a translated page is missing and you allowed Azure in the settings. The characters are added to the KOZ Static Translate monthly quota, and generation stops when the quota is used up.
+
+= Can I upload directly to Google Ads? =
+
+No. The plugin creates a ZIP for Google Ads Editor. All campaigns are Paused; you review and post them yourself.
+
 = Does the plugin require the whole KOZ suite? =
 
 No. Every public KOZ plugin is independently installable unless its own description explicitly identifies an optional companion integration.
 
 == Changelog ==
+
+= 1.5.0 =
+* Ad copy from the rendered pages: up to 15 headlines and 4 descriptions, neutral calls to action in 8 languages, length checks.
+* Other languages use the translated pages of KOZ Static Translate; Azure is optional and counts against the Static Translate quota.
+* Keywords from page headings with one brand keyword; Google Ads / Keyword Planner report import removes low-search-volume keywords and adds matching ideas.
+* Conversions: Ad Grants packages are launch-ready only after a real conversion; automatic bid strategy (Maximize clicks until conversions exist); CONVERSION-SETUP.txt for the Donate Stats event.
+* Option to skip the site-language campaign when it has no search demand.
+* Google Ads Editor headers (Budget, Languages, Ad type, Negative Phrase), validation of Ad Grants rules, POST-IMPORT-CHECKLIST.txt.
+* Landing pages: Donate Stats page and menu pages first, or a manual selection.
+* AdsBot check for desktop and mobile with the campaign language and noindex detection.
+* Ad preview, Site Health test, `kozgads_public_status` filter.
+* No automatic deactivation of the former UA FREE plugin (a notice is shown instead).
+* New package folder and random file names; code split into Integrations, Copy, Report, Export, Checks and Health classes.
+* Support panel without PayPal; corrected BTC and USDT addresses.
 
 = 1.4.13 =
 * Updated WordPress compatibility metadata for WordPress 7.1.
@@ -125,6 +176,9 @@ No. Every public KOZ plugin is independently installable unless its own descript
 * Last stable release under the former UA FREE public branding.
 
 == Upgrade Notice ==
+
+= 1.5.0 =
+Better ad copy and keywords, conversion-first bidding, report import and a post-import checklist. Generate a new package after updating.
 
 = 1.4.13 =
 WordPress 7.1 compatibility metadata update; plugin behavior remains unchanged.

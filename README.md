@@ -24,7 +24,7 @@ A practical collection of 12 privacy-first WordPress plugins independently maint
 | koz-site-bridge | 0.6.0 (WordPress.org: LIVE, owner-confirmed; public-index check pending) |
 | koz-consent-manager | 0.3.0 (WordPress.org: LIVE) |
 | koz-donate-stats | 1.4.0 (WordPress.org: LIVE) |
-| koz-google-ads-campaign-builder | 1.4.13 |
+| koz-google-ads-campaign-builder | 1.5.0 (WordPress.org: submission pending) |
 | koz-copy-actions | 1.1.14 |
 | koz-url-only-comment-spam | 1.1.11 |
 | koz-suite-control-center | 0.4.7 (WordPress.org: submission pending) |

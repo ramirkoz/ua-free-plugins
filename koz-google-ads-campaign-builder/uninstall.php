@@ -20,14 +20,17 @@ if ( ! is_array( $kozgads_package ) ) {
 }
 $kozgads_path   = is_array( $kozgads_package ) ? (string) ( $kozgads_package['path'] ?? '' ) : '';
 $kozgads_upload = wp_upload_dir();
-$kozgads_base   = empty( $kozgads_upload['error'] ) ? realpath( trailingslashit( (string) $kozgads_upload['basedir'] ) . 'ua-free-google-ads-packages' ) : false;
 $kozgads_real   = '' !== $kozgads_path ? realpath( $kozgads_path ) : false;
-
-if ( is_string( $kozgads_base ) && is_string( $kozgads_real ) && str_starts_with( $kozgads_real, trailingslashit( $kozgads_base ) ) && is_file( $kozgads_real ) ) {
-	wp_delete_file( $kozgads_real );
+foreach ( array( 'koz-google-ads-packages', 'ua-free-google-ads-packages' ) as $kozgads_folder ) {
+	$kozgads_base = empty( $kozgads_upload['error'] ) ? realpath( trailingslashit( (string) $kozgads_upload['basedir'] ) . $kozgads_folder ) : false;
+	if ( is_string( $kozgads_base ) && is_string( $kozgads_real ) && str_starts_with( $kozgads_real, trailingslashit( $kozgads_base ) ) && is_file( $kozgads_real ) ) {
+		wp_delete_file( $kozgads_real );
+	}
 }
 
 delete_option( 'kozgads_settings' );
 delete_option( 'kozgads_last_package' );
+delete_option( 'kozgads_keyword_data' );
+delete_option( 'kozgads_live_destination_check' );
 delete_option( $kozgads_legacy_settings_key );
 delete_option( $kozgads_legacy_package_key );
