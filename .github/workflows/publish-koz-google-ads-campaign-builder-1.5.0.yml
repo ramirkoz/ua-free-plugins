@@ -1,0 +1,108 @@
+name: Publish KOZ Google Ads Campaign Builder 1.5.0
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/publish-koz-google-ads-campaign-builder-1.5.0.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Synchronize source from finished release ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo '5e02df1bb1d87dac727761926b58b766df27991a4421ab9a27f67eefc03e5eff  releases/koz-google-ads-campaign-builder-1.5.0.zip' | sha256sum -c -
+          echo '3f3165b61ca3fd209be4765a0ac01986415004e80c5a60824dd6467b7d9416b1  releases/koz-google-ads-campaign-builder-1.5.0-claude-original.zip' | sha256sum -c -
+          python3 - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile
+          import tempfile, shutil, json
+
+          slug = "koz-google-ads-campaign-builder"
+          src = Path("releases/koz-google-ads-campaign-builder-1.5.0-claude-original.zip")
+          dest = Path("releases/koz-google-ads-campaign-builder-1.5.0.zip")
+          with ZipFile(src) as original, ZipFile(dest) as final:
+              assert len(original.namelist()) == 28
+              assert set(original.namelist()) == set(final.namelist())
+              diffs = [p for p in original.namelist() if original.read(p) != final.read(p)]
+              assert diffs == [f"{slug}/readme.txt"], diffs
+              readme = final.read(f"{slug}/readme.txt").decode("utf-8")
+              assert "Stable tag: 1.5.0" in readme
+              assert readme.count("= Part of the KOZ Suite =") == 1
+              assert readme.count("https://wordpress.org/plugins/") == 9
+              plugin = final.read(f"{slug}/{slug}.php").decode("utf-8")
+              assert "Version: 1.5.0" in plugin
+              with tempfile.TemporaryDirectory() as temp:
+                  final.extractall(temp)
+                  target = Path(slug)
+                  if target.exists():
+                      shutil.rmtree(target)
+                  shutil.copytree(Path(temp, slug), target)
+
+          Path("releases/koz-google-ads-campaign-builder-1.5.0.zip.sha256").write_text(
+              "5e02df1bb1d87dac727761926b58b766df27991a4421ab9a27f67eefc03e5eff  koz-google-ads-campaign-builder-1.5.0.zip\n", encoding="utf-8"
+          )
+          overview = Path("README.md")
+          old = "| koz-google-ads-campaign-builder | 1.4.13 |"
+          text = overview.read_text(encoding="utf-8")
+          assert old in text, "Unexpected overview version row"
+          overview.write_text(text.replace(
+              old, "| koz-google-ads-campaign-builder | 1.5.0 (WordPress.org: submission pending) |"
+          ), encoding="utf-8")
+          manifest = {
+              "slug": slug,
+              "candidate_version": "1.5.0",
+              "wordpress_org_status": "not submitted; pending owner upload and manual review",
+              "git_release": "koz-google-ads-campaign-builder-v1.5.0",
+              "zip": "releases/koz-google-ads-campaign-builder-1.5.0.zip",
+              "original_zip": "releases/koz-google-ads-campaign-builder-1.5.0-claude-original.zip",
+              "sha256": "5e02df1bb1d87dac727761926b58b766df27991a4421ab9a27f67eefc03e5eff",
+              "original_sha256": "3f3165b61ca3fd209be4765a0ac01986415004e80c5a60824dd6467b7d9416b1",
+              "changes_to_original_zip": [f"{slug}/readme.txt"],
+              "drive_folder": "https://drive.google.com/drive/folders/12_sh6HwO4WOSaAYTNJjaJ01Tb91csh2P",
+              "claude_report": "Plugin Check pass; production site checks reported; Google Ads Editor live import and account conversions not yet done",
+              "suite_bundle": "1.0.30 unchanged"
+          }
+          Path("releases/KOZ_GOOGLE_ADS_CAMPAIGN_BUILDER_1.5.0_RELEASE.json").write_text(
+              json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+          )
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A koz-google-ads-campaign-builder
+          git add README.md releases/koz-google-ads-campaign-builder-1.5.0.zip.sha256 releases/KOZ_GOOGLE_ADS_CAMPAIGN_BUILDER_1.5.0_RELEASE.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'Synchronize KOZ Google Ads Campaign Builder 1.5.0 exact source and metadata'
+            git push origin HEAD:main
+          fi
+
+      - name: Publish GitHub tag and release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG="koz-google-ads-campaign-builder-v1.5.0"
+          if ! gh release view "$TAG" >/dev/null 2>&1; then
+            gh release create "$TAG" \
+              releases/koz-google-ads-campaign-builder-1.5.0.zip \
+              releases/koz-google-ads-campaign-builder-1.5.0-claude-original.zip \
+              releases/koz-google-ads-campaign-builder-1.5.0.zip.sha256 \
+              releases/KOZ_GOOGLE_ADS_CAMPAIGN_BUILDER_1.5.0_CHANGES.md \
+              releases/KOZ_GOOGLE_ADS_CAMPAIGN_BUILDER_1.5.0_RELEASE.json \
+              --target "$(git rev-parse HEAD)" \
+              --title 'KOZ Google Ads Campaign Builder 1.5.0' \
+              --notes-file releases/KOZ_GOOGLE_ADS_CAMPAIGN_BUILDER_1.5.0_CHANGES.md \
+              --latest=false
+          fi
+          gh release view "$TAG" --json tagName,isDraft,assets
