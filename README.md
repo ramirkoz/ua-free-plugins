@@ -21,7 +21,7 @@ A practical collection of 12 privacy-first WordPress plugins independently maint
 | koz-translate-diagnostics | 0.4.0 (WordPress.org: LIVE) |
 | koz-seo-core | 2.1.22 |
 | koz-404-guard | 2.2.0 (WordPress.org: 2.1.4 live) |
-| koz-site-bridge | 0.6.0 (WordPress.org: 0.5.7 live) |
+| koz-site-bridge | 0.6.0 (WordPress.org: LIVE, owner-confirmed; public-index check pending) |
 | koz-consent-manager | 0.3.0 (WordPress.org: LIVE) |
 | koz-donate-stats | 1.4.0 (WordPress.org: LIVE) |
 | koz-google-ads-campaign-builder | 1.4.13 |
