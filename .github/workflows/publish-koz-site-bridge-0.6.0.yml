@@ -1,0 +1,110 @@
+name: Publish KOZ Site Bridge 0.6.0
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/publish-koz-site-bridge-0.6.0.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Sync 0.6.0 source from release ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo 'ca9082af7a308f2d4981fda5079f99191dacb9c6b1362a1fd81e8c18429366b2  releases/koz-site-bridge-0.6.0.zip' | sha256sum -c -
+          echo '391698d3a7dad75982b1fd2f99d66efbd7a5b17e42c5db9de650ba04c14181d6  releases/koz-site-bridge-0.6.0-claude-original.zip' | sha256sum -c -
+          python3 - <<'PY'
+          import tempfile
+          import shutil
+          import json
+          import hashlib
+          import zipfile
+          from pathlib import Path
+
+          original = Path('releases/koz-site-bridge-0.6.0-claude-original.zip')
+          release_zip = Path('releases/koz-site-bridge-0.6.0.zip')
+          with zipfile.ZipFile(original) as source, zipfile.ZipFile(release_zip) as final:
+              assert source.namelist() == final.namelist()
+              diffs = [p for p in source.namelist() if source.read(p) != final.read(p)]
+              assert diffs == ['koz-site-bridge/readme.txt'], diffs
+              readme = final.read('koz-site-bridge/readme.txt').decode('utf-8')
+              assert 'Stable tag: 0.6.0' in readme
+              assert '= Part of the KOZ Suite =' in readme
+              assert readme.count('[KOZ SEO Core](https://wordpress.org/plugins/koz-seo-core/)') == 1
+          with tempfile.TemporaryDirectory() as temp:
+              with zipfile.ZipFile(release_zip) as archive:
+                  archive.extractall(temp)
+              folder = Path(temp, 'koz-site-bridge')
+              target = Path('koz-site-bridge')
+              if target.exists():
+                  shutil.rmtree(target)
+              shutil.copytree(folder, target)
+
+          Path('releases/koz-site-bridge-0.6.0.zip.sha256').write_text(
+              'ca9082af7a308f2d4981fda5079f99191dacb9c6b1362a1fd81e8c18429366b2  koz-site-bridge-0.6.0.zip\n', encoding='utf-8'
+          )
+          overview = Path('README.md')
+          content = overview.read_text(encoding='utf-8')
+          old = '| koz-site-bridge | 0.5.7 (WordPress.org: LIVE) |'
+          if old not in content:
+              raise RuntimeError('Unexpected KOZ Site Bridge README version row')
+          overview.write_text(
+              content.replace(old, '| koz-site-bridge | 0.6.0 (WordPress.org: 0.5.7 live) |'),
+              encoding='utf-8'
+          )
+          manifest = {
+              'slug': 'koz-site-bridge',
+              'candidate_version': '0.6.0',
+              'wordpress_org_live': '0.5.7',
+              'zip': 'releases/koz-site-bridge-0.6.0.zip',
+              'original_zip': 'releases/koz-site-bridge-0.6.0-claude-original.zip',
+              'sha256': 'ca9082af7a308f2d4981fda5079f99191dacb9c6b1362a1fd81e8c18429366b2',
+              'original_sha256': '391698d3a7dad75982b1fd2f99d66efbd7a5b17e42c5db9de650ba04c14181d6',
+              'changes_to_original_zip': ['koz-site-bridge/readme.txt'],
+              'drive_folder': 'https://drive.google.com/drive/folders/1PHg3FmqRMauDteiIM-zV07wnmZreHwLB',
+              'status': 'GitHub and Drive synchronized; WordPress.org SVN publication by owner pending',
+              'suite_bundle': '1.0.30 unchanged'
+          }
+          Path('releases/KOZ_SITE_BRIDGE_0.6.0_RELEASE.json').write_text(
+              json.dumps(manifest, indent=2, ensure_ascii=False) + '\n', encoding='utf-8'
+          )
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A koz-site-bridge
+          git add README.md releases/koz-site-bridge-0.6.0.zip.sha256 releases/KOZ_SITE_BRIDGE_0.6.0_RELEASE.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'Sync KOZ Site Bridge 0.6.0 source and release metadata'
+            git push origin HEAD:main
+          fi
+
+      - name: Create tagged GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          TAG='koz-site-bridge-v0.6.0'
+          if ! gh release view "$TAG" >/dev/null 2>&1; then
+            gh release create "$TAG" \
+              releases/koz-site-bridge-0.6.0.zip \
+              releases/koz-site-bridge-0.6.0-claude-original.zip \
+              releases/koz-site-bridge-0.6.0.zip.sha256 \
+              releases/KOZ_SITE_BRIDGE_0.6.0_CHANGES.md \
+              releases/KOZ_SITE_BRIDGE_0.6.0_RELEASE.json \
+              --target "$(git rev-parse HEAD)" \
+              --title 'KOZ Site Bridge 0.6.0' \
+              --notes-file releases/KOZ_SITE_BRIDGE_0.6.0_CHANGES.md \
+              --latest=false
+          fi
+          gh release view "$TAG" --json tagName,isDraft,assets
