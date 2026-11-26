@@ -17,9 +17,6 @@ final class KOZSUITECC_Dashboard {
 	private const LEGACY_CONTROL_PAGE = 'koz-suite-control-center';
 	private const EXPORT_ACTION = 'kozsuitecc_export';
 	private const PERIODS = array( 7, 30, 90 );
-	private const LEGACY_HEARTBEAT_HOOK = 'uafree_suite_daily_heartbeat';
-	private const MIGRATION_OPTION = 'kozsuitecc_migration_version';
-	private const LEGACY_MIGRATION_OPTION = 'kozsuitecontrolcenter_migration_version';
 	private const EXPOSURE_SCAN_NONCE = 'kozsuitecc_public_exposure_scan';
 	private const EXPOSURE_SCAN_LIMIT = 6;
 
@@ -29,66 +26,11 @@ final class KOZSUITECC_Dashboard {
 		add_action( 'admin_menu', array( __CLASS__, 'ensure_root_menu' ), 1 );
 		add_action( 'admin_menu', array( __CLASS__, 'register_submenu' ), 2 );
 		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'enqueue_assets' ) );
-		add_action( 'admin_init', array( __CLASS__, 'remove_legacy_telemetry' ) );
 		add_action( 'admin_post_' . self::EXPORT_ACTION, array( __CLASS__, 'export_json' ) );
 		add_filter(
 			'plugin_action_links_' . plugin_basename( KOZSUITECC_FILE ),
 			array( __CLASS__, 'action_links' )
 		);
-	}
-
-	public static function activate(): void {
-		self::deactivate_legacy_plugin();
-		self::remove_legacy_telemetry();
-	}
-
-	public static function deactivate(): void {
-		self::unschedule_legacy_heartbeat();
-	}
-
-	private static function deactivate_legacy_plugin(): void {
-		if ( ! function_exists( 'deactivate_plugins' ) ) {
-			require_once ABSPATH . 'wp-admin/includes/plugin.php';
-		}
-		foreach (
-			array(
-				'ua-free-analytics-dashboard/ua-free-analytics-dashboard.php',
-				'ua-free-suite-control-center/ua-free-suite-control-center.php',
-			)
-			as $legacy_file
-		) {
-			if ( is_plugin_active( $legacy_file ) ) {
-				deactivate_plugins( $legacy_file, true );
-			}
-		}
-	}
-
-	public static function remove_legacy_telemetry(): void {
-		if ( KOZSUITECC_VERSION === (string) get_option( self::MIGRATION_OPTION, '' ) ) {
-			return;
-		}
-		self::unschedule_legacy_heartbeat();
-		foreach (
-			array(
-				'uafree_suite_support_settings',
-				'uafree_suite_install_id',
-				'uafree_suite_heartbeat_token',
-				'uafree_suite_heartbeat_token_expiry',
-			)
-			as $option
-		) {
-			delete_option( $option );
-		}
-		update_option( self::MIGRATION_OPTION, KOZSUITECC_VERSION, false );
-		delete_option( self::LEGACY_MIGRATION_OPTION );
-	}
-
-	private static function unschedule_legacy_heartbeat(): void {
-		while ( false !== ( $timestamp = wp_next_scheduled( self::LEGACY_HEARTBEAT_HOOK ) ) ) {
-			if ( false === wp_unschedule_event( $timestamp, self::LEGACY_HEARTBEAT_HOOK ) ) {
-				break;
-			}
-		}
 	}
 
 	public static function ensure_root_menu(): void {
@@ -387,7 +329,7 @@ final class KOZSUITECC_Dashboard {
 		?>
 		<div class="wrap kozsuitecc-dashboard">
 			<h1><?php echo esc_html__( 'KOZ Suite Control Center', 'koz-suite-control-center' ); ?></h1>
-			<div class="kozsuitecc-hero <?php echo $all_active ? 'is-good' : 'is-attention'; ?>">
+			<div class="kozsuitecc-hero <?php echo esc_attr( $all_active ? 'is-good' : 'is-attention' ); ?>">
 				<span><?php echo esc_html__( 'Suite status', 'koz-suite-control-center' ); ?></span>
 				<strong><?php echo esc_html( $all_active ? __( 'Everything is active', 'koz-suite-control-center' ) : __( 'The suite needs attention', 'koz-suite-control-center' ) ); ?></strong>
 				<p><?php echo esc_html__( 'This screen reports installed packages and does not send data outside WordPress.', 'koz-suite-control-center' ); ?></p>

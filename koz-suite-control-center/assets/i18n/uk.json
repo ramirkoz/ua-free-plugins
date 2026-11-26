@@ -43,5 +43,22 @@
   "Version": "Версія",
   "You do not have permission to export this report.": "У вас немає дозволу експортувати цей звіт.",
   "You do not have permission to view this dashboard.": "У вас немає дозволу переглядати цю панель.",
-  "plugins active": "плагінів активно"
+  "plugins active": "плагінів активно",
+  "About the foundation": "Про фонд",
+  "Address copied.": "Адресу скопійовано.",
+  "Copied": "Скопійовано",
+  "Copy": "Копіювати",
+  "Copy BTC address": "Копіювати BTC-адресу",
+  "Copy ETH and USDC address": "Копіювати адресу ETH і USDC",
+  "Copy USDT address": "Копіювати USDT-адресу",
+  "Crypto donations support maintenance, testing and new free releases.": "Пожертви в криптовалюті підтримують супровід, тестування та нові безкоштовні релізи.",
+  "Developed and maintained by Tony Kozyriev. The suite began as production tooling for the UA FREE charitable foundation and remains in active use on its website.": "Розробляє і підтримує Tony Kozyriev. Збірка почалася як виробничі інструменти для благодійного фонду UA FREE і досі активно використовується на його сайті.",
+  "Donate to UA FREE": "Пожертвувати UA FREE",
+  "Free, open source and privacy-conscious": "Безкоштовно, з відкритим кодом і з повагою до приватності",
+  "KOZ project support": "Підтримка проєкту KOZ",
+  "Support Ukraine through UA FREE": "Підтримати Україну через UA FREE",
+  "Support independent development and Ukraine": "Підтримайте незалежну розробку та Україну",
+  "Support the developer": "Підтримати розробника",
+  "The foundation was the first production environment for these plugins. Its charitable work is separate from plugin ownership and developer donations.": "Фонд був першим виробничим середовищем для цих плагінів. Його благодійна діяльність відокремлена від прав на плагіни та пожертв розробнику.",
+  "Development contact:": "Контакт розробника:"
 }

@@ -2,6 +2,8 @@
 	'use strict';
 	var panel = document.getElementById('kozsuitecc-admin-support-panel');
 	var container = document.getElementById('wpbody-content');
+	var i18n = window.KOZSUITECCSupportI18n || {};
+	var label = function (key, fallback) { return typeof i18n[key] === 'string' && i18n[key] ? i18n[key] : fallback; };
 	if (!panel) { return; }
 	if (container) { container.appendChild(panel); }
 	panel.hidden = false;
@@ -11,11 +13,11 @@
 		var value = button.getAttribute('data-koz-copy') || '';
 		var status = document.getElementById('kozsuitecc-support-copy-status');
 		var done = function () {
-			button.textContent = 'Copied';
+			button.textContent = label('copied', 'Copied');
 			button.classList.add('is-copied');
-			if (status) { status.textContent = 'Address copied.'; }
+			if (status) { status.textContent = label('status', 'Address copied.'); }
 			window.setTimeout(function () {
-				button.textContent = 'Copy';
+				button.textContent = label('copy', 'Copy');
 				button.classList.remove('is-copied');
 			}, 1600);
 		};

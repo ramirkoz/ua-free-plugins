@@ -5,7 +5,7 @@ Tags: admin, dashboard, diagnostics, plugin suite, privacy
 Requires at least: 6.2
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 0.4.7
+Stable tag: 0.4.8
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -93,6 +93,12 @@ No. The suite grew from tools used on the foundation website, but the software i
 
 == Changelog ==
 
+= 0.4.8 =
+* Activation no longer deactivates any other plugin. Older UA FREE packages that are still active are only reported on the Control Center screen, and the administrator decides what to do with them.
+* No longer removes other plugins' admin footer callbacks. The Control Center support panel renders only on its own screens.
+* No longer deletes options or unschedules cron events that belong to other plugins, on activation, deactivation or admin_init.
+* Support panel: PayPal removed, crypto addresses updated, panel texts translated.
+
 = 0.4.7 =
 * Updated WordPress compatibility metadata for WordPress 7.1.
 * No functional changes.
@@ -126,3 +132,8 @@ No. The suite grew from tools used on the foundation website, but the software i
 * Added a corrected twelve-plugin KOZ catalog and reliable active-state detection.
 * Added multilingual administration and English fallback.
 * Added privacy-safe JSON export and legacy telemetry cleanup.
+
+== Upgrade Notice ==
+
+= 0.4.8 =
+WordPress.org review fixes: Control Center no longer deactivates other plugins, removes their admin footer hooks or deletes their data. Old UA FREE packages are now left for the administrator to manage.

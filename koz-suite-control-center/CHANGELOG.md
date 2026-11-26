@@ -1,8 +1,15 @@
+# KOZ Suite Control Center changelog
+
+## 0.4.8
+- Removed automatic deactivation of the legacy `ua-free-analytics-dashboard` and `ua-free-suite-control-center` plugins on activation. Control Center no longer changes the activation state of any plugin; active legacy packages are only reported in "Needs attention".
+- Removed `remove_action( 'admin_footer', ... )` calls for `UAFree_Admin_Support_Panel_V2` and `UAFree_Admin_Support_Footer`. Control Center only adds its own panel on its own screens.
+- Removed legacy telemetry cleanup (`uafree_suite_*` options and the `uafree_suite_daily_heartbeat` cron event) from activation, deactivation and `admin_init`. That data belongs to the legacy UA FREE plugins, which remove it on their own uninstall.
+- Support panel: removed PayPal, aligned BTC and USDT TRC-20 addresses with KOZ Site Bridge 0.6.0, translated panel texts and the copy-button labels, versioned panel assets.
+- Escaped the dashboard status class.
+
 ## 0.4.7
 - Updated WordPress compatibility metadata for WordPress 7.1.
 - No functional changes.
-
-# KOZ Suite Control Center changelog
 
 ## 0.4.6
 - Added a read-only public exposure scanner for tokenized private-download and sensitive admin-post URLs.

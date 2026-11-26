@@ -11,13 +11,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-if ( class_exists( 'UAFree_Admin_Support_Panel_V2', false ) ) {
-	remove_action( 'admin_footer', array( 'UAFree_Admin_Support_Panel_V2', 'render' ), 50 );
-}
-if ( class_exists( 'UAFree_Admin_Support_Footer', false ) ) {
-	remove_action( 'admin_footer', array( 'UAFree_Admin_Support_Footer', 'render' ), 50 );
-}
-
 if ( ! class_exists( __NAMESPACE__ . '\\KOZSUITECC_Admin_Support_Panel', false ) ) {
 	final class KOZSUITECC_Admin_Support_Panel {
 		private static bool $initialized = false;
@@ -61,15 +54,15 @@ if ( ! class_exists( __NAMESPACE__ . '\\KOZSUITECC_Admin_Support_Panel', false )
 
 			wp_enqueue_style(
 				'kozsuitecc-admin-support-panel',
-				plugins_url( '../assets/kozsuitecc-admin-support-panel.css', __FILE__ ),
+				KOZSUITECC_URL . 'assets/kozsuitecc-admin-support-panel.css',
 				array(),
-				'1.0.0'
+				KOZSUITECC_VERSION
 			);
 			wp_enqueue_script(
 				'kozsuitecc-admin-support-panel',
-				plugins_url( '../assets/kozsuitecc-admin-support-panel.js', __FILE__ ),
+				KOZSUITECC_URL . 'assets/kozsuitecc-admin-support-panel.js',
 				array(),
-				'1.0.0',
+				KOZSUITECC_VERSION,
 				true
 			);
 			wp_localize_script(
@@ -111,15 +104,15 @@ if ( ! class_exists( __NAMESPACE__ . '\\KOZSUITECC_Admin_Support_Panel', false )
 							<span class="dashicons dashicons-admin-tools" aria-hidden="true"></span>
 							<div>
 								<h3><?php echo esc_html__( 'Support the developer', 'koz-suite-control-center' ); ?></h3>
-								<p><?php echo esc_html__( 'PayPal and crypto donations support maintenance, testing and new free releases.', 'koz-suite-control-center' ); ?></p>
+								<p><?php echo esc_html__( 'Crypto donations support maintenance, testing and new free releases.', 'koz-suite-control-center' ); ?></p>
 							</div>
 						</div>
 
 						<div class="koz-support-wallets">
 							<div class="koz-support-wallet">
 								<span class="koz-support-wallet__network">BTC</span>
-								<code>bc1q4dn8e7sz2866g7qp1qtshh98j54tvuau5ghuuk</code>
-								<button type="button" class="button button-small koz-support-wallet__copy" data-koz-copy="bc1q4dn8e7sz2866g7qp1qtshh98j54tvuau5ghuuk" aria-label="<?php echo esc_attr__( 'Copy BTC address', 'koz-suite-control-center' ); ?>"><?php echo esc_html__( 'Copy', 'koz-suite-control-center' ); ?></button>
+								<code>bc1q4dn8e7sz2866g7qplqtshh98j54tvuau5ghuuk</code>
+								<button type="button" class="button button-small koz-support-wallet__copy" data-koz-copy="bc1q4dn8e7sz2866g7qplqtshh98j54tvuau5ghuuk" aria-label="<?php echo esc_attr__( 'Copy BTC address', 'koz-suite-control-center' ); ?>"><?php echo esc_html__( 'Copy', 'koz-suite-control-center' ); ?></button>
 							</div>
 							<div class="koz-support-wallet">
 								<span class="koz-support-wallet__network">ETH / USDC</span>
@@ -128,16 +121,8 @@ if ( ! class_exists( __NAMESPACE__ . '\\KOZSUITECC_Admin_Support_Panel', false )
 							</div>
 							<div class="koz-support-wallet">
 								<span class="koz-support-wallet__network">USDT TRC-20</span>
-								<code>TYsGyK7K3XB4NPHprf5w8ZodFafxFfDdbP</code>
-								<button type="button" class="button button-small koz-support-wallet__copy" data-koz-copy="TYsGyK7K3XB4NPHprf5w8ZodFafxFfDdbP" aria-label="<?php echo esc_attr__( 'Copy USDT address', 'koz-suite-control-center' ); ?>"><?php echo esc_html__( 'Copy', 'koz-suite-control-center' ); ?></button>
-							</div>
-							<div class="koz-support-wallet koz-support-wallet--paypal">
-								<span class="koz-support-wallet__network">PayPal</span>
-								<code>kozyriev@uafree.org</code>
-								<div class="koz-support-wallet__actions">
-									<a class="button button-small button-primary" href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&amp;business=kozyriev%40uafree.org&amp;item_name=Support+KOZ+WordPress+plugin+development&amp;currency_code=USD" target="_blank" rel="noopener noreferrer"><?php echo esc_html__( 'Donate', 'koz-suite-control-center' ); ?></a>
-									<button type="button" class="button button-small koz-support-wallet__copy" data-koz-copy="kozyriev@uafree.org" aria-label="<?php echo esc_attr__( 'Copy PayPal email', 'koz-suite-control-center' ); ?>"><?php echo esc_html__( 'Copy', 'koz-suite-control-center' ); ?></button>
-								</div>
+								<code>TYSgyk7K3XB4WPHprf5w8ZodFAfxFfDdbF</code>
+								<button type="button" class="button button-small koz-support-wallet__copy" data-koz-copy="TYSgyk7K3XB4WPHprf5w8ZodFAfxFfDdbF" aria-label="<?php echo esc_attr__( 'Copy USDT address', 'koz-suite-control-center' ); ?>"><?php echo esc_html__( 'Copy', 'koz-suite-control-center' ); ?></button>
 							</div>
 						</div>
 						<p class="koz-support-contact"><?php echo esc_html__( 'Development contact:', 'koz-suite-control-center' ); ?> <a href="mailto:ramir@ua.fm">ramir@ua.fm</a> · <a href="https://github.com/ramirkoz/" target="_blank" rel="noopener noreferrer">GitHub</a> · <a href="https://www.linkedin.com/in/tonykoz/" target="_blank" rel="noopener noreferrer">LinkedIn</a></p>
