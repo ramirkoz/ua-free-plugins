@@ -17,5 +17,10 @@
     "removal of other plugins admin_footer hooks removed",
     "legacy option and CRON cleanup removed"
   ],
-  "suite_bundle": "1.0.30 unchanged"
+  "suite_bundle": "1.0.30 unchanged",
+  "github_source_commit": "e8cda9b7061b8882419179f22d30bb7e71b4bd31",
+  "github_source_status": "synchronized",
+  "github_release_status": "not created — GitHub Actions job failed",
+  "google_drive_folder": "https://drive.google.com/drive/folders/1xsBjljwPmUyqXVJs2x7790bNo3vu9K8r",
+  "wordpress_org_review": "owner must upload corrected ZIP to existing review and reply to reviewer thread"
 }
