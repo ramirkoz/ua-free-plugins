@@ -1,0 +1,21 @@
+{
+  "slug": "koz-suite-control-center",
+  "candidate_version": "0.4.8",
+  "wordpress_org_status": "In review: resubmission pending owner upload; not approved",
+  "source_files": 20,
+  "zip": "koz-suite-control-center-0.4.8-wordpress-review.zip",
+  "sha256": "590459651036231219791d9f76244ebcfd057d8db59471485103d3eaabe289e8",
+  "source": "Claude-provided ready archive, no code changes made by assistant",
+  "claude_tests": "uafree.org and Plugin Check PASS per report; WP_DEBUG=true clean install not performed",
+  "known_caveats": [
+    "WP_DEBUG=true clean installation not tested",
+    "uafree.org /wp-content/debug.log was reported publicly accessible and should be blocked",
+    "legacy direct admin URL yields 403, pre-existing behavior"
+  ],
+  "review_issues": [
+    "automatic deactivation of legacy plugins removed",
+    "removal of other plugins admin_footer hooks removed",
+    "legacy option and CRON cleanup removed"
+  ],
+  "suite_bundle": "1.0.30 unchanged"
+}
