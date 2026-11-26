@@ -1,0 +1,86 @@
+name: Prepare KOZ Suite Control Center 0.4.8 review candidate
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/koz-suite-control-center-0.4.8-review.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync-review-candidate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Synchronize exact review ZIP source
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo '590459651036231219791d9f76244ebcfd057d8db59471485103d3eaabe289e8  releases/koz-suite-control-center-0.4.8-wordpress-review.zip' | sha256sum -c -
+          python3 - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile
+          import shutil
+          import tempfile
+          import hashlib
+
+          slug = 'koz-suite-control-center'
+          archive = Path('releases/koz-suite-control-center-0.4.8-wordpress-review.zip')
+          with ZipFile(archive) as z:
+              members = [n for n in z.namelist() if not n.endswith('/')]
+              assert len(members) == 20, len(members)
+              assert all(n.startswith(slug + '/') and '..' not in Path(n).parts for n in members)
+              php = z.read(f'{slug}/{slug}.php').decode('utf-8')
+              readme = z.read(f'{slug}/readme.txt').decode('utf-8')
+              assert 'Version: 0.4.8' in php
+              assert 'Stable tag: 0.4.8' in readme
+              assert '= Part of the KOZ Suite =' in readme
+              assert readme.count('https://wordpress.org/plugins/') == 9
+              with tempfile.TemporaryDirectory() as t:
+                  z.extractall(t)
+                  folder = Path(slug)
+                  if folder.exists():
+                      shutil.rmtree(folder)
+                  shutil.copytree(Path(t)/slug, folder)
+
+          overview = Path('README.md')
+          before = overview.read_text('utf-8')
+          old = '| koz-suite-control-center | 0.4.7 (WordPress.org: submission pending) |'
+          assert old in before, 'Unexpected README suite row'
+          overview.write_text(before.replace(old, '| koz-suite-control-center | 0.4.8 (WordPress.org: review update pending) |'), 'utf-8')
+          Path('releases/koz-suite-control-center-0.4.8-wordpress-review.zip.sha256').write_text('590459651036231219791d9f76244ebcfd057d8db59471485103d3eaabe289e8  koz-suite-control-center-0.4.8-wordpress-review.zip\n','utf-8')
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A koz-suite-control-center README.md releases/koz-suite-control-center-0.4.8-wordpress-review.zip.sha256
+          if ! git diff --cached --quiet; then
+            git commit -m 'Sync KOZ Suite Control Center 0.4.8 WordPress review source'
+            git push origin HEAD:main
+          fi
+
+      - name: Create GitHub prerelease for WordPress review
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG='koz-suite-control-center-v0.4.8'
+          if ! gh release view "$TAG" >/dev/null 2>&1; then
+            gh release create "$TAG" \
+              releases/koz-suite-control-center-0.4.8-wordpress-review.zip \
+              releases/koz-suite-control-center-0.4.8-wordpress-review.zip.sha256 \
+              releases/KOZ_SUITE_CONTROL_CENTER_0.4.8_REVIEW_FIXES.md \
+              releases/KOZ_SUITE_CONTROL_CENTER_0.4.8_RELEASE.json \
+              --target "$(git rev-parse HEAD)" \
+              --title 'KOZ Suite Control Center 0.4.8 (WordPress review candidate)' \
+              --notes-file releases/KOZ_SUITE_CONTROL_CENTER_0.4.8_REVIEW_FIXES.md \
+              --prerelease \
+              --latest=false
+          fi
+          gh release view "$TAG" --json tagName,isDraft,isPrerelease,assets
